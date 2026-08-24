@@ -101,6 +101,12 @@ COMMON_PASSWORD_ROOTS: Final[frozenset[str]] = frozenset(
         "abcd",
         "test",
         "temp",
+        "stellarerp",
+        # The upstream project this one forked from. Kept alongside the current
+        # name because a business migrating from Personal ERP will try the name it
+        # has been typing for a year, and the blocklist's job is to catch the
+        # password people actually choose rather than the one the product is
+        # currently called.
         "personalerp",
         "personal",
         "erpadmin",

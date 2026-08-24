@@ -57,7 +57,7 @@ __all__ = [
 
 # Root namespace for every logger in the process. Keeps our lines visually
 # distinct from third-party ones and gives us one prefix to filter on.
-LOGGER_NAMESPACE = "personalerp"
+LOGGER_NAMESPACE = "stellarerp"
 
 # Third-party loggers we re-point at logifyx's handlers so that *all* output -
 # ours and the framework's - lands in the same file/stream with one format.
@@ -203,8 +203,8 @@ def get_logger(name: str | None = None) -> StructuredLogger:
     """Return a namespaced logger (one underlying logifyx singleton per name).
 
     ``name`` is normally ``__name__``; the ``app.`` prefix is swapped for the
-    ``personalerp.`` namespace so ``app.modules.auth.service`` logs as
-    ``personalerp.modules.auth.service``.
+    ``stellarerp.`` namespace so ``app.modules.auth.service`` logs as
+    ``stellarerp.modules.auth.service``.
 
     Wrapped in :class:`StructuredLogger` so ``extra=`` actually reaches the
     output - see that class for why it is necessary.

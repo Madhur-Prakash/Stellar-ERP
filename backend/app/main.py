@@ -11,6 +11,8 @@ Run with::
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -32,14 +34,27 @@ from app.core.middleware import (
     RequestContextMiddleware,
     SecurityHeadersMiddleware,
 )
+from app.core.monitoring import configure_monitoring
 from app.core.redis import close_redis, get_redis
 from app.db.migrate import run_migrations
 from app.db.session import dispose_engine
+from app.modules.attestation.hooks import install_attestation_hooks
 from app.modules.health.router import router as health_router
 
 # logifyx must be registered as the global logger class before any module
 # acquires a logger, so this is the first thing that happens in the process.
 configure_logging()
+
+# Immediately after logging, before anything else can raise: an exception during
+# startup is exactly the one worth reporting, and a tracker initialised inside
+# `create_app` would miss it.
+#
+# A no-op unless SENTRY_DSN is set, in which case nothing leaves this machine.
+# When it is set, every event goes through a scrubber that drops request bodies
+# and SQL parameters - an error report from an accounting system is an unusually
+# dangerous thing to send anywhere. See `app.core.monitoring`.
+configure_monitoring()
+
 log = get_logger(__name__)
 
 
@@ -114,9 +129,53 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         # breaking. Better to serve with a warning than refuse to boot.
         log.error("redis unreachable at startup", extra={"error": str(exc)})
 
+    # Ledger 3's background worker.
+    #
+    # In-process by default, which is what keeps the whole product one
+    # `docker compose up`. It is safe to run in every replica: the worker holds no
+    # lock and needs none, because two replicas racing to seal collide on the
+    # contract's sequence number and the loser is refused by consensus. See the
+    # module docstring in `attestation/worker.py`.
+    #
+    # Started *after* Redis so a boot that is already going badly does not also
+    # start submitting transactions.
+    seal_task: asyncio.Task[None] | None = None
+    seal_stop = asyncio.Event()
+    if settings.attestation_enabled and settings.seal_worker_enabled:
+        if settings.attestation_ready:
+            from app.modules.attestation.worker import run_forever
+
+            seal_task = asyncio.create_task(run_forever(seal_stop), name="seal-worker")
+            log.info(
+                "seal worker started in-process",
+                extra={"interval_seconds": settings.seal_worker_interval_seconds},
+            )
+        else:
+            # Named rather than silent. "Sealing is not working" and "no contract is
+            # configured" look identical from the outside, and this is the line that
+            # tells them apart at boot.
+            log.warning(
+                "the proof ledger is enabled but has no contract configured, so the "
+                "seal worker was not started - set SOROBAN_CONTRACT_ID"
+            )
+
     yield
 
     log.info("shutting down")
+
+    if seal_task is not None:
+        # Ask, then wait, then insist. A pass in flight is mid-transaction, and
+        # letting it finish avoids leaving a seal in `submitted` that the next boot
+        # has to reconcile - correct either way, but needlessly noisy.
+        seal_stop.set()
+        with contextlib.suppress(TimeoutError, asyncio.CancelledError):
+            await asyncio.wait_for(seal_task, timeout=10.0)
+        if not seal_task.done():
+            seal_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await seal_task
+        log.info("seal worker stopped")
+
     await close_redis()
     await dispose_engine()
     # Drain queued remote/Kafka log records before the process exits.
@@ -152,6 +211,16 @@ def create_app() -> FastAPI:
         # body; better to 404 and make the client fix its URL.
         redirect_slashes=False,
     )
+
+    # Ledger 3 subscribes to the accounting module's events here, in the
+    # composition root, and nowhere else.
+    #
+    # This is the one place in the application that knows both modules exist, which
+    # is exactly what keeps the dependency pointing the right way: accounting
+    # announces that an entry was posted and has no idea the proof ledger is
+    # listening. Wiring it inside `PostingService` would have made the ledger
+    # undeployable without the blockchain subsystem.
+    install_attestation_hooks()
 
     _register_middleware(app)
 

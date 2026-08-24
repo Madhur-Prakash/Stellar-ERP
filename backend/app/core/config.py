@@ -149,7 +149,7 @@ class Settings(BaseSettings):
     # ---- Runtime ------------------------------------------------------------
     environment: Environment = Environment.DEVELOPMENT
     debug: bool = True
-    app_name: str = "Personal ERP"
+    app_name: str = "Stellar ERP"
     app_version: str = "0.1.0"
 
     # ---- HTTP ---------------------------------------------------------------
@@ -225,9 +225,9 @@ class Settings(BaseSettings):
     # ---- PostgreSQL ---------------------------------------------------------
     postgres_host: str = "localhost"
     postgres_port: int = 5432
-    postgres_user: str = "personalerp"
-    postgres_password: str = "personalerp"
-    postgres_db: str = "personalerp"
+    postgres_user: str = "stellarerp"
+    postgres_password: str = "stellarerp"
+    postgres_db: str = "stellarerp"
 
     #: Full DSN override. Ignores all ``POSTGRES_*`` settings when set.
     #:
@@ -312,6 +312,18 @@ class Settings(BaseSettings):
     #: Report exports (xlsx/pdf/csv). Each renders a full statement in memory.
     rate_limit_export: str
 
+    #: The unauthenticated verification endpoints.
+    #:
+    #: Given a default, unlike the tiers above, and deliberately: those are required
+    #: so an operator has to think about them, but this one guards a route that
+    #: exists whether or not anybody configured it. A missing value must not be the
+    #: reason the public verifier is unprotected.
+    #:
+    #: Generous, because the intended caller is a bank's credit officer checking a
+    #: handful of invoices and each check costs one contract simulation - but
+    #: bounded, because "unauthenticated" and "free to hammer" are different things.
+    rate_limit_public_verify: str = "60/minute"
+
     #: Global per-IP limit applied alongside user-based rate limits.
     #:
     #: Prevents abuse from a single source, even with multiple users or stolen
@@ -355,7 +367,7 @@ class Settings(BaseSettings):
     # ---- Email (Gmail API) --------------------------------------------------
     gmail_credentials_b64: str | None = None
     gmail_sender: str | None = None
-    email_from_name: str = "Personal ERP"
+    email_from_name: str = "Stellar ERP"
 
     # ---- Frontend -----------------------------------------------------------
     frontend_url: str = "http://localhost:5173"
@@ -383,7 +395,7 @@ class Settings(BaseSettings):
     #: :attr:`document_storage` would raise ``AttributeError`` on ``.get_secret_value()`` the
     #: moment an endpoint and access key were configured without a secret.
     minio_secret_key: SecretStr = SecretStr("")
-    minio_bucket: str = "personalerp-documents"
+    minio_bucket: str = "stellarerp-documents"
 
     #: TLS to the object store. False only for a store on the loopback interface; true for
     #: anything reachable over a network - the credentials and the documents both cross it.
@@ -398,7 +410,7 @@ class Settings(BaseSettings):
     #: that never set ``LOG_FILE`` - which is every deployment that was happy with logifyx's
     #: own default - stops booting, with a validation error about logging while the operator
     #: is looking for what they changed about the database.
-    log_file: str = "personalerp.log"
+    log_file: str = "stellarerp.log"
 
     #: Whether ``/health*`` requests get the same "request completed" line as everything
     #: else (:class:`~app.core.middleware.RequestContextMiddleware`).
@@ -504,6 +516,135 @@ class Settings(BaseSettings):
     #: one that fails with an explanation.
     ocr_timeout_seconds: int = Field(default=30, ge=1, le=300)
 
+    # ---- Ledger 3: the proof ledger on Soroban ------------------------------
+    #: Master switch for the third ledger.
+    #:
+    #: The ERP is complete and fully usable with this off - Ledger 1 and Ledger 2
+    #: do not depend on it in either direction. That independence is deliberate and
+    #: it is what the layering buys: the attestation module imports from accounting,
+    #: never the reverse, so an install that wants nothing to do with a blockchain
+    #: turns this off and loses no accounting capability whatsoever.
+    attestation_enabled: bool = True
+
+    #: ``testnet`` or ``public``. Testnet is the default and the honest one: a
+    #: default of ``public`` would have a fresh install writing commitments to
+    #: mainnet before anybody had decided to.
+    stellar_network: Literal["testnet", "public"] = "testnet"
+
+    #: The deployed ``proof_ledger`` contract - a ``C...`` address.
+    #:
+    #: Unset means sealing cannot start, and the Trust screen says exactly that
+    #: rather than failing on the first attempt. Each organization *copies* this
+    #: value onto its own settings row when sealing is switched on, so changing it
+    #: here re-points new organizations without stranding the proofs already issued
+    #: by existing ones - see :attr:`AttestationSetting.contract_id`.
+    soroban_contract_id: str | None = None
+
+    #: Override the RPC endpoint. Blank uses the public one for the chosen network.
+    #:
+    #: Worth overriding for a real deployment, and the reason the verifier lets its
+    #: endpoint be changed too: a scheme whose whole claim is "you do not have to
+    #: trust us" should not quietly require everybody to trust one hosted RPC.
+    soroban_rpc_url: str | None = None
+
+    #: Inclusion fee in stroops. The resource fee is computed by simulation and
+    #: added on top, so this is only the priority bid.
+    #:
+    #: 1,000 stroops is 0.0001 XLM - ten times the network minimum, and still a
+    #: rounding error against the value of a seal. Deliberately generous: the
+    #: failure mode of bidding the minimum is a seal stranded in a busy ledger, and
+    #: the whole security argument depends on seals landing on schedule rather than
+    #: eventually.
+    stellar_base_fee: int = Field(default=1_000, ge=100, le=10_000_000)
+
+    #: How long to wait for a submitted transaction before giving up on *knowing*
+    #: the outcome. Soroban closes ledgers about every five seconds, so 45 covers
+    #: several rounds.
+    #:
+    #: Giving up here does not fail the seal. It parks it as ``submitted`` for the
+    #: reconciler, because a transaction that has left the process may still land -
+    #: see :mod:`app.modules.attestation.stellar`.
+    soroban_timeout_seconds: int = Field(default=45, ge=10, le=300)
+
+    #: Gap between polls while waiting for confirmation.
+    soroban_poll_seconds: float = Field(default=2.0, ge=0.5, le=15.0)
+
+    #: Salt folded into an organization's on-chain namespace:
+    #: ``SHA-256(organization_id || salt)``.
+    #:
+    #: This is what makes the chain unlinkable to a named business. Without it,
+    #: anyone who guessed an organization id could confirm the guess by hashing it
+    #: and looking for the namespace on chain.
+    #:
+    #: **Rotating it is safe**, which is not obvious and is worth stating: the
+    #: computed namespace is stored on the organization's settings row the first
+    #: time sealing is switched on, and never recomputed. A new salt therefore
+    #: affects only organizations that have not started sealing yet. It is *not*
+    #: safe to rotate the salt and then delete a settings row.
+    #:
+    #: Defaults to a value derived from :attr:`secret_key` so a fresh install works
+    #: without another mandatory secret; production validation requires it to be
+    #: set explicitly, because deriving it from the signing key ties two unrelated
+    #: rotations together.
+    attestation_namespace_salt: str | None = None
+
+    #: Whether this process runs the seal worker in-process.
+    #:
+    #: On by default because the target deployment is one ``docker compose up`` on
+    #: one small VPS, and requiring a second process for the feature to work at all
+    #: would contradict that. A larger install turns it off here and runs
+    #: ``python -m app.modules.attestation.worker`` as its own container, which is
+    #: the same code path - the worker is a loop around a function the API can also
+    #: call, not a parallel implementation.
+    seal_worker_enabled: bool = True
+
+    #: Seconds between worker passes. A pass with nothing to do is one indexed
+    #: query, so this can be short without costing anything.
+    seal_worker_interval_seconds: int = Field(default=60, ge=10, le=3600)
+
+    #: Hour (0-23, organization-local) at which the daily cadence seals.
+    #:
+    #: 1 a.m. rather than midnight: an entry typed at 23:58 should land in the seal
+    #: for the day it was typed, and a boundary exactly at midnight makes that a
+    #: race against the clock.
+    seal_daily_hour: int = Field(default=1, ge=0, le=23)
+
+    #: Largest number of entries one seal may cover.
+    #:
+    #: A cap exists because the Merkle tree and its proof paths are built in memory,
+    #: and because a first seal after a long backfill would otherwise try to cover
+    #: every entry a business has ever posted. Exceeding it is not an error - the
+    #: batch is split and the next pass takes the rest, so a large backlog drains
+    #: over several seals instead of failing as one.
+    seal_max_batch: int = Field(default=5_000, ge=1, le=100_000)
+
+    # ---- Error tracking and product analytics -------------------------------
+    #: Sentry DSN. Blank disables error tracking entirely, and nothing is sent.
+    #:
+    #: Optional on purpose: this is a self-hosted product whose pitch is that the
+    #: books stay on the operator's own server, and a hard dependency on a
+    #: third-party error tracker would undercut that. Configured, it reports
+    #: exceptions; unconfigured, the logifyx log is still the record.
+    sentry_dsn: str | None = None
+
+    #: Fraction of requests traced for performance. Sampling rather than
+    #: all-or-nothing: full tracing on a small VPS costs more than the insight is
+    #: worth.
+    sentry_traces_sample_rate: float = Field(default=0.1, ge=0.0, le=1.0)
+
+    #: Fraction of requests profiled. Off by default - profiling is the most
+    #: expensive thing the SDK does, and it answers a question nobody has yet on a
+    #: fresh deployment.
+    sentry_profiles_sample_rate: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    #: Record product-usage events (which screens, which actions) in PostgreSQL.
+    #:
+    #: First-party and local by design. The alternative - a hosted analytics script
+    #: in the browser - would mean shipping every user's navigation to a third party
+    #: from a product sold on data sovereignty. Events carry an organization and an
+    #: action, never a customer name and never an amount.
+    usage_analytics_enabled: bool = True
+
     # -------------------------------------------------------------------------
     # Derived values
     # -------------------------------------------------------------------------
@@ -581,6 +722,47 @@ class Settings(BaseSettings):
     @property
     def openapi_url(self) -> str | None:
         return "/openapi.json" if self.docs_enabled else None
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def namespace_salt(self) -> str:
+        """The resolved salt for on-chain organization namespaces.
+
+        Falls back to a value derived from :attr:`secret_key` so a fresh checkout
+        can switch sealing on without configuring a second secret. Derived through
+        a domain-separated hash rather than used directly, so the signing key is
+        never itself written into a namespace that ends up on a public ledger.
+
+        Production validation requires the explicit setting, because the fallback
+        ties the salt's lifetime to the JWT signing key's - and those rotate for
+        completely unrelated reasons.
+        """
+        import hashlib
+
+        if self.attestation_namespace_salt:
+            return self.attestation_namespace_salt
+        return hashlib.sha256(f"stellar-erp:namespace-salt:{self.secret_key}".encode()).hexdigest()
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def attestation_ready(self) -> bool:
+        """Whether the proof ledger could seal anything at all.
+
+        Read by the Trust screen so the reason sealing is unavailable is stated up
+        front - "no contract configured" - rather than discovered as a failed seal
+        an hour later.
+        """
+        return bool(self.attestation_enabled and self.soroban_contract_id)
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def stellar_explorer_base(self) -> str:
+        """Explorer root for the configured network, for building links once."""
+        return (
+            "https://stellar.expert/explorer/public"
+            if self.stellar_network == "public"
+            else "https://stellar.expert/explorer/testnet"
+        )
 
     # -------------------------------------------------------------------------
     # Guardrails
@@ -732,7 +914,7 @@ class Settings(BaseSettings):
 
         This exists because of a real, live near-miss rather than a hypothetical.
 
-        ``tests/conftest.py`` isolates itself by setting ``POSTGRES_DB=personalerp_test``
+        ``tests/conftest.py`` isolates itself by setting ``POSTGRES_DB=stellarerp_test``
         and ``REDIS_DB=15``. Both are silently ignored when ``DATABASE_URL`` or
         ``REDIS_URL`` is set, because a full URL wins over the composed parts - and a
         developer whose ``.env`` carries a managed-database URL for a deployment has both.
@@ -787,7 +969,7 @@ class Settings(BaseSettings):
         # explicit DATABASE_URL the password lives in that URL and this field is
         # never read, so checking it would reject a perfectly good deployment.
         if self.database_url is None and self.postgres_password in (
-            "personalerp",
+            "stellarerp",
             "postgres",
             "change-me-in-production",
         ):

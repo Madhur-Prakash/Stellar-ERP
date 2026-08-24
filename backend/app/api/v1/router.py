@@ -18,9 +18,12 @@ from app.modules.accounting.router import (
     reports_router,
 )
 from app.modules.analytics.router import router as analytics_router
+from app.modules.attestation.router import public_router as verification_router
+from app.modules.attestation.router import router as attestation_router
 from app.modules.audit.router import router as audit_router
 from app.modules.auth.router import router as auth_router
 from app.modules.billing.router import router as billing_router
+from app.modules.feedback.router import router as feedback_router
 from app.modules.ocr.router import router as documents_router
 from app.modules.organizations.router import (
     invitations_router,
@@ -97,5 +100,26 @@ api_router.include_router(documents_router)
 # Analytics. Last because it summarises everything above it: the dashboard's
 # figures come from the same ReportingService that renders the statements.
 api_router.include_router(analytics_router)
+
+# Feedback and product usage. Mounted here because `POST /feedback` is open to
+# anybody, including somebody who could not sign in - which is precisely the
+# report worth having, and the reason the endpoint is not behind the auth wall.
+api_router.include_router(feedback_router)
+
+# Ledger 3 - the proof ledger. Mounted after everything it commits to, because
+# that is the dependency direction: it observes the accounting core and nothing
+# observes it.
+api_router.include_router(attestation_router)
+
+# Public verification. **The only unauthenticated router in the application**, and
+# mounted last so that fact is the last thing a reader of this file sees.
+#
+# It exists because the verifier - a bank's credit officer, an auditor, a buyer -
+# has been handed a proof bundle and needs a verdict, and requiring them to hold
+# an account here would defeat the entire design. What it returns is either
+# computed from a bundle the caller already sent, or already public on the Stellar
+# ledger. See the module docstring in `attestation/router.py` for the byte-by-byte
+# justification.
+api_router.include_router(verification_router)
 
 __all__ = ["api_router"]

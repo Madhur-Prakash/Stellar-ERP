@@ -27,7 +27,7 @@ os.environ.update(
     {
         "ENVIRONMENT": "test",
         "DEBUG": "true",
-        "POSTGRES_DB": "personalerp_test",
+        "POSTGRES_DB": "stellarerp_test",
         # ---------------------------------------------------------------------
         # Neutralise the full-URL overrides. This is the most important pair of
         # lines in the file.
@@ -154,10 +154,10 @@ async def _create_test_database() -> AsyncGenerator[None]:
     async with admin_engine.connect() as conn:
         exists = await conn.scalar(
             text("SELECT 1 FROM pg_database WHERE datname = :name"),
-            {"name": "personalerp_test"},
+            {"name": "stellarerp_test"},
         )
         if not exists:
-            await conn.execute(text('CREATE DATABASE "personalerp_test"'))
+            await conn.execute(text('CREATE DATABASE "stellarerp_test"'))
 
     await admin_engine.dispose()
 

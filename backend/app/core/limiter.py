@@ -69,7 +69,7 @@ SWALLOW_STORAGE_ERRORS: Final = True
 #: Load-bearing, not cosmetic: both limiters would otherwise build a key from a scope and
 #: an identity, and a collision means two different algorithms mutating one another's
 #: counters - which produces limits that are wrong in a way no log line explains.
-KEY_PREFIX: Final = "personalerp:slowapi"
+KEY_PREFIX: Final = "stellarerp:slowapi"
 
 
 def rate_limit_key(request: Request) -> str:

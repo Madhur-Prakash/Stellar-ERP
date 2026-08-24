@@ -53,7 +53,7 @@ def _totp(secret: str) -> pyotp.TOTP:
 def build_provisioning_uri(secret: str, *, email: str, issuer: str | None = None) -> str:
     """Build the ``otpauth://`` URI an authenticator app scans.
 
-    The account label includes the issuer prefix (``Personal ERP:priya@acme.com``)
+    The account label includes the issuer prefix (``Stellar ERP:priya@acme.com``)
     so the entry is identifiable in an app holding thirty other codes.
     """
     issuer_name = issuer or settings.app_name
