@@ -2,7 +2,6 @@ import {
   createRootRouteWithContext,
   createRoute,
   createRouter,
-  Outlet,
   redirect,
 } from '@tanstack/react-router';
 
@@ -29,7 +28,10 @@ import { MembersPage } from '@/features/organizations/MembersPage';
 import { RolesPage } from '@/features/organizations/RolesPage';
 import { InvoicesPage } from '@/features/sales/InvoicesPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
+import { TrustPage } from '@/features/trust/TrustPage';
+import { VerifyPage } from '@/features/verify/VerifyPage';
 import { NotFoundPage } from '@/routes/NotFoundPage';
+import { RootLayout } from '@/routes/RootLayout';
 import { RouteErrorPage } from '@/routes/RouteErrorPage';
 
 /**
@@ -64,7 +66,11 @@ export interface RouterContext {
 // type so every child route's `beforeLoad` sees it, which a plain
 // `createRootRoute` generic does not do.
 const rootRoute = createRootRouteWithContext<RouterContext>()({
-  component: () => <Outlet />,
+  // `RootLayout` carries the feedback button and screen tracking. It lives in its
+  // own file so that this module can keep exporting `router` - a non-component -
+  // without breaking React fast refresh, which needs a file to export components
+  // or values but not both.
+  component: RootLayout,
   errorComponent: RouteErrorPage,
   notFoundComponent: NotFoundPage,
 });
@@ -165,6 +171,25 @@ const acceptInviteRoute = createRoute({
   component: AcceptInvitePage,
   validateSearch: (search: Record<string, unknown>): { token?: string } =>
     typeof search['token'] === 'string' ? { token: search['token'] } : {},
+});
+
+/**
+ * The public verifier.
+ *
+ * **The only route in this application that is deliberately reachable by somebody
+ * with no account and no relationship to the business**, and it is a sibling of
+ * the auth routes rather than a child of `appRoute` on purpose: hanging it under
+ * the authenticated tree would put a session guard between a bank's credit officer
+ * and the verdict, which defeats the entire feature.
+ *
+ * It is also outside `redirectIfAuthenticated`. A signed-in accountant checking a
+ * proof for one of their own clients has a perfectly good reason to be here, and
+ * bouncing them to the dashboard would make the link look broken.
+ */
+const verifyRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/verify',
+  component: VerifyPage,
 });
 
 // ---------------------------------------------------------------------------
@@ -341,6 +366,17 @@ const analyticsRoute = createRoute({
   component: AnalyticsPage,
 });
 
+// The third ledger. Guarded on `seal:read` rather than `journal:read`: seeing that
+// the books are sealed is a different thing from reading them, and every seeded
+// role gets it - an invoice's verification QR promises something, and the person
+// who raised that invoice should be able to see whether the promise holds.
+const trustRoute = createRoute({
+  getParentRoute: () => appRoute,
+  path: '/trust',
+  beforeLoad: requirePermission('seal:read'),
+  component: TrustPage,
+});
+
 const assistantRoute = createRoute({
   getParentRoute: () => appRoute,
   path: '/assistant',
@@ -366,6 +402,7 @@ const routeTree = rootRoute.addChildren([
   magicLinkVerifyRoute,
   otpRoute,
   acceptInviteRoute,
+  verifyRoute,
   appRoute.addChildren([
     dashboardRoute,
     membersRoute,
@@ -379,6 +416,7 @@ const routeTree = rootRoute.addChildren([
     inventoryRoute,
     documentsRoute,
     analyticsRoute,
+    trustRoute,
     assistantRoute,
   ]),
 ]);

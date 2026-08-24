@@ -1,23 +1,23 @@
 ; =============================================================================
-; Personal ERP - Windows installer
+; Stellar ERP - Windows installer
 ;
 ; Packages the Flutter desktop release build into a single setup executable.
 ;
 ;   1. cd app_frontend && flutter build windows --release
-;   2. compile this script (Inno Setup Compiler, F9 - or `iscc installer\personal-erp.iss`)
+;   2. compile this script (Inno Setup Compiler, F9 - or `iscc installer\stellar-erp.iss`)
 ;   3. the installer lands in installer\dist\
 ;
 ; See README.md beside this file for prerequisites and the options that matter.
 ; =============================================================================
 
-#define AppName        "Personal ERP"
+#define AppName        "Stellar ERP"
 #define AppVersion     "1.0.0"
-#define AppPublisher   "Personal ERP"
+#define AppPublisher   "Stellar ERP"
 ; The repository, not a running deployment. This is what Windows shows as the
 ; publisher link in Add/Remove Programs, and every install points at it - so it has
 ; to be somewhere that answers for *this software*, not for one person's server.
-#define AppUrl         "https://github.com/Madhur-Prakash/Personal-ERP"
-#define AppExeName     "personalerp_desktop.exe"
+#define AppUrl         "https://github.com/Madhur-Prakash/Stellar-ERP"
+#define AppExeName     "stellarerp_desktop.exe"
 
 ; Relative to this script. `flutter build windows` writes here; nothing else in the
 ; tree is packaged, because everything the app needs is already inside this folder.
@@ -83,7 +83,7 @@ OutputDir=dist
 ; above puts it in the Properties dialog - and from Add/Remove Programs once installed.
 ; The trade is that each build overwrites the last: archive one before rebuilding if you
 ; need to keep it.
-OutputBaseFilename=PersonalERP-Setup
+OutputBaseFilename=StellarERP-Setup
 SetupIconFile={#IconFile}
 UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName}
