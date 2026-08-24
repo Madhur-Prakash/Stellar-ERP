@@ -216,7 +216,8 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
       if (apiError.isRetryable) {
         context.toastError(
           'Could not reach the server',
-          description: 'Your code is still valid. Please try again in a moment.',
+          description:
+              'Your code is still valid. Please try again in a moment.',
         );
         return;
       }

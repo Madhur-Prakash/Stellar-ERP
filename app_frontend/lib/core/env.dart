@@ -58,7 +58,7 @@ abstract final class Env {
 
   static String get _rawPrefix => _read('API_V1_PREFIX', '/api/v1');
 
-  static String get appName => _read('APP_NAME', 'Personal ERP');
+  static String get appName => _read('APP_NAME', 'Stellar ERP');
 
   /// True in a debug or profile build. Gates the stack trace on the error screen,
   /// which in a release build would leak internals to no benefit.

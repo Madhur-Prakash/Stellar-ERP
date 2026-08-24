@@ -251,10 +251,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final AppTokens t = context.tokens;
 
     return AuthLayout(
-      title: 'Sign in to Personal ERP',
+      title: 'Sign in to Stellar ERP',
       subtitle: const Text('Welcome back. Enter your details to continue.'),
       footer: AuthFooterPrompt(
-        prompt: 'New to Personal ERP?',
+        prompt: 'New to Stellar ERP?',
         actionLabel: 'Create an account',
         onAction: () => context.go('/register'),
       ),

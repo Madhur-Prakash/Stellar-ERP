@@ -90,7 +90,7 @@ class AuthLayout extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              'Personal ERP',
+                              'Stellar ERP',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,

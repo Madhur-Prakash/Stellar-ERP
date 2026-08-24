@@ -477,14 +477,14 @@ class _MagicLinkVerifyScreenState extends ConsumerState<MagicLinkVerifyScreen> {
     // Requires a press rather than firing on mount: the token is single-use, and
     // mail-client link prefetching would otherwise burn it before the user arrives.
     return AuthLayout(
-      title: 'Sign in to Personal ERP',
+      title: 'Sign in to Stellar ERP',
       subtitle: const Text('Confirm to continue with your sign-in link.'),
       child: AppButton(
         onPressed: _consume,
         loading: _verifying,
         fullWidth: true,
         size: AppButtonSize.lg,
-        label: 'Continue to Personal ERP',
+        label: 'Continue to Stellar ERP',
       ),
     );
   }
