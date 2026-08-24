@@ -2,10 +2,10 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/api/auth_api.dart';
-import 'package:personalerp_desktop/core/api_client.dart';
-import 'package:personalerp_desktop/core/env.dart';
-import 'package:personalerp_desktop/models/auth.dart';
+import 'package:stellarerp_desktop/api/auth_api.dart';
+import 'package:stellarerp_desktop/core/api_client.dart';
+import 'package:stellarerp_desktop/core/env.dart';
+import 'package:stellarerp_desktop/models/auth.dart';
 
 /// The session round-trip, against a real backend.
 ///
@@ -100,7 +100,7 @@ void main() {
       const String password = r'Kx7!vqmZ#4tr';
 
       final Directory jarDir = Directory.systemTemp.createTempSync(
-        'personalerp-session-test',
+        'stellarerp-session-test',
       );
       addTearDown(() => jarDir.deleteSync(recursive: true));
 

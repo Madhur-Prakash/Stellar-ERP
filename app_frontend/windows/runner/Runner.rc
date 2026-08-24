@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.personalerp" "\0"
-            VALUE "FileDescription", "personalerp_desktop" "\0"
+            VALUE "CompanyName", "com.stellarerp" "\0"
+            VALUE "FileDescription", "stellarerp_desktop" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "personalerp_desktop" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.personalerp. All rights reserved." "\0"
-            VALUE "OriginalFilename", "personalerp_desktop.exe" "\0"
-            VALUE "ProductName", "personalerp_desktop" "\0"
+            VALUE "InternalName", "stellarerp_desktop" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 com.stellarerp. All rights reserved." "\0"
+            VALUE "OriginalFilename", "stellarerp_desktop.exe" "\0"
+            VALUE "ProductName", "stellarerp_desktop" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

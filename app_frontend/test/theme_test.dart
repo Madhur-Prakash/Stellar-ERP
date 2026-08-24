@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/core/decimal_input.dart';
-import 'package:personalerp_desktop/theme/oklch.dart';
-import 'package:personalerp_desktop/theme/tokens.dart';
+import 'package:stellarerp_desktop/core/decimal_input.dart';
+import 'package:stellarerp_desktop/theme/oklch.dart';
+import 'package:stellarerp_desktop/theme/tokens.dart';
 
 /// The palette conversion, and the input filter.
 ///

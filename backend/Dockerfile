@@ -1,5 +1,5 @@
 # =============================================================================
-# Personal ERP - backend image
+# Stellar ERP - backend image
 #
 # Multi-stage, with `development` and `production` targets sharing one dependency
 # layer. Compose selects the target; CI builds `production`.
@@ -110,14 +110,14 @@ FROM base AS production
 
 # Runs unprivileged. A container process that does not need root should not have
 # it - this is the cheapest possible mitigation for a container escape.
-RUN groupadd --gid 1001 personalerp \
-    && useradd --uid 1001 --gid personalerp --create-home --shell /bin/bash personalerp
+RUN groupadd --gid 1001 stellarerp \
+    && useradd --uid 1001 --gid stellarerp --create-home --shell /bin/bash stellarerp
 
-COPY --from=deps --chown=personalerp:personalerp /app/.venv /app/.venv
+COPY --from=deps --chown=stellarerp:stellarerp /app/.venv /app/.venv
 
-COPY --chown=personalerp:personalerp app ./app
-COPY --chown=personalerp:personalerp migrations ./migrations
-COPY --chown=personalerp:personalerp alembic.ini pyproject.toml README.md ./
+COPY --chown=stellarerp:stellarerp app ./app
+COPY --chown=stellarerp:stellarerp migrations ./migrations
+COPY --chown=stellarerp:stellarerp alembic.ini pyproject.toml README.md ./
 
 # The operational scripts, not only the application.
 #
@@ -126,12 +126,12 @@ COPY --chown=personalerp:personalerp alembic.ini pyproject.toml README.md ./
 # answers "does the deployed schema still match the models", which is a question about
 # production and can only be asked from inside it. A recovery procedure that exists
 # solely on a developer's laptop is not a recovery procedure.
-COPY --chown=personalerp:personalerp scripts ./scripts
+COPY --chown=stellarerp:stellarerp scripts ./scripts
 
 # logifyx writes here; it must be writable by the unprivileged user.
-RUN mkdir -p /app/logs && chown -R personalerp:personalerp /app/logs
+RUN mkdir -p /app/logs && chown -R stellarerp:stellarerp /app/logs
 
-USER personalerp
+USER stellarerp
 
 EXPOSE 8000
 

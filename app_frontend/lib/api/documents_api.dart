@@ -85,10 +85,12 @@ class DocumentsApi {
   /// explicit `null` clears it. Passing the whole form back would work, but every
   /// untouched field would be recorded as a human correction - and the point of the
   /// record is to say which values a person actually checked.
-  Future<ScannedDocument> correct(String id, Map<String, Object?> fields) async =>
-      ScannedDocument.fromJson(
-        await _client.patch<Json>('/documents/$id/extracted', body: fields),
-      );
+  Future<ScannedDocument> correct(
+    String id,
+    Map<String, Object?> fields,
+  ) async => ScannedDocument.fromJson(
+    await _client.patch<Json>('/documents/$id/extracted', body: fields),
+  );
 
   Future<void> remove(String id) => _client.delete<Json>('/documents/$id');
 

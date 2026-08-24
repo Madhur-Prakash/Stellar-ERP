@@ -249,7 +249,7 @@ class _AuthInterceptor extends Interceptor {
   final ApiClient _client;
 
   /// Marks a request that has already been retried, so a loop is impossible.
-  static const String _retriedKey = 'personalerp_retried';
+  static const String _retriedKey = 'stellarerp_retried';
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {

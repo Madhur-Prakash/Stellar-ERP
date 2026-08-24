@@ -195,7 +195,9 @@ class ApiError implements Exception {
     };
 
     final String detail = _shortText(body);
-    return detail.isEmpty ? '$base (HTTP $status).' : '$base: $detail (HTTP $status).';
+    return detail.isEmpty
+        ? '$base (HTTP $status).'
+        : '$base: $detail (HTTP $status).';
   }
 
   /// A body worth showing: short, present, and neither markup nor JSON.

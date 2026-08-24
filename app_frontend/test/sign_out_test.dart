@@ -3,11 +3,11 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/api/auth_api.dart';
-import 'package:personalerp_desktop/core/api_client.dart';
-import 'package:personalerp_desktop/models/auth.dart';
-import 'package:personalerp_desktop/state/auth_controller.dart';
-import 'package:personalerp_desktop/state/providers.dart';
+import 'package:stellarerp_desktop/api/auth_api.dart';
+import 'package:stellarerp_desktop/core/api_client.dart';
+import 'package:stellarerp_desktop/models/auth.dart';
+import 'package:stellarerp_desktop/state/auth_controller.dart';
+import 'package:stellarerp_desktop/state/providers.dart';
 
 /// Signing out when the server will not answer.
 ///

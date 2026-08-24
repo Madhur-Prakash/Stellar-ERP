@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/theme/app_theme.dart';
-import 'package:personalerp_desktop/widgets/app_button.dart';
-import 'package:personalerp_desktop/widgets/info_tip.dart';
+import 'package:stellarerp_desktop/theme/app_theme.dart';
+import 'package:stellarerp_desktop/widgets/app_button.dart';
+import 'package:stellarerp_desktop/widgets/info_tip.dart';
 
 /// Does pressing things do anything?
 ///

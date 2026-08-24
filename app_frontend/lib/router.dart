@@ -20,6 +20,7 @@ import 'features/organizations/members_screen.dart';
 import 'features/organizations/roles_screen.dart';
 import 'features/sales/sales_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/trust/trust_screen.dart';
 import 'layout/app_shell.dart';
 import 'state/auth_controller.dart';
 
@@ -85,6 +86,9 @@ const Map<String, String> _requiredPermissions = <String, String>{
   '/inventory': 'inventory:read',
   '/documents': 'document:read',
   '/analytics': 'report:read',
+  // Guarded on `seal:read` rather than `journal:read`: seeing that the books are
+  // sealed is a different thing from reading them.
+  '/trust': 'seal:read',
 };
 
 final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
@@ -210,6 +214,7 @@ final Provider<GoRouter> routerProvider = Provider<GoRouter>((Ref ref) {
             path: '/analytics',
             builder: (_, _) => const AnalyticsScreen(),
           ),
+          GoRoute(path: '/trust', builder: (_, _) => const TrustScreen()),
           GoRoute(
             path: '/assistant',
             builder: (_, _) => const StagePlaceholder(

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/core/format.dart';
-import 'package:personalerp_desktop/core/locale_settings.dart';
+import 'package:stellarerp_desktop/core/format.dart';
+import 'package:stellarerp_desktop/core/locale_settings.dart';
 
 /// The money path, which is the one thing in this app that must not be approximately right.
 ///

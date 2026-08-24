@@ -42,8 +42,8 @@ from app.core.logging import get_logger
 
 log = get_logger(__name__)
 
-JWT_ISSUER: Final = "personalerp"
-JWT_AUDIENCE: Final = "personalerp-api"
+JWT_ISSUER: Final = "stellarerp"
+JWT_AUDIENCE: Final = "stellarerp-api"
 
 
 class TokenType(StrEnum):

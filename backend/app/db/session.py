@@ -12,6 +12,7 @@ construction, which matters more in accounting than anywhere else.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from typing import Any
 
 from sqlalchemy.ext.asyncio import (
@@ -71,6 +72,36 @@ async def get_db() -> AsyncGenerator[AsyncSession]:
     """FastAPI dependency yielding a transactional session.
 
     Commits on success, rolls back on any exception, always closes.
+    """
+    session = SessionFactory()
+    try:
+        yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
+        await session.close()
+
+
+@asynccontextmanager
+async def session_scope() -> AsyncGenerator[AsyncSession]:
+    """A transactional session for code that has no request behind it.
+
+    Same policy as :func:`get_db` - commit on success, roll back on any exception,
+    always close - expressed as a context manager instead of a dependency, because
+    a background worker cannot be handed a FastAPI ``Depends``.
+
+    Deliberately a sibling of ``get_db`` rather than a wrapper around it. Wrapping
+    an async generator dependency in ``contextlib`` works right up until the
+    generator's ``finally`` runs on a different task than its ``yield``, and the
+    failure mode is a connection returned to the pool mid-transaction. Two small
+    functions with one shared policy is the cheaper correctness.
+
+    Used by the seal worker, where **one pass is one transaction**: a pass that
+    fails halfway leaves the database exactly as it was, and the chain is
+    unaffected either way because the chain is the authority on what has been
+    sealed.
     """
     session = SessionFactory()
     try:

@@ -31,7 +31,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
   // side-by-side chart panels collapse to one column on first launch, which is not what this
   // UI is designed to look like.
   Win32Window::Size size(1440, 900);
-  if (!window.Create(L"Personal ERP", origin, size)) {
+  if (!window.Create(L"Stellar ERP", origin, size)) {
     return EXIT_FAILURE;
   }
   window.SetQuitOnClose(true);

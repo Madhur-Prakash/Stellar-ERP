@@ -1,7 +1,7 @@
 [project]
-name = "personalerp-backend"
+name = "stellarerp-backend"
 version = "0.1.0"
-description = "Personal ERP - a self-hosted ERP for small businesses"
+description = "Stellar ERP - a self-hosted ERP for small businesses"
 # Pinned to the 3.13 series (see .python-version). An upper bound keeps uv from
 # silently resolving to 3.14+, where parts of this stack are not yet validated.
 requires-python = ">=3.13,<3.14"
@@ -55,6 +55,7 @@ dependencies = [
     "minio>=7.2.20",
     "pytesseract==0.3.13",
     "pypdf==6.14.2",
+    "stellar-sdk>=13.0.0",
 ]
 
 [project.optional-dependencies]
@@ -87,6 +88,16 @@ ocr = [
 # client, and it is imported lazily, so the default path never loads it either way.
 objectstore = [
     "minio>=7.2.20",
+]
+
+# Error tracking. Optional, and off unless SENTRY_DSN is set.
+#
+# Deliberately not a base dependency: this product's pitch is that a business's
+# books stay on its own server, so a mandatory third-party error tracker would
+# contradict the promise on the page that makes it. An operator who wants it opts
+# in; one who does not ships nothing that could phone home.
+monitoring = [
+    "sentry-sdk[fastapi]>=2.20.0",
 ]
 
 [dependency-groups]
@@ -162,6 +173,24 @@ plugins = ["pydantic.mypy"]
 warn_unreachable = true
 disallow_untyped_decorators = false  # FastAPI/SQLAlchemy decorators are untyped
 exclude = ["migrations/", "tests/"]
+
+[[tool.mypy.overrides]]
+# `sentry_sdk` is an optional extra (see `monitoring` above), so on a default
+# install it is genuinely not there. `app.core.monitoring` imports it inside a
+# guarded block and degrades to "not configured", which is the intended
+# behaviour - so the missing import is correct rather than a problem to fix.
+module = ["sentry_sdk.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# `stellar-sdk` re-exports its whole public surface through its package
+# `__init__` without marking each name as a re-export, which `--strict`
+# reads as "private, do not import". Every name this backend uses -
+# `Keypair`, `TransactionBuilder`, `SorobanServerAsync`, `scval` - is the
+# documented public API, so the setting is wrong about this package rather
+# than the imports being wrong.
+module = ["stellar_sdk.*"]
+implicit_reexport = true
 
 [[tool.mypy.overrides]]
 # pytesseract is a thin subprocess wrapper that ships no stubs and never will.

@@ -30,6 +30,14 @@ from app.modules.accounting.models import (
     NumberSequence,
     PeriodStatus,
 )
+from app.modules.attestation.models import (
+    AttestationSetting,
+    Seal,
+    SealCadence,
+    SealLeaf,
+    SealStatus,
+    SealTrigger,
+)
 from app.modules.audit.models import AuditAction, AuditLog, AuditSeverity
 from app.modules.auth.models import LoginMethod, SessionRevocationReason, UserSession
 from app.modules.billing.models import (
@@ -37,6 +45,12 @@ from app.modules.billing.models import (
     CardKind,
     CardNetwork,
     PaymentCard,
+)
+from app.modules.feedback.models import (
+    Feedback,
+    FeedbackKind,
+    FeedbackStatus,
+    UsageEvent,
 )
 from app.modules.ocr.engines import DocumentFormat
 from app.modules.ocr.models import Document, DocumentKind, DocumentStatus
@@ -93,6 +107,7 @@ __all__ = [
     "AccountSubtype",
     "AccountType",
     "AccountingPeriod",
+    "AttestationSetting",
     "AuditAction",
     "AuditLog",
     "AuditSeverity",
@@ -110,6 +125,9 @@ __all__ = [
     "DocumentKind",
     "DocumentStatus",
     "EntryStatus",
+    "Feedback",
+    "FeedbackKind",
+    "FeedbackStatus",
     "FiscalYear",
     "GoodsReceipt",
     "GoodsReceiptLine",
@@ -149,12 +167,18 @@ __all__ = [
     "SalesOrder",
     "SalesOrderLine",
     "SalesOrderStatus",
+    "Seal",
+    "SealCadence",
+    "SealLeaf",
+    "SealStatus",
+    "SealTrigger",
     "SessionRevocationReason",
     "StockLevel",
     "StockMovement",
     "Supplier",
     "SupplierPayment",
     "SupplierPaymentAllocation",
+    "UsageEvent",
     "User",
     "UserSession",
     "Warehouse",
