@@ -9,7 +9,7 @@
 ![Migrations](https://img.shields.io/badge/Alembic-reversible-8957E5?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · **Database** · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · **Database** · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -216,6 +216,12 @@ Beyond the primary keys and unique constraints:
 | `ix_audit_log_org_created` | The audit viewer's default query |
 | `ix_audit_log_actor_created` | "What did this person do?" |
 | `ix_audit_log_resource` | "What happened to this record?" |
+| `ix_seal_leaf_unsealed` partial `WHERE seal_id IS NULL` | The seal worker's only hot query: what still needs sealing |
+| `uq_seal_leaf_org_seq` | A journal entry occupies exactly one position in the Merkle sequence |
+| `uq_seal_org_seq_live` partial `WHERE status <> 'failed'` | One live seal per sequence number |
+| `uq_seal_org_last_leaf` partial `WHERE status <> 'failed'` | One live seal per leaf range |
+| `uq_attestation_setting_organization_id` | One attestation configuration per organization |
+| `ix_usage_event_org_created` | Analytics rollups, which are always time-bounded |
 
 **Partial indexes are doing real work here.** `uq_member_single_owner` is the
 clearest example: a plain unique index on `organization_id` would allow only one
@@ -226,6 +232,17 @@ test asserts a second owner insert raises `IntegrityError`.
 
 The same technique gives `uq_invitation_pending_email` its meaning: an address can
 have many *historical* invitations but only one *pending* one.
+
+`uq_seal_org_last_leaf` was **unconditional at first, and that was a defect.** A seal
+whose submission failed still held its leaf range, so the replacement seal - which
+must cover exactly the same entries - could never be inserted. One network timeout
+stopped that organization from ever sealing again. The `WHERE status <> 'failed'`
+predicate says what was actually intended: a range may be claimed once
+*successfully*, and any number of times unsuccessfully. `uq_seal_org_seq_live` is
+partial for the same reason, and the test that found it is
+`test_a_failed_seal_lets_its_sequence_be_reused`. See
+[Proof ledger](attestation.md) for why a gap in that sequence is not a recoverable
+inconvenience but indistinguishable from evidence of tampering.
 
 ---
 
@@ -349,6 +366,7 @@ volume to remember, which is the whole reason that storage decision was made.
 - [Accounting](accounting.md) - why the ledger tables are shaped the way they are
 - [Architecture](architecture.md) - where persistence sits in the layering
 - [Deployment](deployment.md) - backups, restores, and running migrations on a server
+- [Proof ledger](attestation.md) - the three tables behind the seals, and why two of their indexes are partial
 
 [All documentation](README.md)
 <!-- related:end -->

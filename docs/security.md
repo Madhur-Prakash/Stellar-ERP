@@ -10,7 +10,7 @@
 ![Audit](https://img.shields.io/badge/audit_trail-append--only-8957E5?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · **Security** · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · **Security** · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -62,7 +62,9 @@ and why each one is there.
 | [Authorization](#authorization) | Permissions in code, staleness bounds, tenant isolation, lockout prevention |
 | [Input handling](#input-handling) | Validation boundaries and mass-assignment defence |
 | [Document storage](#document-storage) | Attacker-controlled paths, tenant predicates, byte-exact round trips |
-| [Secrets and logging](#secrets-and-logging) | Redaction, card numbers and PCI DSS scope, encrypted bank details |
+| [Secrets and logging](#secrets-and-logging) | Redaction, card numbers and PCI DSS scope, encrypted bank details, the sealing key |
+| [The public verifier](#the-public-verifier) | The one unauthenticated router, and why it is safe to be one |
+| [Error reporting](#error-reporting) | What may leave this machine when something crashes |
 | [Rate limiting](#rate-limiting) | Both layers, and why both fail open |
 | [Transport and headers](#transport-and-headers) | What this application sets, and what it cannot |
 | [OWASP Top 10](#owasp-top-10-2021) | The mapping |
@@ -429,10 +431,10 @@ audit it as `critical`. Both parties must re-authenticate.
 
 Two mechanisms, because they answer different questions:
 
-- **Epoch counter** (`personalerp:auth:epoch:<user_id>`) - every token carries the
+- **Epoch counter** (`stellarerp:auth:epoch:<user_id>`) - every token carries the
   user's epoch; incrementing it invalidates all of them at once. Used for password
   change, sign-out-everywhere, role change, suspension, and removal.
-- **Per-session marker** (`personalerp:auth:revoked-sid:<session_id>`) - revokes one
+- **Per-session marker** (`stellarerp:auth:revoked-sid:<session_id>`) - revokes one
   device without signing the user out everywhere.
 
 Both are checked in a single pipelined Redis round trip. Entries only need to
@@ -482,6 +484,31 @@ access is structurally impossible rather than merely checked.
 Defence in depth on top of that: `RoleRepository.get_scoped` puts the tenant
 filter *in the query* rather than checking after the fetch, so a cross-tenant id
 returns no row instead of relying on a caller's `if`.
+
+### The four proof-ledger permissions
+
+`seal:read`, `seal:write`, `seal:configure` and `proof:export` are separate because
+they are four different powers, and one of the splits is the interesting one:
+
+| Permission | Power | Seeded roles that hold it |
+| --- | --- | --- |
+| `seal:read` | See the sealing status and history | owner, admin, accountant, sales, viewer |
+| `seal:write` | Trigger a seal, drain, reconcile | owner, admin, accountant |
+| `proof:export` | Hand a proof bundle to an outsider | owner, admin, accountant |
+| `seal:configure` | Enable, disable, change cadence, rotate the signer | owner, admin |
+
+**The accountant deliberately cannot `seal:configure`.** Somebody who keeps the books
+should be able to prove them and unable to stop proving them - the ability to switch
+attestation off is the ability to work unobserved, so it sits with the people who
+answer for the organization rather than the people who write in it.
+
+`proof:export` is separate from `seal:read` for the same reason a report and a
+signature are different acts: reading that a batch was sealed is internal, and handing
+a counterparty a document that discloses one journal entry in full is disclosure.
+
+Note what none of them can do: **there is no permission that unseals anything.** No
+role, including owner, and no superuser. `disable` stops future seals; written seals
+stay written, because the contract has no update path and no administrative override.
 
 ### Lockout prevention
 
@@ -656,6 +683,84 @@ The protections that apply to the stored number:
 - **It is never logged.** The account-creation log line carries the bank name and the last
   four digits only.
 - Both clients set `autoComplete="off"` on the field, for the same reason the card field does.
+
+### The sealing key - encrypted, and the honest limitation
+
+Each organization gets its own Stellar account, and its secret is Fernet-encrypted
+with the same key material as `app_user.totp_secret`. Per-organization rather than one
+shared signer, for two reasons: one compromised key exposes one book, and each
+organization's account supplies its own transaction sequence numbers, so two
+organizations sealing at the same instant cannot collide.
+
+**What that key can do is worth stating plainly, because the whole subsystem's value
+depends on it.** It cannot rewrite a written seal - nothing can. What a holder of the
+key *can* do is seal a doctored batch as though it were the original, which is
+tampering *before* the seal rather than after it. Three things bound that:
+
+- **Cadence.** Daily sealing leaves a one-day window, not a one-year one. Costing
+  fractions of a cent per seal is what makes daily affordable, and affordability is
+  what makes the window small.
+- **The chain.** Seals form a hash chain the network timestamps, so a rewrite of any
+  period requires re-sealing every period after it, publicly, at a time the network
+  records.
+- **`POST /attestation/signer/rotate`.** Moves the book onto a 2-of-3 multisig held
+  with the business's accountant, after which no single machine - this one included -
+  can seal alone. That is the honest end state, and it is a Stellar protocol
+  primitive rather than a contract we would have to write and then audit forever.
+
+The Trust screen says this rather than implying more. A trust product that overstates
+what it proves is worse than one that proves nothing.
+
+---
+
+## The public verifier
+
+`/api/v1/verify/*` is the **only unauthenticated router in the application**, and that
+is a deliberate hole in an otherwise closed wall. It exists because the reader of a
+proof is a bank's credit officer or an auditor, and requiring them to hold an account
+here would defeat the design.
+
+What makes it safe is not a check - it is that there is nothing behind it:
+
+| | |
+| --- | --- |
+| **Issues a query?** | No. Neither handler touches the session it is handed; every response is computed from the caller's own bundle or read from the public Stellar ledger. A test counts the SQL statements and asserts zero |
+| **Accepts an identifier that resolves to a tenant?** | No. A namespace is `SHA-256(organization_id ‖ install_salt)` - 32 opaque bytes, unlinkable to a named business until the business discloses it |
+| **Can it confirm a guess?** | No. Guessing a namespace requires guessing the install salt, which is 32 random bytes and never leaves the server |
+| **Rate limited?** | Separately, at `RATE_LIMIT_PUBLIC_VERIFY` (default 60/min per IP), because it is unauthenticated and Merkle folding is CPU work |
+| **Body size** | Bounded by the global request-size limit; a bundle is a few kilobytes |
+
+The salt is why the same organization sealing on two installs produces two unrelated
+namespaces, and why an observer watching the contract sees traffic they cannot
+attribute.
+
+**And the endpoint is a convenience, not the verifier.** The real check runs in the
+reader's browser against an RPC endpoint they can change on screen - a verdict issued
+by the party being audited is not a verdict. See
+[Proof ledger](attestation.md#the-encoding-exists-twice-on-purpose).
+
+---
+
+## Error reporting
+
+Error tracking is **off unless `SENTRY_DSN` is set**, and when it is on, what may leave
+this machine is filtered rather than trusted:
+
+- **Request bodies are dropped entirely.** A `ValidationError` on an invoice carries
+  the invoice - the customer, the amounts, the GSTIN. There is no subset of that safe
+  to send to a third party, so none of it is sent.
+- **SQL parameters are dropped.** A query's *shape* is useful for debugging; its
+  bound values are the row.
+- **Remaining values are scrubbed recursively** against a key blocklist, with a depth
+  limit, and the scrubber **fails closed** - a structure it cannot walk is replaced
+  rather than passed through.
+- **Nothing is sent when the DSN is absent**, and the boot log says so explicitly, so
+  a self-hosted deployment can confirm it rather than assume it.
+
+Usage analytics stay in your own PostgreSQL and have **no free-text payload column**:
+actions come from a closed vocabulary and context keys from an allow-list. An events
+table with an open payload is how analytics ends up holding customer names and inside
+the compliance boundary.
 
 ---
 
@@ -877,6 +982,7 @@ Stated plainly rather than left implied:
 - [Audit](security-audit.md) - the review that produced several of these controls
 - [API](api.md) - the surface they protect
 - [Deployment](deployment.md) - the ones that only exist once it is on a server
+- [Proof ledger](attestation.md) - what the sealing key can and cannot do, stated plainly
 
 [All documentation](README.md)
 <!-- related:end -->

@@ -11,7 +11,7 @@
 ![Info](https://img.shields.io/badge/info-1_action_required-8957E5?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · **Audit** · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · **Audit** · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -24,10 +24,17 @@ Every finding below was verified against the code, not inferred from a pattern.
 - **Scope**: `backend/app/**`, `backend/Dockerfile`, `docker-compose.prod.yml`,
   `frontend/nginx.conf`, the edge proxy configuration as it stood at the time,
   `.env` / `.env.sample`, `tests/conftest.py`.
-- **Read this alongside the two supersession notes.** Findings 3 and 5 have since changed:
+- **Read this alongside its supersession notes.** Findings 3 and 5 have since changed -
   the gateway check was removed, and the nginx/certbot edge was removed from the production
-  stack entirely. Each says so where it sits, and [security.md](security.md) is the current
-  statement of the control set.
+  stack entirely - and two items under
+  [what this does not solve](#what-this-does-not-solve) have since been closed. Each says
+  so where it sits, and [security.md](security.md) is the current statement of the control
+  set.
+- **This report predates the third ledger.** Its scope was the ERP as it stood; the
+  attestation module, the public verifier and the sealing key came later, so nothing below
+  covers them. What they add to the exposure surface - and what they honestly do not
+  solve - is stated in [what this does not solve](#what-this-does-not-solve) and in
+  [Proof ledger](attestation.md).
 - **Method**: route-table introspection for authorization coverage, source review of
   every `app/core` module and the auth module, dependency-source review where behaviour
   mattered (uvicorn's proxy-header handling, slowapi's storage backend), 145 new tests,
@@ -35,7 +42,10 @@ Every finding below was verified against the code, not inferred from a pattern.
   backend that echoes what it receives.
 - **Route coverage measured**: 196 API routes. 177 require authentication. The 19 that
   do not are listed in [Authorization coverage](#authorization-coverage) and every one is
-  a deliberate pre-auth endpoint.
+  a deliberate pre-auth endpoint. The count has since grown, and so has the pre-auth set:
+  `POST /feedback` is open on purpose, and so are the four `/verify/*` routes. Both are
+  argued for where they live - see
+  [the public verifier](security.md#the-public-verifier).
 
 ---
 
@@ -69,7 +79,7 @@ Two findings need you rather than code: **#16**, and reading
 
 **`tests/conftest.py`, `app/core/config.py`**
 
-`conftest.py` isolated itself by setting `POSTGRES_DB=personalerp_test` and
+`conftest.py` isolated itself by setting `POSTGRES_DB=stellarerp_test` and
 `REDIS_DB=15`. Both were silently ignored, because `sqlalchemy_dsn` and `redis_dsn`
 prefer a full URL over the composed parts:
 
@@ -83,11 +93,11 @@ def sqlalchemy_dsn(self) -> str:
 The repository's own `.env` sets both:
 
 ```
-DATABASE_URL=postgresql://personalerp:<password>@dpg-d9piqie1egvs73ffrgj0-a/personalerp
+DATABASE_URL=postgresql://stellarerp:<password>@dpg-d9piqie1egvs73ffrgj0-a/stellarerp
 REDIS_URL=redis://red-d8bu4ke7r5hc738u2fq0:6379
 ```
 
-Those are remote managed-database hostnames, not local ones. So `POSTGRES_DB=personalerp_test`
+Those are remote managed-database hostnames, not local ones. So `POSTGRES_DB=stellarerp_test`
 had no effect, and the session fixture ran:
 
 ```python
@@ -114,7 +124,7 @@ with `getaddrinfo failed` rather than succeeding against a live database.
 3. `_create_test_database` asserts the same thing at the line that does the dropping.
 
 ```
-ValueError: Refusing to run tests against database 'personalerp': the test suite
+ValueError: Refusing to run tests against database 'stellarerp': the test suite
 drops every table, so the name must end in '_test'.
 ```
 
@@ -642,19 +652,55 @@ that does not.
   application at all - its own limiter runs only after the request has already reached
   Python. Absorbing a real flood needs the platform router, a CDN, or whatever you put in
   front.
-- **Frontend source maps are now served.** `vite.config.ts` still sets `sourcemap: true`
-  with the comment "not served publicly", and that used to be true: the frontend's own edge
-  configuration returned 404 for `*.map`. That configuration was deleted when the edge was
-  removed, and **nothing replaced the rule** - so wherever `dist/` is served from, the maps
-  beside it are fetchable, and `dist/assets` holds seven of them today. They expose original
-  sources, not secrets, and the intent recorded in `vite.config.ts` is to upload them to an
-  error tracker rather than ship them. Either restore the 404 at whatever now serves the
-  bundle, or set `sourcemap: false` for production builds.
-- **Twenty pre-existing test failures are unrelated to this work**, and were confirmed on
-  a clean tree: 19 OCR tests fail because the optional `ocr` extra (`pypdf`) is not
-  installed in this virtualenv, and
-  `test_password_policy.py::test_rejects_password_containing_name` fails on `main` too.
-  Neither was touched here.
+- ~~**Frontend source maps are now served.**~~ **Fixed since this report.**
+  `vite.config.ts` set `sourcemap: true` with the comment "not served publicly", which was
+  true only because the frontend's own edge configuration returned 404 for `*.map`. That
+  configuration was deleted with the edge and nothing replaced the rule, so the maps beside
+  `dist/assets` became fetchable.
+
+  It is now closed in two places, deliberately, because the comment was load-bearing once
+  and turned out not to be: the build uses `sourcemap: 'hidden'`, which emits the maps
+  without the `//# sourceMappingURL` comment so no browser asks for them and an error
+  tracker can still be given them at release time; and the production image runs
+  `find … -name '*.map' -delete` after copying `dist/`, so nothing is there to fetch. A
+  fix that depends on one configuration file staying deleted is the fix that produced this
+  finding.
+- ~~**Twenty pre-existing test failures are unrelated to this work.**~~ **Cleared since
+  this report.** At the time, 19 OCR tests failed because the optional `ocr` extra
+  (`pypdf`) was not installed in that virtualenv, and
+  `test_password_policy.py::test_rejects_password_containing_name` failed on `main` too -
+  its password shared no substring with the name it was meant to be rejected for
+  containing, so the assertion could never have held. Both are fixed; the suite runs
+  clean.
+
+### Added by the third ledger
+
+The proof ledger arrived after this report, so its limits are stated here rather than
+implied by silence. All three are also on the Trust screen, in the product, because a
+trust feature that overstates itself is worse than none.
+
+- **A server-held signing key means the operator can doctor the books *before* sealing.**
+  What a seal proves is that nothing changed *after* it - which is the claim that matters,
+  because retroactive editing is how accounts are actually cooked, but it is not the same
+  as "these figures are true". Three things bound it: daily cadence (a one-day window,
+  affordable only because Stellar charges fractions of a cent), the hash chain the network
+  timestamps (rewriting one period means publicly re-sealing every period after it), and
+  `POST /attestation/signer/rotate`, which moves the book onto a 2-of-3 multisig with the
+  business's accountant so no single machine can seal alone.
+- **A seal proves inclusion, not completeness.** It says the entries in the batch are
+  unchanged. It does not say the batch was everything - an entry never written to the
+  journal was never sealed and leaves no gap. Control totals and the sealed entry count
+  make wholesale omission visible over time; they do not make one missing invoice visible.
+- **Losing `ATTESTATION_NAMESPACE_SALT` orphans every book.** An organization's on-chain
+  identity is `SHA-256(organization_id ‖ salt)`, and the mapping is deliberately
+  unrecoverable from the chain. The seals survive under a namespace nothing can compute,
+  and every proof already handed to a counterparty stops resolving. It belongs with
+  `ENCRYPTION_KEY` in whatever holds the deployment's secrets - see the
+  [pre-flight checklist](deployment.md#8-pre-flight-checklist).
+
+The one thing it deliberately does *not* add to the exposure surface is business data:
+nothing personal, no amount attached to a party, no name, and no document is written on
+chain, so there is nothing there a data-erasure request would need to reach.
 
 ---
 

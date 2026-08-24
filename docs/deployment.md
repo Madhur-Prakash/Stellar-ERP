@@ -9,7 +9,7 @@
 ![Self-hosted](https://img.shields.io/badge/self--hosted-your_server-6E7681?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · **Deployment**
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · **Deployment**
 <!-- nav:end -->
 
 </div>
@@ -74,8 +74,8 @@ sudo apt install -y unattended-upgrades && sudo dpkg-reconfigure -plow unattende
 ## 2. Configure
 
 ```bash
-sudo mkdir -p /srv/personalerp && sudo chown "$USER" /srv/personalerp
-git clone <repo> /srv/personalerp && cd /srv/personalerp
+sudo mkdir -p /srv/stellarerp && sudo chown "$USER" /srv/stellarerp
+git clone <repo> /srv/stellarerp && cd /srv/stellarerp
 cp .env.sample .env
 ```
 
@@ -117,8 +117,73 @@ FRONTEND_PORT=8080
 # `uv run python scripts/mint_gmail_token.py`, and keep it in a secret store.
 GMAIL_CREDENTIALS_B64=<output of scripts/mint_gmail_token.py>
 GMAIL_SENDER=no-reply@yourdomain.com
-EMAIL_FROM_NAME=Personal ERP
+EMAIL_FROM_NAME=Stellar ERP
 ```
+
+### The proof ledger
+
+Optional, and **off by default** in the sense that `ATTESTATION_ENABLED=false`
+removes the subsystem entirely - no worker, no chain calls, no Trust screen. Nothing
+else in the deployment depends on it.
+
+```env
+ATTESTATION_ENABLED=true
+STELLAR_NETWORK=testnet          # or: public
+SOROBAN_CONTRACT_ID=<your deployment, or the published testnet one>
+SOROBAN_RPC_URL=                 # blank uses the network's default public RPC
+
+# The namespace salt. 32 random bytes, generated once, then NEVER CHANGED.
+ATTESTATION_NAMESPACE_SALT=<openssl rand -hex 32>
+
+SEAL_WORKER_ENABLED=true
+SEAL_WORKER_INTERVAL_SECONDS=60  # how often it looks for work
+SEAL_DAILY_HOUR=1                # local hour the daily cadence fires
+SEAL_MAX_BATCH=5000              # entries per seal
+
+RATE_LIMIT_PUBLIC_VERIFY=60/minute
+
+# Baked into the frontend bundle at build time, so the browser can read the
+# contract itself. They must match the three values above.
+VITE_STELLAR_NETWORK=testnet
+VITE_SOROBAN_CONTRACT_ID=<same id>
+VITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
+```
+
+> **`ATTESTATION_NAMESPACE_SALT` is a one-way door.** An organization's on-chain
+> identity is `SHA-256(organization_id ‖ salt)`. Change the salt and every existing
+> book becomes unreachable - the contract still holds the seals, under a namespace
+> nothing can now compute, and every proof already handed to a bank stops resolving.
+> There is no migration, because the point of the salt is that the mapping cannot be
+> recovered from the chain. **Generate it once, back it up with `ENCRYPTION_KEY`, and
+> treat losing it as losing the seals.**
+
+> **Leave it on testnet until you have watched it seal.** On mainnet, `POST
+> /attestation/enable` funds a real account with real XLM, and the address it creates
+> is where that organization's book lives permanently.
+
+Deploying your own contract is four commands, and reproducible:
+
+```bash
+make contract-test && make contract-build   # the wasm hash is deterministic
+make contract-key                           # testnet only; fund your own on mainnet
+make contract-deploy                        # prints the id
+make contract-deploy STELLAR_NETWORK=public STELLAR_IDENTITY=my-mainnet-key
+```
+
+### Monitoring
+
+```env
+SENTRY_DSN=                      # blank = nothing leaves this machine
+SENTRY_TRACES_SAMPLE_RATE=0.1
+SENTRY_PROFILES_SAMPLE_RATE=0.0
+VITE_SENTRY_DSN=
+USAGE_ANALYTICS_ENABLED=true     # first-party, stays in your PostgreSQL
+```
+
+Error reports carry **no request bodies and no SQL parameters** - see
+[Error reporting](security.md#error-reporting) for what is stripped and why. With the
+DSN blank, the boot log says so explicitly, so a self-hosted operator can confirm
+nothing is being sent rather than assume it.
 
 ```bash
 chmod 600 .env
@@ -210,11 +275,11 @@ app.yourdomain.com {
 commands above, so there is no third behaviour to learn.
 
 **The two stacks cannot collide.** Each compose file pins its own project name -
-`personalerp` and `personalerp-prod` - so containers, networks and volumes are namespaced
+`stellarerp` and `stellarerp-prod` - so containers, networks and volumes are namespaced
 separately. Two consequences worth knowing before they surprise you:
 
-- **They do not share a database.** `personalerp_postgres-data` and
-  `personalerp-prod_postgres-data` are different volumes. Bringing up the production
+- **They do not share a database.** `stellarerp_postgres-data` and
+  `stellarerp-prod_postgres-data` are different volumes. Bringing up the production
   stack on a machine where you have been developing gives you an **empty** database, not
   your development data.
 - **Both can run at once**, and will fight over host ports if you let them. Development
@@ -252,10 +317,10 @@ which is that container's `/backups` mount. There is no script tree to keep in s
 with the compose file and nothing extra to install on the server.
 
 ```bash
-make backup      # -> backups/personalerp-20260807T020000Z.dump
+make backup      # -> backups/stellarerp-20260807T020000Z.dump
 
 # Nightly at 02:00
-(crontab -l 2>/dev/null; echo "0 2 * * * cd /srv/personalerp && make backup >> logs/backup.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "0 2 * * * cd /srv/stellarerp && make backup >> logs/backup.log 2>&1") | crontab -
 ```
 
 Two details that matter more than they look:
@@ -271,7 +336,7 @@ plain dump is all or nothing.
 Restoring:
 
 ```bash
-make restore f=backups/personalerp-20260807T020000Z.dump
+make restore f=backups/stellarerp-20260807T020000Z.dump
 ```
 
 It requires typing the database name to confirm, stops the API first, restores
@@ -282,12 +347,24 @@ starts the API again.
 not survive the failure it exists for:
 
 ```bash
-0 3 * * * rclone sync /srv/personalerp/backups remote:personalerp-backups
+0 3 * * * rclone sync /srv/stellarerp/backups remote:stellarerp-backups
 ```
 
 Uploaded documents are compressed **into PostgreSQL**, so one dump captures the
 ledger and the scans supporting it at a single consistent moment. There is no second
 volume to remember.
+
+**What a dump does not contain, if the proof ledger is on.** Two values live only in
+`.env`, and losing either is unrecoverable in a way a database restore cannot fix:
+
+| | Losing it means |
+| --- | --- |
+| `ENCRYPTION_KEY` | Every 2FA secret, bank account number, and **signer secret** in the dump is ciphertext nobody can read. The organization can no longer seal |
+| `ATTESTATION_NAMESPACE_SALT` | Every book on chain sits under a namespace nothing can recompute. The seals are still there and permanently unreachable, and every proof already given to a bank stops resolving |
+
+Back both up with the dumps and separately from the server. The seals themselves need
+no backup - they are on a public ledger - which is the one part of this system a disk
+failure cannot touch.
 
 ---
 
@@ -301,7 +378,7 @@ moment it diverged.
 ### Self-hosted
 
 ```bash
-cd /srv/personalerp
+cd /srv/stellarerp
 make backup                                                   # always first
 git pull --ff-only
 docker compose -f docker-compose.prod.yml build
@@ -354,8 +431,8 @@ files in `./logs`.
 
 ```bash
 docker compose -f docker-compose.prod.yml logs -f --tail=100 backend
-tail -f logs/personalerp.log | jq 'select(.levelname == "ERROR")'
-tail -f logs/personalerp.log | jq 'select(.request_id == "01930f4c-...")'   # one request
+tail -f logs/stellarerp.log | jq 'select(.levelname == "ERROR")'
+tail -f logs/stellarerp.log | jq 'select(.request_id == "01930f4c-...")'   # one request
 ```
 
 Every line carries `request_id`, and authenticated lines carry `user_id` and
@@ -426,6 +503,29 @@ the assertion (`timedatectl status`).
 **"Session is no longer valid" immediately after signing in** - the token epoch
 was bumped, or the client and server clocks disagree. Check `timedatectl`.
 
+**Sealing has silently stopped** - the figure to watch is `days_unsealed` on
+`GET /attestation/status`, not the seal count. A count that has stopped rising looks
+identical to sealing that is simply quiet, and the Trust screen leads with the age of
+the backlog for exactly that reason. When it climbs:
+
+```bash
+curl -fsS http://127.0.0.1:8000/api/v1/attestation/chain/health   # is the RPC reachable?
+docker compose -f docker-compose.prod.yml logs backend | grep -i seal
+```
+
+`chain/health` is deliberately **not** part of `/health/ready` - an unreachable RPC
+must never make this deployment look unhealthy and get its containers killed.
+
+**Seals stuck in `submitted`** - a submission left the process and no verdict came
+back, which is the one genuinely ambiguous failure here. Do **not** resubmit by hand.
+`POST /attestation/reconcile` reads `latest()` from the contract and corrects local
+state from it; the chain is the authority, and the contract refuses a duplicate
+sequence anyway. See
+[the ambiguous failure](attestation.md#the-ambiguous-failure).
+
+**`SequenceOutOfOrder` in the logs** - on a retry this is **success in disguise**: a
+previous attempt landed. Reconcile rather than investigate.
+
 ### Scaling
 
 The API process is stateless and holds no session state, so replicas need no
@@ -456,6 +556,19 @@ assets from a CDN.
 - [ ] `/docs` returns 404 in production
 - [ ] First owner account created
 
+**The proof ledger, if `ATTESTATION_ENABLED=true`**
+
+- [ ] `ATTESTATION_NAMESPACE_SALT` generated **once**, and backed up with
+      `ENCRYPTION_KEY` - changing it orphans every seal already written
+- [ ] `SOROBAN_CONTRACT_ID` matches `VITE_SOROBAN_CONTRACT_ID`, and
+      `STELLAR_NETWORK` matches `VITE_STELLAR_NETWORK`
+- [ ] `GET /attestation/chain/health` reports the RPC reachable
+- [ ] One seal written end to end, and its transaction found on the explorer
+- [ ] A proof bundle exported and verified at `/verify` **from a different browser,
+      signed out** - that is the only path that proves the verifier needs nothing
+      from you
+- [ ] `days_unsealed` monitored, not the seal count
+
 **The edge you supplied**
 
 - [ ] TLS certificate issued and renewing; HTTP redirects to HTTPS
@@ -484,6 +597,7 @@ The restore rehearsal is the one people skip, and it is the one that matters.
 - [Security](security.md) - what to verify is switched on before opening a port
 - [Database](database.md) - backup and restore mechanics in detail
 - [Development](development.md) - the local stack this mirrors
+- [Proof ledger](attestation.md) - what sealing needs from a deployment, and what to watch once it is on
 
 [All documentation](README.md)
 <!-- related:end -->

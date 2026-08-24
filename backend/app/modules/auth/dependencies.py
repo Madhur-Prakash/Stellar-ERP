@@ -61,7 +61,7 @@ log = get_logger(__name__)
 bearer_scheme = HTTPBearer(auto_error=False, description="Access token")
 
 #: Name of the refresh-token cookie. HttpOnly, so JavaScript cannot read it.
-REFRESH_COOKIE_NAME = "personalerp_refresh"
+REFRESH_COOKIE_NAME = "stellarerp_refresh"
 
 
 # =============================================================================

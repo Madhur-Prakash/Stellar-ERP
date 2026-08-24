@@ -5,7 +5,7 @@
 **Local setup, the conventions that are not style preferences, testing, and the gotchas.**
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · **Development** · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · **Development** · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -14,7 +14,8 @@
 
 ## Setup
 
-Requires Docker, [uv](https://docs.astral.sh/uv/), and Node 22.
+Requires Docker, [uv](https://docs.astral.sh/uv/), and Node 24 - the version CI and
+the frontend image both use.
 
 ```bash
 make setup     # .env, dependencies, services, migrations
@@ -38,6 +39,41 @@ REDIS_HOST=localhost
 ```
 
 `make help` lists every task.
+
+### Working on the contract
+
+Only needed if you are changing Rust. The application runs against an already-deployed
+contract, so a full `make setup` needs neither Rust nor the Stellar CLI.
+
+Requires Rust (the version is pinned in
+[`contracts/rust-toolchain.toml`](../contracts/rust-toolchain.toml)) and the
+[Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools).
+
+```bash
+make contract-test      # 28 adversarial tests, native, no network
+make contract-lint      # clippy -D warnings, plus a format check
+make contract-build     # wasm32v1-none, ~15 KB
+make contract-key       # generate and fund a testnet deployer
+make contract-deploy    # prints the id for SOROBAN_CONTRACT_ID
+```
+
+**The toolchain is pinned, and that is not tidiness.** A Soroban deployment is
+addressed by the hash of its wasm. "Builds with whatever rustc is installed" means the
+published hash cannot be reproduced, and a reviewer cannot confirm that the code they
+read is the code that is running. `make contract-build` on this source must produce
+`2324b519f8a205a8cae31e1b8ebf3944be1bc5d1d6ec7028cdea3829f5e79246`.
+
+### Running the seal worker
+
+In `make up` and `make dev-api` the worker runs inside the API process as a lifespan
+task, governed by `SEAL_WORKER_ENABLED`. To watch it on its own:
+
+```bash
+make seal-worker
+```
+
+Useful when the interesting question is *why nothing sealed*, because the worker's
+decisions are then the only thing in the log.
 
 ---
 
@@ -178,7 +214,7 @@ variable in whatever hosts the backend.
 ```env
 GMAIL_CREDENTIALS_B64=<the base64 line>
 GMAIL_SENDER=you@yourdomain.com
-EMAIL_FROM_NAME=Personal ERP
+EMAIL_FROM_NAME=Stellar ERP
 ```
 
 **Restart the backend.** Settings are read once at import, so a running server keeps using
@@ -326,6 +362,21 @@ so leakage would make tests order-dependent.
 Argon2 is dialled to its minimum in tests. At production parameters, hashing
 dominates the runtime of an auth-heavy suite.
 
+### The frontend and the contract have their own suites
+
+```bash
+cd frontend && npm test          # Vitest - 42 tests, all of them the canonical encoding
+make contract-test               # Rust - 28 tests, all of them adversarial
+```
+
+**`frontend/src/features/trust/canonical.test.ts` is the one to know about.** It pins
+the TypeScript encoding against a golden vector asserted in Python by
+`backend/tests/test_attestation_canonical.py`. The two implementations exist
+separately on purpose - a verifier who called our server for a verdict has gained
+nothing - and this test is the only thing stopping them drifting. **If it fails, do
+not update the golden vector.** A changed vector means every proof already handed to a
+counterparty now reads as tampering. Change the encoding version instead.
+
 ### What to test
 
 The suite is weighted toward places where a bug is expensive:
@@ -336,6 +387,8 @@ The suite is weighted toward places where a bug is expensive:
 - owner-lockout prevention
 - secret redaction in the audit trail
 - account-enumeration resistance, including timing
+- the proof ledger's ambiguous failure - a submission that lands *and* times out,
+  which is why it is tested against a fake chain rather than testnet
 
 Use `example.com` for test emails. `email-validator` rejects special-use TLDs like
 `.test` and `.local` - correct behaviour for production, and it means those
@@ -363,7 +416,7 @@ nothing on their own. A red backend merges unless you catch it here.
 by it:
 
 ```bash
-tail -f logs/personalerp.log | jq 'select(.request_id == "<id>")'
+tail -f logs/stellarerp.log | jq 'select(.request_id == "<id>")'
 ```
 
 Audit rows store the same id, so a business event pivots to its log lines.
@@ -375,14 +428,14 @@ Audit rows store the same id, so a business event pivots to its log lines.
 ```bash
 make psql
 make redis-cli
-docker exec personalerp-redis redis-cli -n 0 KEYS 'personalerp:*'
+docker exec stellarerp-redis redis-cli -n 0 KEYS 'stellarerp:*'
 ```
 
 **A user seems stuck signed out.** Check their token epoch - anything that bumps
 it invalidates outstanding tokens:
 
 ```bash
-docker exec personalerp-redis redis-cli GET "personalerp:auth:epoch:<user_id>"
+docker exec stellarerp-redis redis-cli GET "stellarerp:auth:epoch:<user_id>"
 ```
 
 ---
@@ -416,6 +469,16 @@ Recorded because each cost real time:
 - **Vite's object-form `manualChunks` matches exact specifiers only.** It will not
   capture `react/jsx-runtime`, producing an empty chunk while React stays in the
   main bundle. Use the function form.
+- **`manualChunks` overrides dynamic-import splitting.** The Stellar SDK is
+  `await import`-ed precisely so the billing screen never pays for it, and a
+  `vendor` rule matching it pulled all ~940 kB back into the eager bundle -
+  silently, because the build still succeeded. It needs its own chunk entry.
+- **RFC 6962 inclusion proofs are innermost-first.** Emitting siblings
+  outermost-first verifies correctly for n ≤ 2 and fails for every larger tree.
+  Getting that order wrong is the single easiest way to make this subsystem accuse
+  an honest business of fraud, which is why `merkle.py` builds top-down and
+  reverses, and why the test checks against an independently written reference for
+  n = 1..69 at every index.
 
 <!-- related:start -->
 
@@ -426,6 +489,7 @@ Recorded because each cost real time:
 - [Architecture](architecture.md) - the layering the conventions exist to protect
 - [Database](database.md) - migrations, and how tests get an isolated schema
 - [API](api.md) - the contract a new endpoint has to fit
+- [Proof ledger](attestation.md) - the contract workflow, and the one test you must never "fix" by updating its expected value
 
 [All documentation](README.md)
 <!-- related:end -->

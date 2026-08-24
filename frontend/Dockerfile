@@ -1,5 +1,5 @@
 # =============================================================================
-# Personal ERP - frontend image
+# Stellar ERP - frontend image
 #
 # `development` runs the Vite dev server. `production` builds static assets and
 # serves them from Nginx: the built output is plain files, so there is no reason
@@ -39,11 +39,28 @@ COPY . .
 # present now - supplying them at container start would have no effect.
 ARG VITE_API_BASE_URL=http://localhost:8000
 ARG VITE_API_V1_PREFIX=/api/v1
-ARG VITE_APP_NAME="Personal ERP"
+ARG VITE_APP_NAME="Stellar ERP"
+
+# The chain the browser reads. These must match the backend's STELLAR_NETWORK,
+# SOROBAN_CONTRACT_ID and SOROBAN_RPC_URL. The verifier's whole claim is that it
+# checks the contract *without* asking this API, so they cannot be supplied at
+# runtime - and a mismatch means the browser reads a different chain than the
+# server writes to. Empty is a valid answer: the Trust screen then says sealing is
+# not configured rather than guessing.
+ARG VITE_STELLAR_NETWORK=testnet
+ARG VITE_SOROBAN_CONTRACT_ID=""
+ARG VITE_SOROBAN_RPC_URL=""
+
+# Error tracking in the browser. Empty means nothing is reported anywhere.
+ARG VITE_SENTRY_DSN=""
 
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL \
     VITE_API_V1_PREFIX=$VITE_API_V1_PREFIX \
-    VITE_APP_NAME=$VITE_APP_NAME
+    VITE_APP_NAME=$VITE_APP_NAME \
+    VITE_STELLAR_NETWORK=$VITE_STELLAR_NETWORK \
+    VITE_SOROBAN_CONTRACT_ID=$VITE_SOROBAN_CONTRACT_ID \
+    VITE_SOROBAN_RPC_URL=$VITE_SOROBAN_RPC_URL \
+    VITE_SENTRY_DSN=$VITE_SENTRY_DSN
 
 # Runs `tsc -b && vite build`, so a type error fails the image build.
 RUN npm run build
@@ -51,8 +68,16 @@ RUN npm run build
 # ---- Production -------------------------------------------------------------
 FROM nginx:1.27-alpine AS production
 
-# Static assets only. No Node, no node_modules, no source maps served publicly.
+# Static assets only. No Node, no node_modules.
 COPY --from=build /app/dist /usr/share/nginx/html
+
+# And genuinely no source maps, rather than a comment saying so. The build emits
+# them with `sourcemap: 'hidden'`, so nothing links to them and an error tracker
+# can still be given them at release time; this deletes them from what is served.
+# They were previously excluded by an edge rule that was deleted along with the
+# edge, which is how they became fetchable - see "what this does not solve" in
+# docs/security-audit.md.
+RUN find /usr/share/nginx/html -name '*.map' -delete
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY security-headers.conf /etc/nginx/security-headers.conf
 

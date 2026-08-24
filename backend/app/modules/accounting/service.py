@@ -40,6 +40,7 @@ from app.modules.accounting.coa_template import (
     DEFAULT_JOURNALS,
     SystemAccount,
 )
+from app.modules.accounting.hooks import notify_entry_posted, notify_period_closed
 from app.modules.accounting.models import (
     Account,
     AccountingPeriod,
@@ -607,6 +608,11 @@ class FiscalCalendarService:
             severity=AuditSeverity.WARNING,
             **_audit_ctx(ctx),
         )
+
+        # A closed period is the natural moment to seal: its numbers have stopped
+        # moving. The subscriber only writes a local intent row, so this commits in
+        # milliseconds and a chain outage cannot block a month-end close.
+        await notify_period_closed(self.session, period, actor, ctx)
         return period
 
     async def reopen_period(
@@ -943,6 +949,15 @@ class PostingService:
                 "organization_id": str(organization_id),
             },
         )
+
+        # Announce, in this transaction, after the entry is numbered and audited.
+        #
+        # Accounting does not know who is listening and must not: the proof ledger
+        # subscribes to this, and inverting that - having the posting engine import
+        # the attestation module - would make the ledger undeployable without the
+        # blockchain subsystem. A subscriber cannot fail this call; see
+        # `app.modules.accounting.hooks`.
+        await notify_entry_posted(self.session, entry)
         return entry
 
     # -- Reverse -------------------------------------------------------------

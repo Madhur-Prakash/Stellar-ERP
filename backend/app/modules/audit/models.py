@@ -192,6 +192,38 @@ class AuditAction(StrEnum):
     JOURNAL_ENTRY_REVERSED = "journal_entry.reversed"
     JOURNAL_ENTRY_DELETED = "journal_entry.deleted"
 
+    # --- Ledger 3: the proof ledger ---
+    #: Sealing switched on for an organization. Warning severity: it is the moment
+    #: the business starts publishing commitments to a public network, which is a
+    #: decision an auditor is entitled to see recorded rather than inferred.
+    ATTESTATION_ENABLED = "attestation.enabled"
+    #: Switched off. Warning, and for the sharper reason: a business that stops
+    #: sealing stops being checkable, and "when did they stop?" is the first
+    #: question anyone reviewing the chain will ask.
+    ATTESTATION_DISABLED = "attestation.disabled"
+    #: The on-chain book was opened for this organization.
+    ATTESTATION_REGISTERED = "attestation.registered"
+    #: The signing account changed - the 2-of-3 co-signing upgrade path, and also
+    #: the shape a key compromise would take. Critical either way.
+    ATTESTATION_SIGNER_ROTATED = "attestation.signer_rotated"
+    #: A batch was selected and a root computed. Recorded separately from
+    #: confirmation because the gap between them is exactly where an operator will
+    #: look when sealing appears stuck.
+    SEAL_CREATED = "seal.created"
+    #: The network accepted it. This row carries the transaction hash, so the audit
+    #: trail itself is a route from a local event to an independently checkable fact.
+    SEAL_CONFIRMED = "seal.confirmed"
+    #: Submission was refused, or exhausted its retries. Critical: a business that
+    #: believes it is sealing and is not has a false sense of what it can prove.
+    SEAL_FAILED = "seal.failed"
+    #: Local state was corrected from the chain. Recorded because the chain
+    #: disagreeing with the database is a fact worth keeping even after it is fixed.
+    SEAL_RECONCILED = "seal.reconciled"
+    #: A proof bundle was exported for a counterparty. Warning severity: this is
+    #: the moment a business discloses its namespace and one entry's contents to
+    #: somebody outside it, and it is the one event here with a privacy dimension.
+    PROOF_EXPORTED = "proof.exported"
+
 
 class AuditSeverity(StrEnum):
     """Triage hint. ``WARNING``/``CRITICAL`` are what a security dashboard

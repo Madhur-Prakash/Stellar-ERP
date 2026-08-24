@@ -28,7 +28,7 @@ _client: Redis | None = None
 class RedisKey:
     """Namespaced key builders. One place to see the entire key space."""
 
-    PREFIX: Final = "personalerp"
+    PREFIX: Final = "stellarerp"
 
     # --- auth: one-time tokens (value -> user id) ---
     @classmethod
