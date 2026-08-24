@@ -1,0 +1,117 @@
+name: personalerp_desktop
+description: "Personal ERP desktop client - the same UI as the web app, native."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+  dio: ^5.11.0
+  cookie_jar: ^4.0.9
+  dio_cookie_manager: ^3.5.0
+  flutter_riverpod: ^2.6.1
+  go_router: ^17.3.0
+  fl_chart: ^1.2.0
+  path_provider: ^2.1.6
+  intl: ^0.20.3
+  shared_preferences: ^2.5.5
+  file_picker: ^11.0.3
+  url_launcher: ^6.3.2
+  lucide_icons_flutter: ^3.1.15
+  path: ^1.9.1
+  timezone: ^0.11.1
+  # Runtime configuration from `.env`, replacing the `--dart-define` values that used
+  # to be compiled in. Same keys, but changing one no longer means a rebuild - and it
+  # sidesteps a real bug: Git Bash's MSYS layer rewrote `--dart-define=/api/v1` into
+  # `C:/Program Files/Git/api/v1` and baked that into the binary.
+  flutter_dotenv: ^5.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # `.env` is bundled as an asset because that is the only thing flutter_dotenv can
+  # read - it loads through `rootBundle`, not the filesystem.
+  #
+  # Consequences worth knowing:
+  #   * The file must exist at build time or the build fails on a missing asset.
+  #     `make setup` copies `.env.sample` for exactly this reason.
+  #   * It is listed as a single file, not a directory: Flutter's asset bundler skips
+  #     dotfiles when it walks a directory entry.
+  #   * Being an asset means it ships inside the application bundle. Keep secrets out
+  #     of it - these three values are a host, a path and a display name, all of which
+  #     the client reveals in its first request anyway.
+  assets:
+    - .env
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

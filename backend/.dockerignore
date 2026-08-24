@@ -1,0 +1,71 @@
+# =============================================================================
+# What never enters the build context.
+#
+# The `development` target ends in `COPY . .`, so without this file everything
+# beside the Dockerfile is uploaded to the daemon and committed to a layer. Three
+# separate problems, in descending order of how much they matter:
+#
+#   1. **Secrets.** `credentials.json` and `token.pickle` are the Gmail OAuth client
+#      and a live refresh token. They are gitignored, so nothing else in the
+#      pipeline would ever have caught them - and a layer is not a file you can
+#      delete afterwards. Anyone who pulls the image reads them.
+#   2. **A foreign virtualenv.** `.venv` here is built for the developer's own OS.
+#      Copying a Windows venv into a Linux image is hundreds of megabytes of
+#      unusable binaries, and if anything ever resolved it ahead of `/app/.venv`
+#      the container would import pywin32 and die.
+#   3. **Cache churn.** `.pytest_cache` and friends change on every local test run,
+#      which invalidates the `COPY` layer and every layer after it - a rebuild for
+#      a change to nothing.
+#
+# Everything the build actually needs is listed in the Dockerfile's own COPY lines:
+# pyproject.toml, uv.lock, app/, migrations/, scripts/, alembic.ini, README.md.
+# =============================================================================
+
+# ---- Secrets ----------------------------------------------------------------
+.env
+.env.*
+!.env.sample
+credentials.json
+token.pickle
+*.pem
+*.key
+secrets/
+
+# ---- Virtualenvs (the image builds its own at /app/.venv) --------------------
+.venv/
+venv/
+env/
+
+# ---- Python build and cache artefacts ---------------------------------------
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---- Runtime output ---------------------------------------------------------
+# Mounted as a volume at /app/logs; a host copy would just be shadowed.
+logs/
+*.log
+
+# ---- Uploaded documents -----------------------------------------------------
+# The legacy filesystem blob directory. Customer data, and megabytes of it.
+var/
+
+# ---- Not needed inside the image --------------------------------------------
+Dockerfile
+.dockerignore
+.git/
+.gitignore
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,217 @@
+[project]
+name = "personalerp-backend"
+version = "0.1.0"
+description = "Personal ERP - a self-hosted ERP for small businesses"
+# Pinned to the 3.13 series (see .python-version). An upper bound keeps uv from
+# silently resolving to 3.14+, where parts of this stack are not yet validated.
+requires-python = ">=3.13,<3.14"
+readme = "README.md"
+
+dependencies = [
+    # --- Web framework ---
+    "fastapi>=0.118.0",
+    "uvicorn[standard]>=0.37.0",
+    "python-multipart>=0.0.20",
+    # --- Config & validation ---
+    "pydantic[email]>=2.11.0",
+    "pydantic-settings>=2.10.0",
+    # --- Persistence ---
+    "sqlalchemy[asyncio]>=2.0.43",
+    "asyncpg>=0.30.0",
+    "alembic>=1.16.0",
+    # --- Cache / sessions / rate limiting ---
+    "redis[hiredis]>=6.4.0",
+    # --- Logging (logifyx is the single logging entry point) ---
+    "logifyx>=1.1.2",
+    # --- Security ---
+    "argon2-cffi>=25.1.0",
+    "pyjwt>=2.10.0",
+    "cryptography>=45.0.0",
+    "pyotp>=2.9.0",
+    "qrcode[pil]>=8.2",
+    # --- Email (Gmail API) ---
+    # The official client, so the send is the one call Google documents and the
+    # token refresh is handled by google-auth rather than by hand. No SMTP client:
+    # Google refuses plain passwords, so there is nothing for one to talk to.
+    "google-api-python-client>=2.0.0",
+    "google-auth>=2.0.0",
+    "jinja2>=3.1.6",
+    # --- HTTP client ---
+    "httpx>=0.28.0",
+    # --- Timezones ---
+    # Windows ships no IANA tz database, so `zoneinfo` cannot resolve names like
+    # "Asia/Kolkata" without this. Organizations store IANA zones and fiscal
+    # periods depend on them, so it is a real runtime dependency, not dev-only.
+    "tzdata>=2025.2",
+    # --- Report exports ---
+    # `openpyxl` writes real .xlsx; a CSV renamed would open in Excel but carry no
+    # formatting, no column widths, and no way to mark a figure as currency.
+    # `fpdf2` rather than reportlab or weasyprint: a balance sheet is a table of labels and
+    # numbers, and fpdf2 does that in pure Python with no system libraries - weasyprint
+    # would pull cairo and pango into the image for a document with no HTML in it.
+    "openpyxl>=3.1.5",
+    "fpdf2>=2.8.7",
+    "slowapi>=0.1.10",
+    "minio>=7.2.20",
+    "pytesseract==0.3.13",
+    "pypdf==6.14.2",
+]
+
+[project.optional-dependencies]
+kafka = ["logifyx[kafka]>=1.1.2"]
+
+# OCR is an optional extra, not a core dependency.
+#
+# The heavyweight engines are deliberately excluded: PaddleOCR pulls PaddlePaddle
+# (~500 MB) and EasyOCR pulls torch (~2 GB), which contradicts "one person can
+# operate this on a small VPS". Tesseract is a 30 MB system binary and reads a
+# GST invoice perfectly well.
+#
+# `pytesseract` also needs the `tesseract` binary on PATH - a pip install alone is
+# not enough, which is why the engine is probed at runtime rather than assumed.
+ocr = [
+    "pytesseract>=0.3.13",
+    "pypdf>=6.0.0",
+]
+
+# S3-compatible object storage for document blobs.
+#
+# `minio` is also in the base dependencies above, so this extra is a no-op on a normal
+# install - it exists to name the requirement, and so a slimmed-down build that drops it from
+# the base list has one flag to put it back.
+#
+# The client being installed does **not** select the backend. Documents go to PostgreSQL
+# (`document_blob`) unless MINIO_ENDPOINT, MINIO_ACCESS_KEY and MINIO_SECRET_KEY are all set;
+# see `app/modules/ocr/storage.py` for why that is derived from the credentials rather than a
+# separate switch. `app/modules/ocr/object_storage.py` is the only module that imports the
+# client, and it is imported lazily, so the default path never loads it either way.
+objectstore = [
+    "minio>=7.2.20",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.0",
+    "pytest-asyncio>=1.2.0",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.0",
+    "mypy>=1.18.0",
+    "types-passlib>=1.7.7",
+    "types-openpyxl>=3.1.5.20260724",
+    # Runs the OAuth consent flow in `scripts/mint_gmail_token.py`, which is the only
+    # thing in this repository that needs it - the server is handed an already-minted
+    # refresh token and never prompts. Dev-only so a production image does not ship a
+    # browser-based auth flow it cannot use.
+    "google-auth-oauthlib>=1.2.0",
+]
+
+# =============================================================================
+# Ruff - linting + formatting
+# =============================================================================
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["app", "tests"]
+extend-exclude = ["migrations/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",    # pycodestyle
+    "F",         # pyflakes
+    "I",         # isort
+    "A",         # flake8-builtins - see the note below
+    "B",         # flake8-bugbear
+    "C4",        # comprehensions
+    "UP",        # pyupgrade
+    "ASYNC",     # async correctness
+    "S",         # bandit (security)
+    "T20",       # no print()
+    "SIM",       # simplify
+    "RUF",       # ruff-specific
+]
+
+# `A` is enabled because of a real bug: a service method named `list` shadows the
+# builtin inside its own class body, so the annotation `list[Invoice]` on a sibling
+# method resolves to the *method* rather than to `builtins.list`. mypy reports it as
+# the baffling "Function ... is not valid as a type". Ruff catches the cause
+# directly, at the definition.
+ignore = [
+    "B008",  # FastAPI's Depends() in defaults is the documented idiom
+    "S105",  # token-shaped string constants (we name token *types*, not secrets)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]  # asserts and dummy credentials are the point
+"app/core/config.py" = ["S104"]       # 0.0.0.0 bind is intentional inside a container
+# T20 bans `print` so nothing in the application bypasses logifyx. A command-line check is
+# the exception rather than a violation: its output *is* its interface - read by a person or
+# a CI step, not collected as logs - and routing it through a logger would put a timestamp
+# and a level in front of every line of a report meant to be read.
+"scripts/*" = ["T201"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+# =============================================================================
+# mypy
+# =============================================================================
+[tool.mypy]
+python_version = "3.13"
+strict = true
+plugins = ["pydantic.mypy"]
+warn_unreachable = true
+disallow_untyped_decorators = false  # FastAPI/SQLAlchemy decorators are untyped
+exclude = ["migrations/", "tests/"]
+
+[[tool.mypy.overrides]]
+# pytesseract is a thin subprocess wrapper that ships no stubs and never will.
+#
+# `minio` is here for a different reason: it is an optional extra (see `objectstore`), so on
+# a default install it is genuinely absent and mypy would report the import as missing on
+# every run. Ignoring it keeps the type check meaningful for the code everyone runs rather
+# than failing on a dependency almost nobody installs.
+module = ["logifyx.*", "qrcode.*", "pytesseract.*", "googleapiclient.*", "minio.*"]
+ignore_missing_imports = true
+
+# =============================================================================
+# pytest
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Every async def test runs without an explicit marker.
+asyncio_mode = "auto"
+# One event loop for the whole session, shared by fixtures and tests.
+#
+# Required, not cosmetic: the session-scoped SQLAlchemy engine and the
+# per-test connections bound to it must live on the same loop. With
+# function-scoped loops, asyncpg connections created under one loop and reused
+# under another fail with "attached to a different loop", and session-scoped
+# async fixtures raise ScopeMismatch outright.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+addopts = "-ra --strict-markers --strict-config"
+# SQLAlchemy and the app log at INFO; at that level a single failure buries the
+# assertion under hundreds of captured lines. Failures still show WARNING+.
+log_level = "WARNING"
+markers = [
+    "integration: requires postgres + redis",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py", "migrations/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]

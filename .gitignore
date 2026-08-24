@@ -1,0 +1,76 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ---- Node ----
+node_modules/
+.pnpm-store/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.playwright/
+
+# ---- Logs (logifyx writes here) ----
+logs/
+*.log
+
+# ---- Env / secrets ----
+.env
+.env.*
+!.env.sample
+*.pem
+*.key
+!frontend/**/*.key.ts
+secrets/
+
+# ---- Infra volumes ----
+.docker-data/
+
+# Database dumps written by the production stack's `/backups` mount. Never
+# committed: they are the whole database, secrets and customer data included.
+backups/
+
+.vercel/
+
+# ---- Editors / OS ----
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.shared.json
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Uploaded documents. Never committed: they are customer data, and they are the
+# supporting evidence for ledger entries, so they belong in the backup story
+# (rsync the directory) rather than in version control.
+backend/var/
+credentials.json
+token.pickle
+
+# Microsoft's Visual C++ redistributable, bundled into the Windows installer. ~25 MB
+# of someone else's binary, so it is fetched rather than committed - installer/README.md
+# says where from, and the .iss fails the compile with that URL when it is absent.
+#
+# A glob rather than the filename: Microsoft ships it as `VC_redist.x64.exe`, this repo
+# has referred to it in lower case, and Windows treats those as the same file while a
+# case-sensitive checkout does not. Nothing else in that folder is an executable - the
+# installer output goes to `installer/dist/`, ignored above.
+installer/*.exe

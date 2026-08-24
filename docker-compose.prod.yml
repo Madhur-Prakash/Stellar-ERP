@@ -1,0 +1,270 @@
+# =============================================================================
+# Personal ERP - production stack for a self-hosted VPS
+#
+#   cp .env.sample .env       # then fill in real secrets
+#   docker compose -f docker-compose.prod.yml up -d --build
+#
+# Differences from the development stack that matter:
+#
+#   * PostgreSQL and Redis are NOT published to the host. They are reachable only
+#     on the internal Docker network, so the database is not exposed to the
+#     internet by a misconfigured firewall.
+#   * Migrations run as a one-shot job that the API waits on, so a scaled-out API
+#     can never race to apply the same migration.
+#   * Every service has resource limits, log rotation, and a restart policy.
+#   * Every service drops all Linux capabilities and forbids privilege escalation.
+#
+# ---- There is no edge proxy in this stack ----------------------------------
+#
+# `backend` and `frontend` publish plain HTTP ports and nothing terminates TLS
+# here. Something in front of them has to: a TLS terminator you already operate
+# on the host (Caddy, Traefik) or a tunnel that terminates for you.
+#
+# This is not optional. Production boot requires https origins, so a stack with
+# nothing in front does not run insecurely - it refuses to start.
+#
+# Consequences of that, stated plainly rather than discovered later:
+#
+#   * `PUBLISH_ADDR` defaults to 127.0.0.1, so a fresh `up -d` exposes nothing to
+#     the internet. Set it to 0.0.0.0 only when the proxy is on another machine
+#     and the firewall is doing the work instead.
+#   * Both services run ONE replica. A published host port can only be held by
+#     one container, so `replicas: 2` would fail to bind - and with no proxy
+#     there is nothing to load-balance across replicas anyway. Scaling out means
+#     putting a proxy back in front and switching these to a port range.
+#   * A redeploy therefore has a short gap while the container is replaced;
+#     `order: start-first` cannot apply when the old and new container would
+#     contend for the same host port. Migrations still run as their own step, so
+#     a failed migration still leaves the running version untouched.
+#   * Edge rate limiting is whatever the proxy in front provides. The
+#     application's own per-IP limiter (see app/core/ratelimit.py) is unaffected
+#     and still runs.
+# =============================================================================
+
+name: personalerp-prod
+
+# Applied to every container. Both are one line each and both remove a whole class of
+# escalation:
+#
+#   * `no-new-privileges` makes setuid binaries inside the image unable to gain
+#     privileges. A compromised process then cannot use a stray setuid helper - `su`,
+#     `mount`, a package manager's helper - to become root, which is the usual first
+#     step from "code execution in a container" to "root in a container".
+#   * `cap_drop: [ALL]` removes the ~14 capabilities Docker grants by default. None of
+#     these services needs any of them: they bind ports above 1024 (or, for nginx, are
+#     given back the one capability that requires), write to volumes they own, and make
+#     outbound connections. CAP_NET_RAW alone, granted by default, permits ARP spoofing
+#     against every other container on the bridge.
+x-hardening: &hardening
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+x-logging: &default-logging
+  # Without this, container logs grow without bound and eventually fill the disk
+  # - the most common way a small VPS dies.
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  # ---------------------------------------------------------------------------
+  # Data
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    restart: always
+    <<: *hardening
+    # Postgres needs two of the dropped capabilities back: it starts as root to fix
+    # ownership on the data directory, then drops to the `postgres` user itself.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8 --locale=C --data-checksums'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Where `pg_dump` writes from inside the container. Compose creates the host
+      # directory on first start; keep it out of the repository (.gitignore covers
+      # it) and replicate it off the machine - a backup on the same disk as the
+      # database does not survive the failure it exists for.
+      - ./backups:/backups
+    # Deliberately no `ports:` - internal network only.
+    command:
+      # Modest tuning for a small VPS. Raise shared_buffers to ~25% of RAM.
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1536MB
+      - -c
+      - work_mem=8MB
+      - -c
+      - maintenance_work_mem=128MB
+      # Log slow queries so a performance regression is visible before users
+      # report it.
+      - -c
+      - log_min_duration_statement=500
+      - -c
+      - log_checkpoints=on
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits: { cpus: '2', memory: 2G }
+    logging: *default-logging
+    networks: [internal]
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    <<: *hardening
+    cap_add: [SETGID, SETUID]
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD}
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', '-a', '${REDIS_PASSWORD}', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits: { cpus: '1', memory: 768M }
+    logging: *default-logging
+    networks: [internal]
+
+  # ---------------------------------------------------------------------------
+  # Migrations - one-shot, runs to completion before the API starts
+  # ---------------------------------------------------------------------------
+  migrate:
+    build:
+      context: ./backend
+      target: production
+    restart: 'no'
+    <<: *hardening
+    read_only: true
+    tmpfs: [/tmp]
+    env_file: [.env]
+    environment:
+      ENVIRONMENT: production
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+    command: ['alembic', 'upgrade', 'head']
+    depends_on:
+      postgres: { condition: service_healthy }
+    logging: *default-logging
+    networks: [internal]
+
+  # ---------------------------------------------------------------------------
+  # Application
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      target: production
+    restart: always
+    <<: *hardening
+    # The image ships only code and a virtualenv, and the process writes to exactly two
+    # places: the log volume and a temporary directory. A read-only root filesystem means
+    # code execution in this container cannot drop a payload on disk to survive a
+    # restart, or overwrite the application's own modules.
+    read_only: true
+    tmpfs: [/tmp]
+    env_file: [.env]
+    environment:
+      ENVIRONMENT: production
+      DEBUG: 'false'
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      LOG_JSON: 'true' # structured output for the aggregator
+      # Overrides whatever `.env` carries. That file is edited on a workstation, where
+      # this setting has to name a Windows install path for OCR to work at all, and
+      # `env_file` beats the image's own ENV - so the deployed container would inherit a
+      # path it cannot execute and report OCR as unavailable.
+      TESSERACT_CMD: /usr/bin/tesseract
+    # Longer than uvicorn's own 25s graceful timeout (see the Dockerfile), so a container
+    # being replaced always exits by finishing its requests rather than by SIGKILL.
+    stop_grace_period: 30s
+    # Plain HTTP. Bound to loopback by default - whatever terminates TLS proxies to it.
+    ports:
+      - '${PUBLISH_ADDR:-127.0.0.1}:${BACKEND_PORT:-8000}:8000'
+    volumes:
+      - ./logs:/app/logs
+      # No documents volume, and none needed. Uploaded files are compressed into
+      # PostgreSQL (`document_blob`), so they are on the postgres-data volume and inside
+      # the same `pg_dump` as the ledger entries they support.
+      #
+      # That is what removed the last reason for this container to write to disk at all,
+      # which is why `read_only: true` above is viable. It also closed a real durability
+      # hole: the previous filesystem backend wrote into the container's own layer, so a
+      # redeploy discarded the scans supporting posted bills.
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      # Waits for the migration job to exit 0. This is what makes replicas safe.
+      migrate: { condition: service_completed_successfully }
+    deploy:
+      # One replica, because the host port below can only be held by one container.
+      # The process itself is stateless and scales horizontally without coordination -
+      # what is missing is something to balance across the replicas. Put a proxy in
+      # front, change this port to a range (e.g. '8000-8003:8000'), and raise this.
+      replicas: 1
+      resources:
+        limits: { cpus: '2', memory: 1G }
+      update_config:
+        failure_action: rollback
+        delay: 10s
+    logging: *default-logging
+    networks: [internal]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production
+      args:
+        # Baked into the bundle at build time. Must be the public origin.
+        VITE_API_BASE_URL: ${PUBLIC_API_URL:-https://app.example.com}
+        VITE_API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+        VITE_APP_NAME: ${APP_NAME:-Personal ERP}
+    restart: always
+    <<: *hardening
+    read_only: true
+    # The image serves static files from nginx on 8080 as an unprivileged user. It still
+    # writes its pid and its scratch buffers, so those paths must be writable.
+    tmpfs: [/tmp, /var/cache/nginx, /var/run]
+    # Plain HTTP, loopback by default - same arrangement as the API above.
+    ports:
+      - '${PUBLISH_ADDR:-127.0.0.1}:${FRONTEND_PORT:-8080}:8080'
+    deploy:
+      # One replica, for the same reason as the API: one container per host port.
+      replicas: 1
+      resources:
+        limits: { cpus: '0.5', memory: 256M }
+    logging: *default-logging
+    networks: [internal]
+
+volumes:
+  # Uploaded documents live in here too, inside PostgreSQL - see the `backend` service.
+  # One volume to back up, and one dump that is internally consistent.
+  postgres-data:
+  redis-data:
+
+networks:
+  internal:
+    driver: bridge

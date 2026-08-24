@@ -1,0 +1,166 @@
+# =============================================================================
+# Personal ERP - development stack
+#
+#   make up          start everything
+#   make logs        tail all services
+#   make migrate     apply database migrations
+#
+# Source is bind-mounted and both servers hot-reload.
+# =============================================================================
+
+name: personalerp
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: personalerp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-personalerp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-personalerp}
+      POSTGRES_DB: ${POSTGRES_DB:-personalerp}
+      # Deterministic collation so index ordering matches across machines.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-personalerp} -d ${POSTGRES_DB:-personalerp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [personalerp]
+
+  redis:
+    image: redis:7-alpine
+    container_name: personalerp-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [personalerp]
+
+  # Object storage for uploaded documents - S3-compatible, and **not started by default**.
+  #
+  # Documents go to PostgreSQL (`document_blob`) unless MINIO_ENDPOINT, MINIO_ACCESS_KEY and
+  # MINIO_SECRET_KEY are all set. So the container that serves them should not be running
+  # unless you have chosen that backend, and `profiles:` is what expresses it:
+  #
+  #     docker compose up                              # Postgres backend, no MinIO container
+  #     docker compose --profile objectstore up        # MinIO too, for the bucket backend
+  #     make up-objectstore                            # the same thing
+  #
+  # A profiled service is skipped entirely by a plain `up` - not started and not built - so
+  # the default stack is one fewer container, one fewer port, and one fewer set of
+  # credentials. Turning the profile on without also setting the three variables starts a
+  # MinIO nobody talks to, which is harmless and visible; setting the variables without the
+  # profile fails the first upload with a connection error naming the endpoint.
+  #
+  # **With a volume, unlike before.** This service used to run without one, so
+  # `docker compose down` silently took every uploaded document with it - fine for a
+  # throwaway stack right up to the first time someone demonstrated the review queue on
+  # Monday using Friday's uploads. Blobs are the supporting evidence for ledger entries even
+  # in development; losing them should require asking (`make clean`).
+  minio:
+    image: minio/minio
+    container_name: personalerp-minio
+    profiles: [objectstore]
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-yourpassword}
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      # The web console, for looking at what actually landed in the bucket.
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      # The backend creates its bucket on first use, so "is it up" is the whole check.
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks: [personalerp]
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: personalerp-backend
+    restart: unless-stopped
+    env_file: [.env]
+    # Three host-shaped values from `.env` that are wrong inside this network, corrected
+    # here because `environment:` wins over `env_file:`. TESSERACT_CMD is the same kind of
+    # mistake as `localhost` for POSTGRES_HOST: the setting exists for Windows, where the
+    # installer leaves the binary off PATH, so a working developer `.env` names
+    # `C:/Program Files/...` - a path this container has no way to execute.
+    environment:
+      POSTGRES_HOST: postgres
+      REDIS_HOST: redis
+      TESSERACT_CMD: /usr/bin/tesseract
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      # Keep the image's virtualenv; don't let the bind mount shadow it.
+      - backend-venv:/app/.venv
+      - ./logs:/app/logs
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/health/live')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [personalerp]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: personalerp-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
+      VITE_API_V1_PREFIX: ${VITE_API_V1_PREFIX:-/api/v1}
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on: [backend]
+    networks: [personalerp]
+
+volumes:
+  # Document blobs live in here too, inside PostgreSQL - see the `minio` service for the
+  # alternative and why it is opt-in.
+  postgres-data:
+  redis-data:
+  # Only used under the `objectstore` profile. Declaring it unconditionally is fine: an
+  # unreferenced volume is not created until something mounts it.
+  minio-data:
+  backend-venv:
+  frontend-node-modules:
+
+networks:
+  personalerp:
+    driver: bridge

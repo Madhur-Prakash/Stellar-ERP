@@ -1,0 +1,115 @@
+# =============================================================================
+# CI - runs on every push and pull request.
+#
+# **Checks only.** Nothing here builds a container image, publishes to a registry,
+# or deploys. A self-hosted install builds from source on its own server, so an
+# image built here would be a second artefact nobody deploys - slow to produce,
+# and misleading the moment it diverges from what the server actually runs.
+#
+# Two independent jobs - Frontend (type check, lint, format, build) and Compose
+# config (both stacks parsed and schema-checked) - so one failure does not hide the
+# other, and both report in parallel.
+#
+# **There is no backend job.** ruff, mypy, pytest and `alembic check` are local
+# gates only, run through `make check` and `make db-check`, so nothing here stops a
+# red backend from merging. Adding one is the highest-value change to this file, and
+# it has to bring real PostgreSQL and Redis service containers with it: the suite
+# verifies partial unique indexes, JSONB behaviour and cursor pagination - none of
+# which SQLite implements the same way, so passing against a substitute would prove
+# nothing.
+# =============================================================================
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# A new push supersedes the previous run on the same ref, so CI queues do not
+# back up behind superseded commits.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.13'
+  NODE_VERSION: '24'
+
+jobs:
+  # ---------------------------------------------------------------------------
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc -b
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Build
+        # A check, not a deliverable: the server builds its own bundle from source
+        # on every deploy, and the output here is discarded. It stays because the
+        # bundler catches a class of mistake `tsc` does not - an unresolvable
+        # import, a bad chunking config - and finding that here is much cheaper
+        # than finding it in a failed deploy.
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: http://localhost:8000
+          VITE_API_V1_PREFIX: /api/v1
+
+  # ---------------------------------------------------------------------------
+  config:
+    name: Compose config
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create the .env both stacks reference
+        # `env_file: [.env]` on the backend service is a hard requirement: compose
+        # refuses to even parse a file that names one it cannot stat. `.env` is
+        # gitignored, so on a fresh checkout it is never there.
+        #
+        # Empty is enough. `config` only resolves the file's *existence* and the
+        # `${...}` interpolations, and those come from the step environment below -
+        # nothing here needs a real value, and putting one in would only invite
+        # someone to mistake this for a working configuration.
+        run: touch .env
+
+      - name: Validate compose files
+        # Parses and schema-checks both stacks. No images are built and no daemon
+        # work happens - this is `config --quiet`, which catches the YAML and
+        # schema mistakes that would otherwise surface only when someone tries to
+        # bring the stack up.
+        run: |
+          docker compose -f docker-compose.yml config --quiet
+          docker compose -f docker-compose.prod.yml config --quiet
+        env:
+          POSTGRES_USER: personalerp
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: personalerp
+          REDIS_PASSWORD: ci
