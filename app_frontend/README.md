@@ -1,6 +1,6 @@
 <div align="center">
 
-# Personal ERP - desktop client
+# Stellar ERP - desktop client
 
 **The same product as the web app, as a native window.** Same screens, same design tokens,
 same backend. Windows, macOS, and Linux from one codebase.
@@ -11,7 +11,7 @@ same backend. Windows, macOS, and Linux from one codebase.
 ![Riverpod](https://img.shields.io/badge/Riverpod-state-4A90E2?style=flat-square)
 ![Platforms](https://img.shields.io/badge/platforms-Windows_macOS_Linux-6E7681?style=flat-square)
 
-[Root README](../README.md) · [API](../docs/api.md) · [Architecture](../docs/architecture.md) · [Installer](../installer/README.md)
+[Root README](../README.md) · [API](../docs/api.md) · [Architecture](../docs/architecture.md) · [Proof ledger](../docs/attestation.md) · [Installer](../installer/README.md)
 
 </div>
 
@@ -57,7 +57,7 @@ Three settings, read from `app_frontend/.env` at start-up by
 | --- | --- | --- |
 | `API_BASE_URL` | `http://127.0.0.1:8000` | Where the API lives |
 | `API_V1_PREFIX` | `/api/v1` | The versioned path prefix |
-| `APP_NAME` | `Personal ERP` | Window title and footer |
+| `APP_NAME` | `Stellar ERP` | Window title and footer |
 
 ```bash
 cp .env.sample .env    # `make setup` does this for you
@@ -135,6 +135,7 @@ lib/
 ├── widgets/           The design system: button, card, input, table, charts…
 ├── layout/            Sidebar, header, command palette, footer
 └── features/          One directory per screen, mirroring frontend/src/features
+    └── trust/         Ledger 3: sealing status, seal history, proof export
 ```
 
 The tree deliberately mirrors `frontend/src`, so a change on one surface is easy to find on
@@ -216,7 +217,7 @@ indefinitely. Nothing on this side can change that, and nothing on this side sho
 
 ## Where the desktop honestly differs
 
-Four places, and each is a platform limit rather than a shortcut.
+Five places, and each is a platform limit or a deliberate boundary rather than a shortcut.
 
 | The web app | Here | Why |
 | --- | --- | --- |
@@ -224,6 +225,7 @@ Four places, and each is a platform limit rather than a shortcut.
 | PDF preview in an `<iframe>` | Opens in the machine's own PDF viewer | A desktop app has no built-in PDF renderer, and bundling a rasteriser for a preview is a large dependency. The recognised text is still shown inline, and it is the half that answers "where did this figure come from" a year later. |
 | Drag-and-drop upload | File picker | Same endpoint, same validation, same duplicate warning. |
 | `window.confirm` / `window.prompt` | Real dialogs | The web app notes it uses those only because a dialog system belonged with the rest of its UI kit. That kit exists here, so these are proper dialogs - with the wording carried over verbatim, because each one names what will and will not happen. |
+| Verifies a proof bundle in-page | **Does not, on purpose** | The web client carries a second, independent implementation of the canonical encoding so a verifier's browser can check a proof without trusting our API. A third implementation in Dart would be a third thing to keep byte-identical, and nobody verifies a supplier's books from the supplier's own desktop install. [`trust_api.dart`](lib/api/trust_api.dart) therefore has **no** `verifyBundle` - the Trust screen exports a bundle and points at `/verify`. |
 
 Everything else - the 248px sidebar, the glass header, ⌘K, the tabs in the URL, the info
 tips, the reversal-not-delete flow, the exact wording of every explanation - is the same.
