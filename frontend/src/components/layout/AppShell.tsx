@@ -240,7 +240,7 @@ export function AppShell() {
               E
             </span>
             <span className="text-content text-[15px] font-semibold tracking-tight">
-              Personal ERP
+              Stellar ERP
             </span>
           </Link>
           <Button

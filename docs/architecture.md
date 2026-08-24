@@ -5,7 +5,7 @@
 **Layering, the request lifecycle end to end, and how fifteen modules fit together.**
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · **Architecture** · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · **Architecture** · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -72,7 +72,10 @@ graph TB
 
     subgraph External
         S[Gmail API]
+        C[Soroban contract<br/>Stellar]
     end
+
+    V[Verifier<br/>no account, any browser]
 
     B -->|HTTPS| N
     D -->|HTTPS| N
@@ -81,7 +84,17 @@ graph TB
     A --> P
     A --> R
     A --> S
+    A -->|seal worker only| C
+    V -->|reads the chain directly| C
 ```
+
+**Two lines are worth reading twice.** The Stellar contract is the only external
+dependency in a *write* path, and it is reached exclusively by the seal worker -
+never inside a request, so consensus latency can never be in front of a user closing
+a period. And the verifier's arrow does not pass through this application at all: a
+proof is checked in the reader's browser against a public RPC, because a verdict
+issued by the party being audited is not a verdict. See
+[Proof ledger](attestation.md).
 
 **The edge is dashed for a reason: nothing in this repository is it.** TLS is
 terminated by whatever the operator already runs in front of the stack.
@@ -178,7 +191,7 @@ matters more in accounting than anywhere else.
 
 ## Modules
 
-Fifteen modules, in three tiers. An arrow is a real domain dependency, not an
+Sixteen modules, in four tiers. An arrow is a real domain dependency, not an
 import of convenience.
 
 ```mermaid
@@ -190,6 +203,7 @@ graph TD
         ORGS --> AUDIT[audit]
         AUTH --> NOTIF[notifications]
         HEALTH[health]
+        FEEDBACK[feedback]
     end
 
     subgraph Ledger
@@ -205,6 +219,10 @@ graph TD
         ANALYTICS[analytics]
     end
 
+    subgraph Proof
+        ATT[attestation]
+    end
+
     ORGS --> ACCT
     ACCT --> BILL
     ACCT --> SALES
@@ -213,7 +231,12 @@ graph TD
     TAX --> PURCH
     PURCH --> OCR
     ACCT --> ANALYTICS
+    ACCT -.observed by.-> ATT
 ```
+
+**The dashed arrow is the only one in the diagram, and it points the way it does on
+purpose.** `attestation` depends on `accounting`; `accounting` does not know
+`attestation` exists.
 
 `core` depends on nothing in `modules`. Modules depend on `core` and, where a
 real domain relationship exists, on each other - `organizations` needs `rbac`
@@ -224,11 +247,35 @@ is not a record that resembles a ledger entry; issuing one *is* two postings plu
 tax line. `PostingService.post_simple` is the single contract they all call, which is
 why the ledger had to be stable before any of them were built.
 
+`attestation` is the one module that is **not** called by anything. It *observes*.
+See [Why accounting does not import attestation](attestation.md#why-accounting-does-not-import-attestation)
+for the seam, and the paragraph below for the shape of it.
+
 `ocr` is the one module that depends on another module's *service* rather than the
 ledger: confirming a scanned document calls `BillService.create`, the same entry
 point `POST /bills` uses. It has no posting path of its own, deliberately - a second
 one would eventually diverge, and the divergence would be in code that writes to the
 ledger.
+
+### The observer seam
+
+`PostingService.post_entry` finishes by calling
+[`notify_entry_posted`](../backend/app/modules/accounting/hooks.py), which walks a
+list of callbacks that is **empty unless something registered one**. Attestation
+registers at the composition root - `install_attestation_hooks()` in `create_app` -
+and nowhere else.
+
+Two properties make this safe to put at the end of a posting:
+
+- **It runs in the caller's transaction.** A leaf recorded for an entry that then
+  rolls back would be a commitment to something that never happened.
+- **It can never fail the caller.** A hook that raises is logged and swallowed. The
+  journal is the system of record; a business must be able to post an invoice while
+  the proof ledger is misconfigured, unreachable, or switched off.
+
+The alternative - calling `SealService` directly from `PostingService` - was
+rejected because it makes the accounting core undeployable without the blockchain
+subsystem, and inverts the dependency this whole document is about.
 
 Cross-module imports use string-based SQLAlchemy relationships
 (`"OrganizationMember"`) to avoid import cycles;
@@ -340,6 +387,7 @@ without a catalogue entry cannot be granted through the UI at all.
 - [Database](database.md) - the schema the persistence layer maps to
 - [API](api.md) - the contract the outermost layer publishes
 - [Development](development.md) - conventions, and how to add a module
+- [Proof ledger](attestation.md) - the hook seam that lets a module observe accounting without accounting knowing it exists
 
 [All documentation](README.md)
 <!-- related:end -->

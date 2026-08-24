@@ -227,11 +227,11 @@ export function MagicLinkVerifyPage() {
   // mail-client link prefetching would otherwise burn it before the user arrives.
   return (
     <AuthLayout
-      title="Sign in to Personal ERP"
+      title="Sign in to Stellar ERP"
       subtitle="Confirm to continue with your sign-in link."
     >
       <Button fullWidth size="lg" loading={state === 'verifying'} onClick={() => void consume()}>
-        Continue to Personal ERP
+        Continue to Stellar ERP
       </Button>
     </AuthLayout>
   );

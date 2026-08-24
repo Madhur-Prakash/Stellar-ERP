@@ -176,7 +176,7 @@ export function RegisterPage() {
       subtitle={
         search.invitation
           ? 'Set up your account to join the organization.'
-          : 'Start running your business on Personal ERP.'
+          : 'Start running your business on Stellar ERP.'
       }
       footer={
         <span className="text-content-muted">

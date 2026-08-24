@@ -10,7 +10,7 @@
 ![Tokens](https://img.shields.io/badge/access_token-15_minutes-D29922?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · **API** · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · **API** · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -119,7 +119,7 @@ of reasons.
 
 ## Endpoints
 
-197 operations across 152 paths. The tables below cover the platform modules and
+221 operations across 175 paths. The tables below cover the platform modules and
 scanned documents in prose because their rules are not visible from a schema. For
 the commercial modules - accounting, sales, purchasing, inventory - **the generated
 OpenAPI schema at `/docs` is the reference**, and it is authoritative: it is
@@ -421,6 +421,101 @@ it so a list renders without decrypting a row per line.
   the authentication data (CVV, PIN, stripe) that may not be kept - and a name alone cannot
   be used to transact.
 
+### Proof ledger - `/attestation`
+
+Ledger 3. Four permissions guard it, and the split is the point: `seal:read` is a
+viewer's, `seal:write` triggers a seal, `proof:export` hands a document to an
+outsider, and `seal:configure` can switch the whole thing off. The seeded accountant
+role holds the first three and **not** the fourth - somebody who keeps the books
+should be able to prove them and unable to stop proving them.
+
+| Method | Path | Permission | Notes |
+| --- | --- | --- | --- |
+| GET | `/status` | `seal:read` | The screen's one call. **`days_unsealed` is the figure that matters** - a seal count says nothing about now |
+| GET | `/network` | authenticated | Network, contract id, RPC url, explorer base. Everything a client needs to read the chain itself |
+| GET | `/spec` | authenticated | The frozen canonical encoding: version, field order, money scale, sentinels |
+| GET | `/seals` | `seal:read` | Cursor-paginated seal history, newest first |
+| POST | `/seals` | `seal:write` | Seal now. Returns the seal with its transaction hash, or the reason there was nothing to seal |
+| POST | `/drain` | `seal:write` | Run one worker pass in-process - the same code path the background worker runs |
+| POST | `/reconcile` | `seal:write` | Correct local state from `latest()` on chain. **The chain wins**, always |
+| GET | `/proof/{journal_entry_id}` | `proof:export` | The proof bundle: one entry, its Merkle path, the seal reference, the spec |
+| POST | `/enable` | `seal:configure` | Creates and funds the organization's signer, registers the book |
+| POST | `/disable` | `seal:configure` | Stops sealing new entries. **Written seals stay written** - there is no unseal |
+| PATCH | `/cadence` | `seal:configure` | `daily`, `on_close`, or `manual` |
+| POST | `/signer/rotate` | `seal:configure` | Hands the book to another account - the path to 2-of-3 co-signing |
+| GET | `/chain/health` | `seal:read` | Is the configured RPC reachable? Separate from `/health/ready`, because an unreachable chain must never make this deployment look unhealthy |
+| GET | `/adoption` | **superuser** | Every organization with a book, install-wide, most active first |
+
+**`POST /enable` spends money** - it funds a new Stellar account. On testnet that is
+Friendbot and free; on mainnet it is a real transfer, so the endpoint reports what it
+created rather than returning 204.
+
+**`POST /seals` is not idempotent at this layer and does not need to be.** The
+contract rejects a duplicate sequence, so a double call produces one seal and one
+error rather than two seals. See
+[the ambiguous failure](attestation.md#the-ambiguous-failure).
+
+**`GET /adoption` is superuser, not `seal:read`.** The question it answers is about
+the deployment - how many organizations are genuinely sealing - and no member of one
+organization has any claim on another's row. Two details in its shape are deliberate:
+
+- **`sealing` counts organizations that have *sealed*, not organizations that switched
+  sealing on.** Those are different numbers and conflating them is the flattering
+  arithmetic the endpoint exists to avoid. Only **confirmed** seals count; a
+  submitted one may still be in flight.
+- **Every row carries `signer_public_key` and `head_tx_hash`,** so a reader can leave
+  the response and confirm it on a public explorer. A usage figure only we can see is
+  worth very little. The signer's *secret* is in the same table row and is never
+  selected - a test asserts it does not appear in the response body.
+
+### Public verification - `/verify`
+
+**The only unauthenticated router in the application.** No token, no account, no
+wallet. It exists because the reader of a proof is a bank's credit officer or an
+auditor, and requiring them to register here would defeat the whole design.
+
+| Method | Path | Notes |
+| --- | --- | --- |
+| POST | `/bundle` | Check a proof bundle. Returns a verdict plus every intermediate hash, so the caller can redo the arithmetic |
+| GET | `/chain/{namespace}` | A namespace's seal chain, read from the contract |
+| GET | `/network` | Chain coordinates, so the caller can query the chain **without us** |
+| GET | `/spec` | The canonical encoding, so the caller can reimplement it |
+
+Everything here is either computed from a bundle the caller already holds or already
+public on the Stellar ledger. Nothing reaches the database, so no organization id, no
+member, and no journal row is in scope.
+
+**This endpoint is a convenience, not the verifier.** The real verification runs in
+the reader's browser at `/verify`, in TypeScript, against a public RPC endpoint they
+can change on screen - because a verdict produced by the party being audited is not
+a verdict. The last two rows exist so that browser can work without asking us for
+anything but the page.
+
+Rate-limited at `RATE_LIMIT_PUBLIC_VERIFY` (default 60/min per IP), separately from
+the global budget: it is unauthenticated, and Merkle folding is CPU work.
+
+### Feedback and usage - `/feedback`
+
+| Method | Path | Auth | Notes |
+| --- | --- | --- | --- |
+| POST | `/` | **none** | Send feedback. Open on purpose - see below |
+| POST | `/track` | none for public actions, else authenticated | Record a usage event from an allow-listed vocabulary |
+| GET | `/summary` | superuser | Counts by status and kind |
+| GET | `/inbox` | superuser | Read what came in |
+| PATCH | `/{feedback_id}` | superuser | Triage one message |
+| GET | `/usage` | superuser | What is actually being used |
+
+**`POST /feedback` takes no token, and the organization and user are nullable.** The
+report worth most is the one from somebody who could not sign in, and an endpoint
+behind the auth wall cannot receive it.
+
+**`POST /track` accepts an action from a closed vocabulary and a context whose keys
+are allow-listed.** There is no free-text payload column anywhere in usage
+analytics - an open payload is how an events table ends up holding customer names
+and inside the compliance boundary. Three actions are accepted unauthenticated
+(`screen.verify`, `proof.verified`, `proof.rejected`), because the public verifier
+has no session and those three are the only signals it can honestly send.
+
 ### Health - `/health` (unversioned, public)
 
 | Path | Purpose |
@@ -461,6 +556,7 @@ Enforced in the application, per IP. Responses carry `X-RateLimit-Limit`,
 | --- | --- |
 | Default | 200/min per IP |
 | Auth paths | 10/min per IP |
+| `/verify/*` (public) | 60/min per IP |
 | `/health/*` | exempt |
 
 Separately, per-account lockout after 5 failed logins - keyed on the email, since
@@ -497,6 +593,7 @@ budget under the proxy's own address.
 - [Security](security.md) - what guards each of these endpoints, and why
 - [Architecture](architecture.md) - the request lifecycle behind every call
 - [Accounting](accounting.md) - the rules the money endpoints enforce
+- [Proof ledger](attestation.md) - what `/attestation` and `/verify` are for, and why one of them needs no token
 
 [All documentation](README.md)
 <!-- related:end -->

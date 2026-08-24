@@ -9,7 +9,7 @@
 ![Correction](https://img.shields.io/badge/correction-by_reversal-D29922?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · **Accounting** · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · **Accounting** · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -281,6 +281,7 @@ stored casing.
 - [Database](database.md) - the tables and constraints behind these invariants
 - [API](api.md) - the endpoints that post into the ledger
 - [Spec](spec.md) - the product requirements this implements
+- [Proof ledger](attestation.md) - how these entries are committed to Stellar, and why an entry's status is deliberately not hashed
 
 [All documentation](README.md)
 <!-- related:end -->
