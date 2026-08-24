@@ -11,7 +11,7 @@ import {
 export type Theme = 'light' | 'dark' | 'system';
 
 /** Must match the key read by the pre-paint script in `index.html`. */
-const STORAGE_KEY = 'personalerp-theme';
+const STORAGE_KEY = 'stellarerp-theme';
 
 interface ThemeContextValue {
   /** The user's choice, including `system`. */

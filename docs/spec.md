@@ -5,7 +5,7 @@
 **What this is meant to be: product goals, modules, delivery model, non-negotiables.**
 
 <!-- nav:start -->
-[Docs](README.md) · **Spec** · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · **Spec** · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -25,6 +25,14 @@ Small businesses get offered two bad options: cloud SaaS that rents you your own
 books and raises the price once you depend on it, or legacy desktop software that
 lives on one machine and dies with its hard drive. This is the third option - one
 server, your own PostgreSQL, no vendor between you and your accounts.
+
+**And sovereignty has a cost the brochure never mentions.** Books nobody but you can
+see are books nobody else can rely on: a bank underwriting a credit line, a corporate
+buyer running supplier diligence, an insurer, an investor. Self-hosting removes the
+vendor and takes the third-party credibility with it. Closing that gap without
+publishing the books is what [the third ledger](attestation.md) is for, and it is the
+one requirement in this document that could not be met by writing more application
+code.
 
 The design constraint is **restraint**. Deliberately not an enterprise-scale
 platform: no Kubernetes, no broker cluster, no service mesh. One
@@ -80,10 +88,15 @@ Ordered by dependency, not by priority. `✔` = built and verified.
 | AI assistant - conversational interface, RAG over business data, forecasting | Sales, Purchasing | - |
 | Automation - workflow builder, triggers, scheduled jobs, approvals, messaging | Sales | - |
 | Enterprise - API keys, webhooks, SSO, passkeys, compliance | Foundation | - |
-| Production hardening - security review, monitoring, load testing, tuning | all | - |
+| Production hardening - security review, monitoring, load testing, tuning | all | monitoring ✔, load testing - |
+| **Proof ledger** - Soroban contract, canonical encoding, Merkle seals, seal worker, public verifier | Accounting | ✔ |
+| Settlement - SEP-24/31 anchors, tokenised receivables, invoice financing | Proof ledger | **gated** |
 
-Every remaining module is unblocked: none has a hard dependency on another. They are
-still built one at a time, because each edits the same shared files
+Every remaining module is unblocked **except settlement**, which is blocked twice
+over: technically on the proof ledger, and administratively on Stellar Builder Team
+approval. That second block is the reason it is marked *gated* rather than *planned* -
+nothing in this document is contingent on it, and no claim made above needs it. They
+are still built one at a time, because each edits the same shared files
 (`db/registry.py`, `api/v1/router.py`, `audit/models.py`) and Alembic migrations form
 a linear chain - two generated from the same parent produce two heads and
 `alembic upgrade head` fails.

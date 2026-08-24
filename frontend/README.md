@@ -1,6 +1,6 @@
 <div align="center">
 
-# Personal ERP - web client
+# Stellar ERP - web client
 
 **React 19 · TypeScript · Vite 7 · Tailwind CSS v4.** The design system the desktop
 client mirrors.
@@ -12,7 +12,7 @@ client mirrors.
 ![TanStack](https://img.shields.io/badge/TanStack-Router_Query_Table-FF4154?style=flat-square&logo=reactquery&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-type--aware-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 
-[Architecture](../docs/architecture.md#frontend-architecture) · [API](../docs/api.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
+[Architecture](../docs/architecture.md#frontend-architecture) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
 
 </div>
 
@@ -30,9 +30,14 @@ npm run dev     # this, on :5173
 
 Or `make up` for the whole stack in Docker.
 
-Configuration is three `VITE_*` values read from the repo-root `.env` and
+Configuration is a handful of `VITE_*` values read from the repo-root `.env` and
 **validated with Zod at start-up** ([`lib/env.ts`](src/lib/env.ts)). A missing base
 URL otherwise surfaces much later as a request to `null/api/v1/auth/login`.
+
+Three of them are the chain: `VITE_STELLAR_NETWORK`, `VITE_SOROBAN_CONTRACT_ID`,
+`VITE_SOROBAN_RPC_URL`. They exist so the browser can read the contract **without
+asking the API for anything**, which is the only reason a verification done here is
+worth more than our word for it.
 
 > `VITE_*` values are inlined into the bundle at **build** time. Changing
 > `PUBLIC_API_URL` on a deployed instance needs a rebuild, not a restart.
@@ -55,6 +60,30 @@ src/
 One directory per screen under `features/`, mirroring `app_frontend/lib/features` in
 the desktop client, so a change on one surface is easy to find on the other.
 
+Two of those directories are not ordinary screens:
+
+| Directory | What is unusual about it |
+| --- | --- |
+| [`features/trust/`](src/features/trust/) | Holds [`canonical.ts`](src/features/trust/canonical.ts) - a **second, independent implementation** of the backend's byte encoding, and [`chain.ts`](src/features/trust/chain.ts), which talks to Soroban directly |
+| [`features/verify/`](src/features/verify/) | A standalone page outside the app shell, reachable **signed out**, at `/verify` |
+
+### Why the encoding is duplicated here
+
+A verifier who asks our server whether a proof is valid has learnt nothing: a
+compromised server returns `valid: true` for anything. So `/verify` re-encodes the
+entry, re-hashes it, folds the Merkle path, and asks the contract itself - over an
+RPC endpoint the reader can change on screen.
+
+That independence is the product. The duplication is its price, and
+[`canonical.test.ts`](src/features/trust/canonical.test.ts) is what stops the two
+implementations drifting: 42 tests against a golden vector that Python asserts too.
+**If it fails, do not update the expected value** - a changed vector means every
+proof already sent to a bank now reads as tampering. Version the encoding instead.
+
+`moneyMinor` parses amounts from **strings into `BigInt`**, never `Number`. A money
+value that round-trips through a double is a money value that can be off by a paisa,
+and here that produces a different hash and a false accusation.
+
 ---
 
 ## Commands
@@ -65,9 +94,10 @@ npm run build        # tsc -b && vite build
 npm run typecheck    # tsc -b --noEmit
 npm run lint         # eslint, --max-warnings 0
 npm run format       # prettier
+npm test             # vitest - the canonical encoding, 42 tests
 ```
 
-All four run in CI on every push - this is the one surface CI fully covers.
+The first four run in CI on every push - this is the one surface CI fully covers.
 
 ---
 
