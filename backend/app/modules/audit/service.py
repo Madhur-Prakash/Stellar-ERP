@@ -66,6 +66,15 @@ _SEVERITY_OVERRIDES: dict[AuditAction, AuditSeverity] = {
     AuditAction.USER_PASSWORD_CHANGED: AuditSeverity.WARNING,
     # The moment a machine-read figure becomes money owed to a supplier.
     AuditAction.DOCUMENT_CONFIRMED: AuditSeverity.WARNING,
+    # A business that stops sealing stops being checkable, and a seal that failed
+    # silently is worse than one that never ran - so both are surfaced, and the
+    # ones that mean "you can no longer prove what you think you can" are critical.
+    AuditAction.ATTESTATION_ENABLED: AuditSeverity.WARNING,
+    AuditAction.ATTESTATION_DISABLED: AuditSeverity.CRITICAL,
+    AuditAction.ATTESTATION_SIGNER_ROTATED: AuditSeverity.CRITICAL,
+    AuditAction.SEAL_FAILED: AuditSeverity.CRITICAL,
+    AuditAction.SEAL_RECONCILED: AuditSeverity.WARNING,
+    AuditAction.PROOF_EXPORTED: AuditSeverity.WARNING,
 }
 
 
