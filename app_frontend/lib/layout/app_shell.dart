@@ -325,7 +325,7 @@ class _SidebarState extends ConsumerState<_Sidebar> {
                               ),
                             ),
                             Text(
-                              'Personal ERP',
+                              'Stellar ERP',
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
@@ -369,9 +369,9 @@ class _SidebarState extends ConsumerState<_Sidebar> {
               color: t.surfaceRaised,
               onSelected: (String value) => _chooseOrganization(value),
               itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                for (final OrganizationSummary item in widget.auth.user
-                        ?.organizations ??
-                    const <OrganizationSummary>[])
+                for (final OrganizationSummary item
+                    in widget.auth.user?.organizations ??
+                        const <OrganizationSummary>[])
                   PopupMenuItem<String>(
                     value: item.id,
                     child: Row(

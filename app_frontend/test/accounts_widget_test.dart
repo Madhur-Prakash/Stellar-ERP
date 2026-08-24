@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/features/billing/accounts_panel.dart';
-import 'package:personalerp_desktop/models/billing.dart';
-import 'package:personalerp_desktop/state/data_providers.dart';
-import 'package:personalerp_desktop/theme/app_theme.dart';
+import 'package:stellarerp_desktop/features/billing/accounts_panel.dart';
+import 'package:stellarerp_desktop/models/billing.dart';
+import 'package:stellarerp_desktop/state/data_providers.dart';
+import 'package:stellarerp_desktop/theme/app_theme.dart';
 
 /// Do the new widgets actually build?
 ///

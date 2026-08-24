@@ -1,3 +1,3 @@
-"""Personal ERP backend."""
+"""Stellar ERP backend."""
 
 __version__ = "0.1.0"

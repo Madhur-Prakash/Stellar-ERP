@@ -720,7 +720,9 @@ class _AppTextLinkState extends State<AppTextLink> {
               fontSize: widget.fontSize,
               fontWeight: widget.fontWeight,
               color: colour,
-              decoration: _hovered && !shiftsColour ? TextDecoration.underline : null,
+              decoration: _hovered && !shiftsColour
+                  ? TextDecoration.underline
+                  : null,
               decorationColor: colour,
             ),
             child: Text(widget.label),

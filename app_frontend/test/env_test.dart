@@ -1,6 +1,6 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/core/env.dart';
+import 'package:stellarerp_desktop/core/env.dart';
 
 /// What `Env` does with the contents of `.env`.
 ///
@@ -20,13 +20,13 @@ void main() {
 
   test('falls back to the default when the key is absent', () {
     dotenv.testLoad(fileInput: 'SOMETHING_ELSE=1');
-    expect(Env.appName, 'Personal ERP');
+    expect(Env.appName, 'Stellar ERP');
   });
 
   test('treats a blank value as absent', () {
     // `APP_NAME=` in a .env is a mistake, not an instruction to show an empty title.
     dotenv.testLoad(fileInput: 'APP_NAME=   ');
-    expect(Env.appName, 'Personal ERP');
+    expect(Env.appName, 'Stellar ERP');
   });
 
   test('trims surrounding whitespace', () {

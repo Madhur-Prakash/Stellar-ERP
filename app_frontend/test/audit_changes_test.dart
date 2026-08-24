@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/models/json.dart';
-import 'package:personalerp_desktop/models/organization.dart';
+import 'package:stellarerp_desktop/models/json.dart';
+import 'package:stellarerp_desktop/models/organization.dart';
 
 /// Reading an audit entry's `changes`, which is not one shape.
 ///

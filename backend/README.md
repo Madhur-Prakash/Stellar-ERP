@@ -1,6 +1,6 @@
 <div align="center">
 
-# Personal ERP - backend
+# Stellar ERP - backend
 
 **FastAPI · PostgreSQL 17 · Redis 7 · Python 3.13, managed with [uv](https://docs.astral.sh/uv/).**
 
@@ -12,7 +12,7 @@
 ![mypy](https://img.shields.io/badge/mypy-strict-1F5082?style=flat-square)
 ![ruff](https://img.shields.io/badge/ruff-lint_and_format-D7FF64?style=flat-square&logo=ruff&logoColor=black)
 
-[Architecture](../docs/architecture.md) · [Database](../docs/database.md) · [API](../docs/api.md) · [Development](../docs/development.md) · [Security](../docs/security.md)
+[Architecture](../docs/architecture.md) · [Database](../docs/database.md) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Development](../docs/development.md) · [Security](../docs/security.md)
 
 </div>
 
@@ -52,13 +52,30 @@ what keeps modules independently testable and replaceable.
 
 | Tier | Modules |
 | --- | --- |
-| **Platform** | `auth`, `users`, `organizations`, `rbac`, `audit`, `notifications`, `health` |
+| **Platform** | `auth`, `users`, `organizations`, `rbac`, `audit`, `notifications`, `health`, `feedback` |
 | **Ledger** | `accounting` - every commercial module posts through it |
 | **Commerce** | `billing`, `sales`, `purchasing`, `tax`, `ocr`, `analytics` |
+| **Proof** | `attestation` - Ledger 3, on Stellar |
 
 `accounting` is the one nothing may skip. An invoice is not a record resembling a
 ledger entry; issuing one *is* two postings plus a tax line, and
 `PostingService.post_simple` is the single contract they all call.
+
+`attestation` is the one nothing *calls*. It observes: `PostingService` finishes by
+announcing that an entry was posted through
+[`accounting/hooks.py`](app/modules/accounting/hooks.py), and attestation subscribes
+once, from `create_app`. Wiring it in directly would make the accounting core
+undeployable without the blockchain subsystem, and `ATTESTATION_ENABLED=false` would
+stop meaning anything. Its files:
+
+| File | What it is |
+| --- | --- |
+| `canonical.py` | The **frozen** byte encoding of a journal entry. Changing it invalidates every proof already issued |
+| `merkle.py` | RFC 6962 trees, inclusion proofs innermost-first |
+| `stellar.py` | The contract client, and the three-way submit outcome: confirmed, rejected, **unknown** |
+| `service.py` | Leaf recording, batching, submission, reconciliation, proof bundles |
+| `worker.py` | The only thing that waits on consensus, and never in a request path |
+| `hooks.py` | The subscriptions, installed from the composition root |
 
 ---
 
@@ -73,6 +90,8 @@ uv run pytest                        # tests
 uv run pytest --cov                  # with coverage
 uv run ruff check . && uv run ruff format .
 uv run mypy app
+uv run python scripts/verify_proof.py bundle.json   # check a proof bundle
+uv run python -m app.modules.attestation.worker     # the seal worker, standalone
 ```
 
 Requires PostgreSQL and Redis. `docker compose up postgres redis` from the repo

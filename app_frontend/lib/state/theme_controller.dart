@@ -45,7 +45,7 @@ enum ThemeChoice {
 
 /// Must match the key the web app writes, purely so a developer switching between
 /// the two surfaces on one machine is not surprised. Nothing depends on it.
-const String _storageKey = 'personalerp-theme';
+const String _storageKey = 'stellarerp-theme';
 
 class ThemeController extends StateNotifier<ThemeChoice> {
   ThemeController(super.initial);

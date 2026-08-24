@@ -10,6 +10,7 @@ import '../api/documents_api.dart';
 import '../api/inventory_api.dart';
 import '../api/organizations_api.dart';
 import '../api/sales_api.dart';
+import '../api/trust_api.dart';
 import '../core/api_client.dart';
 import '../core/api_error.dart';
 
@@ -65,6 +66,10 @@ final Provider<InventoryApi> inventoryApiProvider = Provider<InventoryApi>(
 
 final Provider<DocumentsApi> documentsApiProvider = Provider<DocumentsApi>(
   (Ref ref) => DocumentsApi(ref.watch(apiClientProvider)),
+);
+
+final Provider<TrustApi> trustApiProvider = Provider<TrustApi>(
+  (Ref ref) => TrustApi(ref.watch(apiClientProvider)),
 );
 
 /// A generation counter every data provider watches, so one bump clears them all.

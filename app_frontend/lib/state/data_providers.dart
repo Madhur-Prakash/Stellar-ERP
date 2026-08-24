@@ -9,6 +9,7 @@ import '../models/inventory.dart';
 import '../models/organization.dart';
 import '../models/page.dart';
 import '../models/sales.dart';
+import '../models/trust.dart';
 import 'providers.dart';
 
 /// Every query in the app, in one place.
@@ -826,3 +827,25 @@ void invalidateDocuments(WidgetRef ref) {
   ref.invalidate(dashboardProvider);
   ref.invalidate(controlChecksProvider);
 }
+
+// =============================================================================
+// Ledger 3 - the proof ledger
+// =============================================================================
+/// Sealing status, including the chain's own view.
+///
+/// **Not `autoDispose`-cached for long**, and the reason is specific to this
+/// screen: the status call reads the Stellar contract on every request, so a stale
+/// answer here is not merely old, it is misleading. A business checking whether its
+/// books are sealed needs now.
+final AutoDisposeFutureProvider<AttestationStatus> attestationStatusProvider =
+    FutureProvider.autoDispose<AttestationStatus>((Ref ref) {
+      bindCache(ref);
+      return retrying(() => ref.read(trustApiProvider).status());
+    });
+
+/// The organization's seal history, newest first.
+final AutoDisposeFutureProvider<SealPage> sealHistoryProvider =
+    FutureProvider.autoDispose<SealPage>((Ref ref) {
+      bindCache(ref);
+      return retrying(() => ref.read(trustApiProvider).seals());
+    });

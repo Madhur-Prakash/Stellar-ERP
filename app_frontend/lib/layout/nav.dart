@@ -96,6 +96,15 @@ const List<NavSection> navSections = <NavSection>[
         icon: LucideIcons.chartColumn,
         permission: 'report:read',
       ),
+      // Last in Finance, because it is about the books rather than a way of adding
+      // to them - and every seeded role can see it, since an invoice's verification
+      // QR makes a promise the person who raised it should be able to check.
+      NavItem(
+        label: 'Trust',
+        path: '/trust',
+        icon: LucideIcons.shieldCheck,
+        permission: 'seal:read',
+      ),
     ],
   ),
   NavSection(

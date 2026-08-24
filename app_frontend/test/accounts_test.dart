@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:personalerp_desktop/core/card_number.dart';
-import 'package:personalerp_desktop/features/billing/accounts_panel.dart';
-import 'package:personalerp_desktop/models/billing.dart';
-import 'package:personalerp_desktop/widgets/app_select.dart';
+import 'package:stellarerp_desktop/core/card_number.dart';
+import 'package:stellarerp_desktop/features/billing/accounts_panel.dart';
+import 'package:stellarerp_desktop/models/billing.dart';
+import 'package:stellarerp_desktop/widgets/app_select.dart';
 
 /// Accounts, cards, and the one thing about them that is easy to get wrong.
 ///
