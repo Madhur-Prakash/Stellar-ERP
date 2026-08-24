@@ -1,0 +1,10 @@
+# Pinned so a contract built on a developer's machine is byte-identical to the one
+# built in CI. A Soroban deployment is addressed by the hash of its wasm, so
+# "compiles with whatever rustc is installed" means the deployed hash cannot be
+# reproduced, and a reviewer cannot confirm that the code they read is the code
+# that is running.
+[toolchain]
+channel = "1.96.0"
+targets = ["wasm32v1-none"]
+profile = "minimal"
+components = ["rustfmt", "clippy"]

@@ -1,0 +1,40 @@
+# Soroban contract workspace - Ledger 3, the proof ledger.
+#
+# Deliberately its own workspace rather than a member of anything in `backend/`
+# or `frontend/`: the contract is the one artefact in this repository whose build
+# output is consensus-critical, and it must be buildable and auditable on its own
+# without a Python interpreter or a Node toolchain anywhere near it.
+[workspace]
+resolver = "2"
+members = ["proof_ledger"]
+
+[workspace.dependencies]
+soroban-sdk = "27.0.6"
+
+# Release profile tuned for on-chain size rather than for speed.
+#
+# A Soroban contract is charged by the byte to upload and by instruction to run, and
+# this contract does almost no arithmetic - it compares two 32-byte values and writes
+# one struct. So every setting here trades compile time and code size against nothing
+# that matters at runtime.
+#
+# `overflow-checks = true` is the one that is *not* a size decision, and it stays on
+# deliberately: a wrapped `seq + 1` would silently reopen the append-only invariant
+# this whole contract exists to enforce. Panicking is the correct behaviour - a failed
+# seal is recoverable, a forged sequence number is not.
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+debug-assertions = false
+panic = "abort"
+codegen-units = 1
+lto = true
+
+# Used by `cargo test` for the contract's own unit tests, which run natively rather
+# than in wasm. Kept close to release so the tests exercise the same overflow and
+# panic behaviour the deployed contract has.
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true

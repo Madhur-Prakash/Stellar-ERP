@@ -19,7 +19,7 @@ fixtures below always restore the previous value.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Iterator
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Final
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -1078,6 +1078,36 @@ class TestEndpointLimiterWiring:
         )
 
 
+#: Every rate-limit budget that :class:`Settings` declares without a default.
+#:
+#: Needed because the tests below build ``Settings(_env_file=None, ...)`` on purpose -
+#: so a developer's own ``.env`` cannot decide whether an assertion about production
+#: guardrails passes. The trade-off only became load-bearing when these budgets moved
+#: out of Python and into ``.env``: with no env file *and* no defaults, they are simply
+#: missing, and every test in this file died on thirteen ``Field required`` errors
+#: before reaching its own assertion.
+#:
+#: The values mirror ``.env.sample`` rather than being arbitrary, because two of the
+#: validators check budgets *against each other* - a per-endpoint budget looser than
+#: its tier is refused, and ``rate_limit_tiers_eclipsed_by_ip`` compares every tier to
+#: the per-IP ceiling. Made-up numbers would satisfy the type and trip the semantics.
+REQUIRED_BUDGETS: Final[dict[str, str]] = {
+    "rate_limit_default": "15/minute",
+    "rate_limit_auth": "10/minute",
+    "rate_limit_auth_strict": "5/minute",
+    "rate_limit_read": "25/minute",
+    "rate_limit_write": "15/minute",
+    "rate_limit_upload": "5/minute",
+    "rate_limit_export": "5/minute",
+    "rate_limit_ip": "250/minute",
+    "rate_limit_login": "5/minute",
+    "rate_limit_register": "3/minute",
+    "rate_limit_mail_sending": "3/minute",
+    "rate_limit_token_exchange": "20/minute",
+    "rate_limit_health": "5/minute",
+}
+
+
 class TestRateLimitBudgetValidation:
     """A malformed budget is refused at boot, in every environment.
 
@@ -1092,7 +1122,11 @@ class TestRateLimitBudgetValidation:
     def _build(**overrides: Any) -> Any:
         from app.core.config import Settings
 
-        return Settings(_env_file=None, environment="development", **overrides)
+        return Settings(
+            _env_file=None,
+            environment="development",
+            **{**REQUIRED_BUDGETS, **overrides},
+        )
 
     @pytest.mark.parametrize(
         "spec",
@@ -1185,6 +1219,7 @@ class TestProductionGuardrails:
     """The checks that refuse to start rather than serve traffic misconfigured."""
 
     BASE: ClassVar[dict[str, Any]] = {
+        **REQUIRED_BUDGETS,
         "environment": "production",
         "debug": False,
         "secret_key": "a" * 48,
@@ -1229,6 +1264,6 @@ class TestProductionGuardrails:
     def test_development_is_not_subject_to_any_of_this(self) -> None:
         from app.core.config import Settings
 
-        built = Settings(environment="development", _env_file=None)
+        built = Settings(environment="development", _env_file=None, **REQUIRED_BUDGETS)
         assert built.debug is True
         assert built.enforce_origin is True

@@ -131,7 +131,8 @@ class TestBlocklistBackstop:
             "Secret@1",
             "Changeme@1",
             "Tally@2024",  # product names are the first thing tried
-            "Personal@Erp",
+            "Stellar@Erp",
+            "Personal@Erp",  # the upstream product's name, still blocked for migrators
         ],
     )
     def test_rejects_dressed_up_common_passwords(self, password: str) -> None:
@@ -150,7 +151,15 @@ class TestPersonalInformation:
         assert any("email" in problem for problem in problems)
 
     def test_rejects_password_containing_name(self) -> None:
-        problems = problems_for("Sharma@Ledger", full_name="Jhon Doe")
+        # The password has to actually contain a part of the name for this to be
+        # testing anything. It used to read `"Sharma@Ledger"` against
+        # `full_name="Jhon Doe"` - which shares no substring at all, so the
+        # assertion had been failing since the fixture's name was changed.
+        #
+        # `"Jhon"` also has to be at least four characters: `_personal_info_problems`
+        # skips shorter parts because `"Doe"` or `"Jo"` would false-positive on
+        # almost any password.
+        problems = problems_for("Jhon@Ledger", full_name="Jhon Doe")
         assert any("name" in problem for problem in problems)
 
     def test_short_name_parts_do_not_false_positive(self) -> None:
