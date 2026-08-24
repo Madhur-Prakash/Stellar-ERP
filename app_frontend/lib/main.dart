@@ -42,7 +42,7 @@ Future<void> main() async {
           (Ref ref) => ThemeController(theme),
         ),
       ],
-      child: const PersonalErpApp(),
+      child: const StellarErpApp(),
     ),
   );
 }

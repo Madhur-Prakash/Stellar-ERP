@@ -246,7 +246,7 @@ _LAYOUT: Final = """<!doctype html>
      name its own footer rendered the literal word "None" where the footer belongs.
      The flag widens it to any falsy value, which also covers an empty string. #}
   <p class="foot">{{ footer|default("You are receiving this because someone used this
-    address to sign in to Personal ERP. If that was not you, you can ignore this email.",
+    address to sign in to Stellar ERP. If that was not you, you can ignore this email.",
     true) }}</p>
 </div></div></body></html>
 """
@@ -369,7 +369,7 @@ async def send_verification_email(*, to: str, name: str, token: str) -> bool:
     html = _render(
         """
         <h1>Confirm your email</h1>
-        <p>Hi {{ name }}, welcome to Personal ERP. Confirm this address to activate
+        <p>Hi {{ name }}, welcome to Stellar ERP. Confirm this address to activate
         your account.</p>
         <a class="btn" href="{{ link }}">Verify email address</a>
         <p class="fallback">Or paste this into your browser:<br>{{ link }}</p>
@@ -381,7 +381,7 @@ async def send_verification_email(*, to: str, name: str, token: str) -> bool:
         hours=hours,
     )
     text = (
-        f"Hi {name},\n\nConfirm your email address to activate your Personal ERP account:\n"
+        f"Hi {name},\n\nConfirm your email address to activate your Stellar ERP account:\n"
         f"{link}\n\nThis link expires in {hours} hours.\n"
     )
     return await send_email(
@@ -413,7 +413,7 @@ async def send_password_reset_email(*, to: str, name: str, code: str) -> bool:
         minutes=minutes,
     )
     text = (
-        f"Hi {name},\n\nYour Personal ERP password reset code is: {code}\n\n"
+        f"Hi {name},\n\nYour Stellar ERP password reset code is: {code}\n\n"
         f"Enter it on the reset page. It expires in {minutes} minutes and can be used "
         "once.\n\nIf you did not request it, ignore this email - your password has not "
         "changed.\n"
@@ -454,11 +454,11 @@ async def send_magic_link_email(
            <strong>{{ device_label }}</strong>{% endif %} that asked for it. That app
            is showing this code - check it matches before you continue:</p>
         <div class="code">{{ user_code }}</div>
-        <p><strong>If you are not looking at a Personal ERP app showing that code, do
+        <p><strong>If you are not looking at a Stellar ERP app showing that code, do
            not open the link.</strong> Someone else may have entered your address, and
            opening it would sign their app in as you.</p>
         {% endif %}
-        <a class="btn" href="{{ link }}">Sign in to Personal ERP</a>
+        <a class="btn" href="{{ link }}">Sign in to Stellar ERP</a>
         <p class="fallback">Or paste this into your browser:<br>{{ link }}</p>
         <p>This link expires in {{ minutes }} minutes and can be used once.</p>
         """,
@@ -470,12 +470,12 @@ async def send_magic_link_email(
         device_label=device_label,
     )
     text = (
-        f"Hi {name},\n\nSign in to Personal ERP:\n{link}\n\n"
+        f"Hi {name},\n\nSign in to Stellar ERP:\n{link}\n\n"
         + (
             f"This will also sign in the app"
             f"{f' on {device_label}' if device_label else ''} that asked for it. That "
             f"app is showing the code {user_code} - check it matches before you "
-            "continue.\n\nIf you are not looking at a Personal ERP app showing that "
+            "continue.\n\nIf you are not looking at a Stellar ERP app showing that "
             "code, do not open the link: someone else may have entered your address, "
             "and opening it would sign their app in as you.\n\n"
             if user_code
@@ -504,7 +504,7 @@ async def send_otp_email(*, to: str, name: str, code: str) -> bool:
         minutes=minutes,
     )
     text = (
-        f"Hi {name},\n\nYour Personal ERP sign-in code is: {code}\n\n"
+        f"Hi {name},\n\nYour Stellar ERP sign-in code is: {code}\n\n"
         f"It expires in {minutes} minutes. Never share it with anyone.\n"
     )
     return await send_email(
@@ -528,7 +528,7 @@ async def send_invitation_email(
         """
         <h1>Join {{ organization_name }}</h1>
         <p>{{ inviter_name }} has invited you to join
-           <strong>{{ organization_name }}</strong> on Personal ERP as
+           <strong>{{ organization_name }}</strong> on Stellar ERP as
            <strong>{{ role_name }}</strong>.</p>
         {% if message %}<p style="padding:12px 14px;background:#f4f4f5;border-radius:8px;
            font-style:italic;">"{{ message }}"</p>{% endif %}
@@ -539,7 +539,7 @@ async def send_invitation_email(
         subject=f"{inviter_name} invited you to {organization_name}",
         footer=(
             "You are receiving this because someone invited this address to an "
-            "organization on Personal ERP. If this was unexpected, you can ignore it."
+            "organization on Stellar ERP. If this was unexpected, you can ignore it."
         ),
         organization_name=organization_name,
         inviter_name=inviter_name,
@@ -549,7 +549,7 @@ async def send_invitation_email(
         message=message,
     )
     text = (
-        f"{inviter_name} invited you to join {organization_name} on Personal ERP "
+        f"{inviter_name} invited you to join {organization_name} on Stellar ERP "
         f"as {role_name}.\n\n"
         + (f'Their message: "{message}"\n\n' if message else "")
         + f"Accept the invitation:\n{link}\n\nThis invitation expires in {days} days.\n"
@@ -572,7 +572,7 @@ async def send_password_changed_email(*, to: str, name: str) -> bool:
     html = _render(
         """
         <h1>Your password was changed</h1>
-        <p>Hi {{ name }}, the password on your Personal ERP account was just changed,
+        <p>Hi {{ name }}, the password on your Stellar ERP account was just changed,
            and every other session was signed out.</p>
         <p>If this was not you, reset your password immediately and review your
            active devices.</p>
@@ -583,7 +583,7 @@ async def send_password_changed_email(*, to: str, name: str) -> bool:
         link=_frontend_url("/forgot-password"),
     )
     text = (
-        f"Hi {name},\n\nThe password on your Personal ERP account was just changed and all "
+        f"Hi {name},\n\nThe password on your Stellar ERP account was just changed and all "
         f"other sessions were signed out.\n\nIf this was not you, reset your password "
         f"immediately: {_frontend_url('/forgot-password')}\n"
     )

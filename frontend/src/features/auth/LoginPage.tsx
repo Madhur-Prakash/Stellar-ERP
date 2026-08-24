@@ -195,11 +195,11 @@ export function LoginPage() {
   // ---- Password step ------------------------------------------------------
   return (
     <AuthLayout
-      title="Sign in to Personal ERP"
+      title="Sign in to Stellar ERP"
       subtitle="Welcome back. Enter your details to continue."
       footer={
         <span className="text-content-muted">
-          New to Personal ERP?{' '}
+          New to Stellar ERP?{' '}
           <Link to="/register" className="text-primary font-medium hover:underline">
             Create an account
           </Link>

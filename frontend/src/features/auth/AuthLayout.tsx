@@ -42,9 +42,7 @@ export function AuthLayout({
           >
             E
           </span>
-          <span className="text-content text-[15px] font-semibold tracking-tight">
-            Personal ERP
-          </span>
+          <span className="text-content text-[15px] font-semibold tracking-tight">Stellar ERP</span>
         </Link>
         <ThemeToggle />
       </header>

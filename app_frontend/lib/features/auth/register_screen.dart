@@ -215,7 +215,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       subtitle: Text(
         invited
             ? 'Set up your account to join the organization.'
-            : 'Start running your business on Personal ERP.',
+            : 'Start running your business on Stellar ERP.',
       ),
       footer: AuthFooterPrompt(
         prompt: 'Already have an account?',

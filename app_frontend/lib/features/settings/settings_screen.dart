@@ -1179,7 +1179,9 @@ class _OrganizationCardState extends ConsumerState<_OrganizationCard> {
                 // Deleting the organization. The API has always allowed this -
                 // owner only - and both clients simply never offered it, so a
                 // documented capability existed nowhere a user could reach.
-                if (ref.watch(authControllerProvider).can('organization:delete'))
+                if (ref
+                    .watch(authControllerProvider)
+                    .can('organization:delete'))
                   _DeleteOrganization(organization: organization),
               ],
             ),
@@ -1365,7 +1367,10 @@ class _DeleteOrganizationState extends ConsumerState<_DeleteOrganization> {
               children: <InlineSpan>[
                 TextSpan(
                   text: 'This cannot be undone from the app. ',
-                  style: TextStyle(fontWeight: FontWeight.w600, color: t.danger),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: t.danger,
+                  ),
                 ),
                 TextSpan(
                   text:
@@ -1487,8 +1492,7 @@ class _CreateOrganizationCardState
             title: ref.watch(authControllerProvider).organization == null
                 ? 'Create an organization'
                 : 'Create another organization',
-            description:
-                ref.watch(authControllerProvider).organization == null
+            description: ref.watch(authControllerProvider).organization == null
                 ? 'You will be its owner, with full access.'
                 : 'You will be its owner. Your existing organizations stay exactly '
                       'as they are, and the sidebar switcher moves between them.',

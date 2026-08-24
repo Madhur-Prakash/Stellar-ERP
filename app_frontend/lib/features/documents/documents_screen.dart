@@ -1027,7 +1027,9 @@ class _ExtractedFieldsState extends ConsumerState<_ExtractedFields> {
                           // A corrected field's confidence is 1 because a person typed
                           // it. Rendering "100%" there would claim the engine was
                           // certain, which is the opposite of what happened.
-                          if (document.correctedFields.contains(field)) ...<Widget>[
+                          if (document.correctedFields.contains(
+                            field,
+                          )) ...<Widget>[
                             const SizedBox(width: 8),
                             Text(
                               'Edited',

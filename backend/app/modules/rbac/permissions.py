@@ -101,6 +101,23 @@ class Permission(StrEnum):
     #: money owed is not.
     DOCUMENT_CONFIRM = "document:confirm"
 
+    # --- Ledger 3: the proof ledger ---
+    SEAL_READ = "seal:read"
+    #: Sealing on demand. Deliberately **not** implied by ``journal:post``, for the
+    #: same reason ``period:close`` is not: a bookkeeper posts daily and should not
+    #: be able to publish a commitment to a public network on the organization's
+    #: behalf.
+    SEAL_WRITE = "seal:write"
+    #: Switching sealing on or off, and rotating the signing key. The most
+    #: consequential permission in this group - disabling it is what makes a
+    #: business stop being checkable - so it is separated from ``seal:write`` and
+    #: granted only to owners and administrators.
+    SEAL_CONFIGURE = "seal:configure"
+    #: Exporting a proof bundle for a counterparty. Separate from ``seal:read``
+    #: because reading your own chain is internal, while an export discloses the
+    #: organization's namespace and one entry's contents to somebody outside it.
+    PROOF_EXPORT = "proof:export"
+
     @property
     def resource(self) -> str:
         return self.value.split(":", 1)[0]
@@ -202,6 +219,17 @@ PERMISSION_GROUPS: Final[tuple[PermissionGroup, ...]] = (
         ),
     ),
     PermissionGroup(
+        "attestation",
+        "Proof ledger",
+        "Sealing the books to Stellar, and exporting proofs for a bank or auditor",
+        (
+            Permission.SEAL_READ,
+            Permission.SEAL_WRITE,
+            Permission.SEAL_CONFIGURE,
+            Permission.PROOF_EXPORT,
+        ),
+    ),
+    PermissionGroup(
         "documents",
         "Scanned documents",
         "Uploading supplier invoices and turning them into bills",
@@ -251,6 +279,8 @@ SYSTEM_ROLE_PERMISSIONS: Final[dict[SystemRole, tuple[str, ...]]] = {
         "purchase:*",
         "inventory:*",
         "document:*",
+        "seal:*",
+        Permission.PROOF_EXPORT,
     ),
     SystemRole.ACCOUNTANT: (
         Permission.ORG_READ,
@@ -267,6 +297,9 @@ SYSTEM_ROLE_PERMISSIONS: Final[dict[SystemRole, tuple[str, ...]]] = {
         Permission.INVENTORY_READ,
         "document:*",
         Permission.AUDIT_READ,
+        Permission.SEAL_READ,
+        Permission.SEAL_WRITE,
+        Permission.PROOF_EXPORT,
     ),
     SystemRole.SALES: (
         Permission.ORG_READ,
@@ -278,6 +311,7 @@ SYSTEM_ROLE_PERMISSIONS: Final[dict[SystemRole, tuple[str, ...]]] = {
         Permission.INVENTORY_READ,
         Permission.PERIOD_READ,
         Permission.REPORT_READ,
+        Permission.SEAL_READ,
     ),
     SystemRole.VIEWER: (
         Permission.ORG_READ,
@@ -293,6 +327,7 @@ SYSTEM_ROLE_PERMISSIONS: Final[dict[SystemRole, tuple[str, ...]]] = {
         Permission.PURCHASE_READ,
         Permission.INVENTORY_READ,
         Permission.DOCUMENT_READ,
+        Permission.SEAL_READ,
     ),
 }
 
