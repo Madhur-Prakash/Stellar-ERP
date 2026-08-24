@@ -53,9 +53,15 @@ Requires Rust (the version is pinned in
 make contract-test      # 28 adversarial tests, native, no network
 make contract-lint      # clippy -D warnings, plus a format check
 make contract-build     # wasm32v1-none, ~15 KB
-make contract-key       # generate and fund a testnet deployer
-make contract-deploy    # prints the id for SOROBAN_CONTRACT_ID
+make contract-up        # all of the above, then deploy and write .env
 ```
+
+`make contract-up` is the one to reach for: it tests, builds, creates and funds a
+testnet key if you have none, deploys, reads the contract back off the network, and
+writes the six chain settings into `.env` so the API and the browser agree on which
+contract they are talking about. `ARGS="--dry-run"` shows the whole plan without
+touching anything. `make contract-key` and `make contract-deploy` are still there
+for when you want one step on its own.
 
 **The toolchain is pinned, and that is not tidiness.** A Soroban deployment is
 addressed by the hash of its wasm. "Builds with whatever rustc is installed" means the

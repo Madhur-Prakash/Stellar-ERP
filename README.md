@@ -285,16 +285,31 @@ on. `make help` lists every task.
 ### Deploying your own contract
 
 The repository is preconfigured against the testnet contract above. To deploy your
-own:
+own, one command does all of it:
 
 ```bash
-make contract-test      # 28 adversarial tests
-make contract-build     # wasm, ~15 KB
-make contract-key       # generate and fund a testnet deployer
-make contract-deploy    # prints the contract id
+make contract-up
 ```
 
-Put the printed id in `.env` as `SOROBAN_CONTRACT_ID` and restart the API.
+That runs the contract's tests, builds the wasm and prints its hash, creates and
+funds a testnet key if you have none, deploys, **reads the contract back off the
+network to prove it is really there**, and writes every setting the application
+needs into `.env` - the backend's and the frontend's, because the browser reads the
+contract itself and cannot be handed those at runtime. Mainnet is
+`make contract-up ARGS="--network public --yes"`.
+
+Two things it refuses to do quietly, both because they are irreversible:
+
+- **Replacing an existing contract id needs `ARGS="--force"`.** A new contract is a
+  new, empty book - every organization that has already sealed keeps its seals on
+  the old one, and every proof already sent to a bank points at an address this
+  install no longer uses.
+- **It never overwrites `ATTESTATION_NAMESPACE_SALT`.** It generates one when
+  absent and leaves it alone forever after, because rotating it orphans every book
+  on chain, permanently.
+
+Then `make up` to restart the API, and `make build` for the web client - `VITE_*`
+values are inlined at build time, so a restart alone will not pick them up.
 
 > **Getting the verification email.** Mail goes through the Gmail API and nothing
 > else, so delivery depends on `GMAIL_CREDENTIALS_B64` - see

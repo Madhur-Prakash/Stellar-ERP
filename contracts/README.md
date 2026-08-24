@@ -115,21 +115,34 @@ one in its first.
 
 ## Building and deploying
 
+One command does the whole thing - test, build, key, deploy, verify against the
+live network, and write `.env`:
+
+```bash
+make contract-up
+make contract-up ARGS="--dry-run"                     # say what would happen
+make contract-up ARGS="--force"                       # replace an existing contract
+make contract-up ARGS="--network public --yes"        # mainnet
+```
+
+See [`deploy.sh`](deploy.sh) for what it will not do without being asked twice:
+replace a contract id that is already in use, or overwrite the namespace salt.
+
+The individual steps are still there when you want one of them on its own:
+
 ```bash
 make contract-test      # 28 adversarial tests, native
 make contract-lint      # clippy -D warnings, and a format check
 make contract-build     # wasm32v1-none, ~15 KB
 make contract-key       # generate and fund a testnet deployer
-make contract-deploy    # prints the contract id
+make contract-deploy    # deploy only; does not touch .env
 ```
 
-Then put the printed id in `.env` as `SOROBAN_CONTRACT_ID` and restart the API.
-
-For mainnet:
-
-```bash
-make contract-deploy STELLAR_NETWORK=public STELLAR_IDENTITY=my-mainnet-key
-```
+**Note the two network vocabularies.** The application calls mainnet `public` -
+Stellar's own name for it, and what `STELLAR_NETWORK` holds in `.env`. The CLI calls
+it `mainnet`, and answers `--network public` with "Failed to find config network for
+public", a long way from anything that explains why. `contract-up` translates
+between them; the lower-level targets take the CLI's name.
 
 The toolchain is pinned in [`rust-toolchain.toml`](rust-toolchain.toml). A Soroban
 deployment is addressed by the hash of its wasm, so "compiles with whatever rustc

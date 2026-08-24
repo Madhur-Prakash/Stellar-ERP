@@ -402,7 +402,7 @@ what turns "trust our verdict" into "here are the coordinates, check it yourself
 # Build, test, deploy the contract
 make contract-test          # 28 adversarial tests, native
 make contract-build         # wasm, ~15 KB
-make contract-deploy        # to testnet; prints the contract id
+make contract-up            # test, build, deploy, verify, and write .env
 
 # Then set SOROBAN_CONTRACT_ID in .env and restart.
 ```

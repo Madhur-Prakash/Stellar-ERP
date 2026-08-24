@@ -70,9 +70,17 @@ CONTRACT     := cd contracts &&
 # The Stellar network the contract targets. `testnet` until the contract has run
 # against real books; override on the command line for a mainnet deploy:
 #
-#     make contract-deploy STELLAR_NETWORK=public STELLAR_IDENTITY=my-mainnet-key
+#     make contract-up ARGS="--network public --yes"
+#
+# Note the two vocabularies. The application calls mainnet `public`, which is
+# Stellar's own name for it and what `STELLAR_NETWORK` in .env holds; the CLI
+# calls it `mainnet`. `contract-up` translates. The lower-level targets below
+# take the CLI's name, because they are thin wrappers around it.
 #
 STELLAR_NETWORK  ?= testnet
+
+# The same network under the name the CLI knows it by.
+CLI_NETWORK      := $(if $(filter public,$(STELLAR_NETWORK)),mainnet,$(STELLAR_NETWORK))
 STELLAR_IDENTITY ?= stellar-erp-deployer
 
 # Where the desktop client points: `app_frontend/.env`, read at start-up.
@@ -283,20 +291,25 @@ contract-lint: ## Clippy and format check on the contract
 contract-build: ## Build the contract to wasm (~15 KB)
 	$(CONTRACT) stellar contract build
 
+.PHONY: contract-up
+contract-up: ## Build, deploy and wire up the contract in one command
+	bash contracts/deploy.sh $(ARGS)
+
 .PHONY: contract-key
-contract-key: ## Create and fund a testnet deploy key
-	stellar keys generate $(STELLAR_IDENTITY) --network $(STELLAR_NETWORK) --fund
+contract-key: ## Create and fund a testnet deploy key (contract-up does this for you)
+	stellar keys generate $(STELLAR_IDENTITY) --network $(CLI_NETWORK) --fund
 	@echo "Deployer: $$(stellar keys address $(STELLAR_IDENTITY))"
 
 .PHONY: contract-deploy
-contract-deploy: contract-build ## Deploy the contract; prints the id for SOROBAN_CONTRACT_ID
+contract-deploy: contract-build ## Deploy only; prefer contract-up, which also writes .env
 	$(CONTRACT) stellar contract deploy \
 		--wasm target/wasm32v1-none/release/proof_ledger.wasm \
 		--source $(STELLAR_IDENTITY) \
-		--network $(STELLAR_NETWORK) \
+		--network $(CLI_NETWORK) \
 		--alias proof_ledger
 	@echo ""
 	@echo "Put that contract id in .env as SOROBAN_CONTRACT_ID, then restart the API."
+	@echo "Or just run 'make contract-up', which does all of it."
 
 .PHONY: seal-worker
 seal-worker: ## Run the seal worker on its own (SEAL_WORKER_ENABLED=false in the API)

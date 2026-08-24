@@ -161,14 +161,22 @@ VITE_SOROBAN_RPC_URL=https://soroban-testnet.stellar.org
 > /attestation/enable` funds a real account with real XLM, and the address it creates
 > is where that organization's book lives permanently.
 
-Deploying your own contract is four commands, and reproducible:
+Deploying your own contract is **one** command, and reproducible:
 
 ```bash
-make contract-test && make contract-build   # the wasm hash is deterministic
-make contract-key                           # testnet only; fund your own on mainnet
-make contract-deploy                        # prints the id
-make contract-deploy STELLAR_NETWORK=public STELLAR_IDENTITY=my-mainnet-key
+make contract-up                                  # testnet
+make contract-up ARGS="--network public --yes"    # mainnet
 ```
+
+It tests, builds (printing the wasm hash, which is deterministic), creates and funds
+a key if needed, deploys, reads the contract back off the network to confirm what is
+at that address, and writes all six chain settings into `.env` - including
+`ATTESTATION_NAMESPACE_SALT` if it is still blank. It will not replace a contract id
+that is already in use without `ARGS="--force"`, and it never overwrites a salt that
+is already set.
+
+On mainnet it will not create the funding for you: generate and fund the key
+yourself first, then pass `ARGS="--network public --yes --identity my-mainnet-key"`.
 
 ### Monitoring
 

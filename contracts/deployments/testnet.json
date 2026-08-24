@@ -1,0 +1,8 @@
+{
+  "network": "testnet",
+  "contract_id": "CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR",
+  "wasm_hash": "2324b519f8a205a8cae31e1b8ebf3944be1bc5d1d6ec7028cdea3829f5e79246",
+  "deployer": "GDKLGSB2MF7ZXDCFR2VSAPZ5WYI25EKRMRQRVXKQ6FB6FB4EOZN2HSGZ",
+  "deployed_at": "2026-08-24T00:00:00Z",
+  "reproduce": "make contract-build  # must print this wasm_hash"
+}
