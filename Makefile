@@ -1,5 +1,5 @@
 # =============================================================================
-# Personal ERP - task runner
+# Stellar ERP - task runner
 #
 #   make help          list every target
 #   make setup         first-time setup
@@ -65,6 +65,15 @@ COMPOSE_PROD := docker compose -f docker-compose.prod.yml
 BACKEND      := cd backend &&
 FRONTEND     := cd frontend &&
 DESKTOP      := cd app_frontend &&
+CONTRACT     := cd contracts &&
+
+# The Stellar network the contract targets. `testnet` until the contract has run
+# against real books; override on the command line for a mainnet deploy:
+#
+#     make contract-deploy STELLAR_NETWORK=public STELLAR_IDENTITY=my-mainnet-key
+#
+STELLAR_NETWORK  ?= testnet
+STELLAR_IDENTITY ?= stellar-erp-deployer
 
 # Where the desktop client points: `app_frontend/.env`, read at start-up.
 #
@@ -179,7 +188,7 @@ shell: ## Open a Python shell with the app importable
 
 .PHONY: psql
 psql: ## Open psql against the development database
-	$(COMPOSE) exec postgres psql -U personalerp -d personalerp
+	$(COMPOSE) exec postgres psql -U stellarerp -d stellarerp
 
 .PHONY: redis-cli
 redis-cli: ## Open redis-cli against the development Redis
@@ -244,13 +253,59 @@ typecheck: ## Type check every surface
 	$(DESKTOP) flutter analyze
 
 .PHONY: test
-test: ## Run backend tests (needs PostgreSQL and Redis) and desktop tests
+test: ## Run backend tests (needs PostgreSQL and Redis), web and desktop tests
 	$(BACKEND) uv run pytest -q
+	$(FRONTEND) npm test
 	$(DESKTOP) flutter test
 
 .PHONY: test-cov
 test-cov: ## Run backend tests with a coverage report
 	$(BACKEND) uv run pytest --cov --cov-report=term-missing --cov-report=html
+
+# -----------------------------------------------------------------------------
+# Ledger 3 - the proof ledger contract
+# -----------------------------------------------------------------------------
+# Its own targets rather than folded into `check`, deliberately: the Rust
+# toolchain is a heavy dependency that nobody working on the accounting core
+# needs, and `make check` has to stay runnable by somebody who has never
+# installed cargo. CI runs `contract-test` as a separate job for the same reason.
+
+.PHONY: contract-test
+contract-test: ## Run the proof-ledger contract's tests (28, adversarial)
+	$(CONTRACT) cargo test
+
+.PHONY: contract-lint
+contract-lint: ## Clippy and format check on the contract
+	$(CONTRACT) cargo clippy --all-targets -- -D warnings
+	$(CONTRACT) cargo fmt --check
+
+.PHONY: contract-build
+contract-build: ## Build the contract to wasm (~15 KB)
+	$(CONTRACT) stellar contract build
+
+.PHONY: contract-key
+contract-key: ## Create and fund a testnet deploy key
+	stellar keys generate $(STELLAR_IDENTITY) --network $(STELLAR_NETWORK) --fund
+	@echo "Deployer: $$(stellar keys address $(STELLAR_IDENTITY))"
+
+.PHONY: contract-deploy
+contract-deploy: contract-build ## Deploy the contract; prints the id for SOROBAN_CONTRACT_ID
+	$(CONTRACT) stellar contract deploy \
+		--wasm target/wasm32v1-none/release/proof_ledger.wasm \
+		--source $(STELLAR_IDENTITY) \
+		--network $(STELLAR_NETWORK) \
+		--alias proof_ledger
+	@echo ""
+	@echo "Put that contract id in .env as SOROBAN_CONTRACT_ID, then restart the API."
+
+.PHONY: seal-worker
+seal-worker: ## Run the seal worker on its own (SEAL_WORKER_ENABLED=false in the API)
+	$(BACKEND) uv run python -m app.modules.attestation.worker
+
+.PHONY: verify-proof
+verify-proof: ## Check an exported proof bundle: make verify-proof f=bundle.json
+	@test -n "$(f)" || (echo "Usage: make verify-proof f=path/to/bundle.json" && exit 1)
+	$(BACKEND) uv run python scripts/verify_proof.py "$(abspath $(f))"
 
 .PHONY: build
 build: ## Build the web frontend for production
@@ -265,7 +320,7 @@ build-desktop: ## Build a release desktop binary for this platform
 # removed without rewriting history. The aka.ms link always serves the current build,
 # which a committed copy would not.
 #
-# `personal-erp.iss` fails the compile when it is missing, so a fresh clone is told what
+# `stellar-erp.iss` fails the compile when it is missing, so a fresh clone is told what
 # to run rather than silently producing an installer without it.
 .PHONY: installer-deps
 installer-deps: ## Fetch the Visual C++ redistributable the Windows installer bundles
@@ -275,7 +330,7 @@ installer-deps: ## Fetch the Visual C++ redistributable the Windows installer bu
 		echo "Fetching VC_redist.x64.exe (~25 MB) into installer/ ..."; \
 		curl -fL --progress-bar -o installer/VC_redist.x64.exe \
 			https://aka.ms/vs/17/release/VC_redist.x64.exe && \
-		echo "Done. Now compile installer/personal-erp.iss with Inno Setup."; \
+		echo "Done. Now compile installer/stellar-erp.iss with Inno Setup."; \
 	fi
 
 # -----------------------------------------------------------------------------
@@ -307,7 +362,7 @@ prod-config: ## Validate the production compose file
 .PHONY: backup
 backup: ## Back up the production database to ./backups
 	@mkdir -p backups
-	@name="personalerp-$$(date -u +%Y%m%dT%H%M%SZ).dump"; \
+	@name="stellarerp-$$(date -u +%Y%m%dT%H%M%SZ).dump"; \
 	echo "dumping to backups/$$name"; \
 	$(COMPOSE_PROD) exec -T -e DUMP="/backups/$$name" postgres sh -c \
 	  'pg_dump -U "$$POSTGRES_USER" -d "$$POSTGRES_DB" --format=custom --file="$$DUMP.partial" \
@@ -316,8 +371,8 @@ backup: ## Back up the production database to ./backups
 	echo "verified backups/$$name"
 
 .PHONY: restore
-restore: ## Restore from a backup: make restore f=backups/personalerp-....dump
-	@test -n "$(f)" || { echo 'Usage: make restore f=backups/personalerp-....dump'; exit 1; }
+restore: ## Restore from a backup: make restore f=backups/stellarerp-....dump
+	@test -n "$(f)" || { echo 'Usage: make restore f=backups/stellarerp-....dump'; exit 1; }
 	@test -f "$(f)" || { echo "no such file: $(f)"; exit 1; }
 	@echo "This REPLACES the production database with $(f)."
 	@read -p 'Type the database name to confirm: ' answer; \

@@ -109,7 +109,7 @@ jobs:
           docker compose -f docker-compose.yml config --quiet
           docker compose -f docker-compose.prod.yml config --quiet
         env:
-          POSTGRES_USER: personalerp
+          POSTGRES_USER: stellarerp
           POSTGRES_PASSWORD: ci
-          POSTGRES_DB: personalerp
+          POSTGRES_DB: stellarerp
           REDIS_PASSWORD: ci

@@ -9,7 +9,7 @@
 ![Audit](https://img.shields.io/badge/audit-16_findings_documented-8957E5?style=flat-square)
 ![Disclosure](https://img.shields.io/badge/disclosure-coordinated-4C8BF5?style=flat-square)
 
-[Controls and threat model](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security.md) · [Security audit](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security-audit.md) · [Deployment](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/deployment.md) · [Documentation](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/README.md)
+[Controls and threat model](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security.md) · [Security audit](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security-audit.md) · [Deployment](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/deployment.md) · [Documentation](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/README.md)
 
 </div>
 
@@ -31,7 +31,7 @@
 It sets out what this project promises, what it asks of you, and how a report is handled.
 
 It is **not** the control set. What the software actually does to defend itself lives in
-[docs/security.md](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security.md):
+[docs/security.md](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security.md):
 
 - **The threat model** - what is defended against, in order of likelihood
 - **Authentication** - password storage and policy, two-factor, account-enumeration and
@@ -46,7 +46,7 @@ It is **not** the control set. What the software actually does to defend itself 
 Each with the reasoning behind it, and the alternatives that were rejected.
 
 > [!NOTE]
-> **Every commitment here is kept.** Personal ERP is maintained by one person, in their
+> **Every commitment here is kept.** Stellar ERP is maintained by one person, in their
 > own time, so this document promises only what one person can deliver: there is no
 > guaranteed response time and no bug bounty. What there is: a reply to every report, a
 > fix when the finding is real, and disclosure dates you can plan around.
@@ -74,7 +74,7 @@ maintainer before it reaches the public.
 | **The application code** | Everything in this repository - backend, web client, desktop client, migrations |
 | **The shipped configuration** | `docker-compose.yml`, `docker-compose.prod.yml`, the Dockerfiles, the Makefile, the CI workflow |
 | **Documented defaults** | A setting whose documented value is unsafe is a finding, even if the code is doing what it was told |
-| **The installer** | `installer/personal-erp.iss` and what it packages |
+| **The installer** | `installer/stellar-erp.iss` and what it packages |
 
 ### What counts as a vulnerability here
 
@@ -98,8 +98,8 @@ to be intended behaviour costs one reply; an unreported flaw costs every install
 
 | | |
 | --- | --- |
-| **Your deployment's own infrastructure** | TLS terminator, DNS, host, firewall, database hardening. The [pre-flight checklist](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/deployment.md#8-pre-flight-checklist) is where to check whether the stack expected you to configure something |
-| **Accepted limits already documented** | [What this does not solve](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security-audit.md#what-this-does-not-solve) states them plainly - volumetric DDoS, infrastructure-level insider threat, supply-chain attestation |
+| **Your deployment's own infrastructure** | TLS terminator, DNS, host, firewall, database hardening. The [pre-flight checklist](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/deployment.md#8-pre-flight-checklist) is where to check whether the stack expected you to configure something |
+| **Accepted limits already documented** | [What this does not solve](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security-audit.md#what-this-does-not-solve) states them plainly - volumetric DDoS, infrastructure-level insider threat, supply-chain attestation |
 | **Findings that need an admin already** | An owner can delete their own organization. That is the feature |
 | **Missing hardening with no exploit** | A header that could be stricter, a dependency with a CVE in a code path this project never calls. Still welcome as an issue - just not as a vulnerability report |
 | **Automated scanner output** | Pasted without a working reproduction. It costs more to triage than to run |
@@ -220,9 +220,9 @@ process. Nothing is backported, because there is nothing to backport *to*.
 | | |
 | --- | --- |
 | **You are on whatever you last pulled** | There is no version number to check and no upgrade notice. `git log --oneline HEAD..origin/main` tells you what you are missing |
-| **Updating is a `git pull` and a rebuild** | The exact sequence, including taking a backup first and running migrations as a separate step, is [Deploying updates](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/deployment.md#6-deploying-updates) |
+| **Updating is a `git pull` and a rebuild** | The exact sequence, including taking a backup first and running migrations as a separate step, is [Deploying updates](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/deployment.md#6-deploying-updates) |
 | **A pull is not always enough** | Some fixes change the *deployment shape* - a new setting in `.env`, a changed compose service, something your TLS terminator has to do. Those need a read, not just a rebuild |
-| **The audit says which is which** | The [audit report](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security-audit.md) marks the findings that changed the deployment rather than only the code |
+| **The audit says which is which** | The [audit report](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security-audit.md) marks the findings that changed the deployment rather than only the code |
 
 **So: pull regularly.** An install that has not been updated in months is running every
 flaw fixed since, and nothing in this repository will tell it so - there is no telemetry,
@@ -243,7 +243,7 @@ particular, both worth reading before you go live:
   this repository cannot check for you - which is why production refuses to boot without
   https origins rather than quietly serving sessions in the clear.
 
-The [pre-flight checklist](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/deployment.md#8-pre-flight-checklist)
+The [pre-flight checklist](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/deployment.md#8-pre-flight-checklist)
 is the short version of everything the stack expects you to have configured.
 
 ---
@@ -252,9 +252,9 @@ is the short version of everything the stack expects you to have configured.
 
 Two places worth checking before you write a report:
 
-- **[The security audit](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security-audit.md)** -
+- **[The security audit](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security-audit.md)** -
   sixteen findings against running code, each with its fix and how to verify it
-- **[What this does not solve](https://github.com/Madhur-Prakash/Personal-ERP/blob/main/docs/security-audit.md#what-this-does-not-solve)** -
+- **[What this does not solve](https://github.com/Madhur-Prakash/Stellar-ERP/blob/main/docs/security-audit.md#what-this-does-not-solve)** -
   the accepted limits, named rather than left implied
 
 Checking there first saves us both a round trip.
