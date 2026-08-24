@@ -18,8 +18,8 @@ import 'widgets/toast.dart';
 /// The toast host wraps the router rather than sitting inside it, so a toast raised by a
 /// mutation survives the navigation that mutation triggers - "invoice posted" should not
 /// vanish because the screen behind it moved on.
-class PersonalErpApp extends ConsumerWidget {
-  const PersonalErpApp({super.key});
+class StellarErpApp extends ConsumerWidget {
+  const StellarErpApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

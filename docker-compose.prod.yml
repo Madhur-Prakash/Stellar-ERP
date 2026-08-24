@@ -1,5 +1,5 @@
 # =============================================================================
-# Personal ERP - production stack for a self-hosted VPS
+# Stellar ERP - production stack for a self-hosted VPS
 #
 #   cp .env.sample .env       # then fill in real secrets
 #   docker compose -f docker-compose.prod.yml up -d --build
@@ -41,7 +41,7 @@
 #     and still runs.
 # =============================================================================
 
-name: personalerp-prod
+name: stellarerp-prod
 
 # Applied to every container. Both are one line each and both remove a whole class of
 # escalation:
@@ -241,7 +241,15 @@ services:
         # Baked into the bundle at build time. Must be the public origin.
         VITE_API_BASE_URL: ${PUBLIC_API_URL:-https://app.example.com}
         VITE_API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
-        VITE_APP_NAME: ${APP_NAME:-Personal ERP}
+        VITE_APP_NAME: ${APP_NAME:-Stellar ERP}
+        # The chain the browser reads, so the verifier can check the contract
+        # without asking this API. Must agree with the backend's STELLAR_NETWORK,
+        # SOROBAN_CONTRACT_ID and SOROBAN_RPC_URL, and it is baked in at build
+        # time - a change here needs a rebuild, not a restart.
+        VITE_STELLAR_NETWORK: ${VITE_STELLAR_NETWORK:-${STELLAR_NETWORK:-testnet}}
+        VITE_SOROBAN_CONTRACT_ID: ${VITE_SOROBAN_CONTRACT_ID:-${SOROBAN_CONTRACT_ID:-}}
+        VITE_SOROBAN_RPC_URL: ${VITE_SOROBAN_RPC_URL:-}
+        VITE_SENTRY_DSN: ${VITE_SENTRY_DSN:-}
     restart: always
     <<: *hardening
     read_only: true

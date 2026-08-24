@@ -4,7 +4,7 @@
 
 **How to report something, how to propose something, and what a mergeable change looks like.**
 
-[Readme](README.md) · [Documentation](docs/README.md) · [Development](docs/development.md) · [Architecture](docs/architecture.md) · [Security](docs/security.md)
+[Readme](README.md) · [Documentation](docs/README.md) · [Development](docs/development.md) · [Architecture](docs/architecture.md) · [Proof ledger](docs/attestation.md) · [Security](docs/security.md)
 
 </div>
 
@@ -20,14 +20,16 @@ quickly. Large ones land only if the shape was agreed before the code was writte
 
 | You want to | Do this |
 | --- | --- |
-| Report a bug | [Open a bug report](https://github.com/Madhur-Prakash/Personal-ERP/issues/new?labels=bug) |
-| Propose a feature | [Open a feature request](https://github.com/Madhur-Prakash/Personal-ERP/issues/new?labels=enhancement) |
+| Report a bug | [Open a bug report](https://github.com/Madhur-Prakash/Stellar-ERP/issues/new?labels=bug) |
+| Propose a feature | [Open a feature request](https://github.com/Madhur-Prakash/Stellar-ERP/issues/new?labels=enhancement) |
 | Report a **security vulnerability** | **Not an issue.** Use GitHub's private vulnerability reporting - see [SECURITY.md](SECURITY.md) |
-| Ask how something works | Check [docs/](docs/README.md) first - it is nine documents deep and indexed by task - then open a discussion or an issue |
+| Ask how something works | Check [docs/](docs/README.md) first - it is ten documents deep and indexed by task - then open a discussion or an issue |
 
 **Search the existing issues first**, and check [Delivery status](README.md#delivery-status).
-Stages 6, 7, 9 and 10 are *planned*, not missing - a request for the AI assistant or the
-workflow builder is already on the roadmap rather than a gap nobody noticed.
+Stages 6, 7 and 9 are *planned*, not missing - a request for the AI assistant or the
+workflow builder is already on the roadmap rather than a gap nobody noticed. Stage 12
+(settlement) is **gated** rather than planned: it needs Stellar Builder Team approval,
+so a PR that starts building anchors will be held rather than merged.
 
 ---
 
@@ -42,7 +44,7 @@ The report that gets fixed fastest contains:
 - **The `X-Request-ID` from the response**, if it was an API call. Every response carries
   one and the log is filterable by it:
   ```bash
-  tail -f logs/personalerp.log | jq 'select(.request_id == "<id>")'
+  tail -f logs/stellarerp.log | jq 'select(.request_id == "<id>")'
   ```
 - **The relevant log lines.** Redaction is on by default, so pasted output should already
   be free of tokens - check anyway before posting
@@ -72,7 +74,7 @@ is easier to get right once the first is written down.
 
 ## Setting up to work on it
 
-Requires Docker, [uv](https://docs.astral.sh/uv/), Node 22, and Flutter for the desktop
+Requires Docker, [uv](https://docs.astral.sh/uv/), Node 24, and Flutter for the desktop
 client.
 
 ```bash
@@ -137,12 +139,27 @@ rather than toward a coverage percentage:
 - Owner-lockout prevention
 - Ledger balance under concurrency
 - Secret redaction
+- The proof ledger's ambiguous failure - a submission that lands *and* times out
 
 ```bash
-make test              # backend, needs PostgreSQL + Redis
+make test              # backend + web + desktop; backend needs PostgreSQL + Redis
 make test-cov          # with coverage
+make contract-test     # the Soroban contract, 28 adversarial tests
 cd backend && uv run pytest -k "two_factor" -v
 ```
+
+**Two rules specific to the proof ledger, because breaking either is expensive in a way
+review does not catch.**
+
+`frontend/src/features/trust/canonical.test.ts` pins the TypeScript encoding to a golden
+vector that `backend/tests/test_attestation_canonical.py` asserts as well. **If it fails,
+do not update the expected value.** A changed vector means every proof already handed to
+a bank now reads as tampering. If the encoding genuinely must change, raise
+`CANONICAL_VERSION` so old bundles keep verifying.
+
+Contract tests are written **adversarially**: the contract's value is what it refuses, so
+most of them assert a panic on a specific error code. A new one that only proves sealing
+works is not a test worth adding.
 
 Tests run against **real PostgreSQL 17 and Redis 7**, not substitutes - partial unique
 indexes, JSONB, cursor pagination and `SELECT … FOR UPDATE` are exactly what a substitute
@@ -161,10 +178,13 @@ make check      # lint + typecheck + test, every surface
 make db-check   # no migration drift
 ```
 
-**Run both, because CI will not.** [`ci.yml`](.github/workflows/ci.yml) has two jobs -
-Frontend (`tsc -b`, `eslint`, `prettier --check`, `vite build`) and Compose config. The
-There is no backend job, so `ruff`, `mypy --strict`, `pytest` and `alembic check` block
-nothing on their own. A red backend merges unless you catch it here.
+Plus `make contract-test` if you touched `contracts/`.
+
+**Run them, because CI will not.** [`ci.yml`](.github/workflows/ci.yml) has two jobs -
+Frontend (`tsc -b`, `eslint`, `prettier --check`, `vite build`) and Compose config.
+There is no backend job and no contract job, so `ruff`, `mypy --strict`, `pytest`,
+`alembic check` and `cargo test` block nothing on their own. A red backend merges unless
+you catch it here.
 
 ---
 
