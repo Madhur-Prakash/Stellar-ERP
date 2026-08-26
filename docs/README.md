@@ -2,9 +2,9 @@
 
 # Documentation
 
-**Ten documents covering what this system is, how it is built, and how to run it.**
+**Eleven documents covering what this system is, how it is built, and how to run it.**
 
-[Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Development](development.md) · [Deployment](deployment.md)
 
 </div>
 
@@ -25,6 +25,10 @@ Pick the row that matches what you are trying to do.
 
 | I want to… | Read, in order |
 | --- | --- |
+| **Just run the thing** | [Commands](commands.md#2-first-time-setup) - every task as a `make` target and as raw commands |
+| **Deploy the contract** | [Commands](commands.md#5-the-proof-ledger-contract) → [Proof ledger](attestation.md) |
+| **See the deployed contract** | [Commands](commands.md#6-seeing-the-deployed-contract) - six ways, two of which trust us not at all |
+| **Show that the records cannot be altered** | [Commands](commands.md#7-demonstrating-that-the-records-are-tamper-evident) |
 | **Understand the third ledger** | [Proof ledger](attestation.md) → [`contracts/README.md`](../contracts/README.md) |
 | **Verify a proof somebody sent me** | [Proof ledger](attestation.md#what-a-seal-proves--stated-precisely) - then open `/verify`. No account, no wallet |
 | **Run it on my machine** | [Development](development.md) → [Architecture](architecture.md) |
@@ -49,6 +53,7 @@ Pick the row that matches what you are trying to do.
 | [**API**](api.md) | The HTTP contract: authentication flows, the error envelope, endpoints, pagination, and rate limits. |
 | [**Security**](security.md) | The threat model and every control, each with its rationale - network edge, authentication, sessions, authorization, input handling, secrets, and rate limiting. |
 | [**Security audit**](security-audit.md) | A full review of the exposure surface: sixteen findings, each verified against the code, with the fix applied and how to confirm it. Several carry supersession notes where the system has since changed, and the limits the third ledger adds are stated there rather than left implied. |
+| [**Commands**](commands.md) | Every task twice: as a `make` target and as the raw commands it runs. Prerequisites, first-time setup, running it, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, quality gates, release builds, production, and a troubleshooting table. |
 | [**Development**](development.md) | Local setup, backend and frontend conventions, testing, the pre-PR checklist, debugging, and the gotchas hit while building this. |
 | [**Deployment**](deployment.md) | Self-hosting on a VPS: configuration, the proxy you have to supply, backups, updates, and a pre-flight checklist. |
 
@@ -67,6 +72,7 @@ graph TD
     sec[Security<br/>the controls]
     audit[Security audit<br/>the review]
     dev[Development<br/>working on it]
+    cmds[Commands<br/>how to run anything]
     deploy[Deployment<br/>running it]
 
     spec --> arch
@@ -79,7 +85,8 @@ graph TD
     api --> sec
     sec --> audit
     arch --> dev
-    dev --> deploy
+    dev --> cmds
+    cmds --> deploy
     sec --> deploy
 ```
 

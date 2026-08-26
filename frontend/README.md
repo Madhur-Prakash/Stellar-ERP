@@ -12,7 +12,7 @@ client mirrors.
 ![TanStack](https://img.shields.io/badge/TanStack-Router_Query_Table-FF4154?style=flat-square&logo=reactquery&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-type--aware-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 
-[Architecture](../docs/architecture.md#frontend-architecture) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
+[Architecture](../docs/architecture.md#frontend-architecture) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Commands](../docs/commands.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
 
 </div>
 

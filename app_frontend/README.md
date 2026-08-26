@@ -11,7 +11,7 @@ same backend. Windows, macOS, and Linux from one codebase.
 ![Riverpod](https://img.shields.io/badge/Riverpod-state-4A90E2?style=flat-square)
 ![Platforms](https://img.shields.io/badge/platforms-Windows_macOS_Linux-6E7681?style=flat-square)
 
-[Root README](../README.md) · [API](../docs/api.md) · [Architecture](../docs/architecture.md) · [Proof ledger](../docs/attestation.md) · [Installer](../installer/README.md)
+[Root README](../README.md) · [API](../docs/api.md) · [Architecture](../docs/architecture.md) · [Proof ledger](../docs/attestation.md) · [Commands](../docs/commands.md) · [Installer](../installer/README.md)
 
 </div>
 

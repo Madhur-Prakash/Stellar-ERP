@@ -5,7 +5,7 @@
 **What this is meant to be: product goals, modules, delivery model, non-negotiables.**
 
 <!-- nav:start -->
-[Docs](README.md) · **Spec** · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · **Spec** · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
 </div>
@@ -74,23 +74,24 @@ not remove the need to actually execute what you wrote.
 
 ## Modules
 
-Ordered by dependency, not by priority. `✔` = built and verified.
+Ordered by dependency, not by priority. **Built** means built and verified, not
+merely started.
 
 | Module | Depends on | Status |
 | --- | --- | --- |
-| Foundation - auth, orgs, RBAC, audit, design system, CI/CD | - | ✔ |
-| Accounting - chart, journals, ledger, trial balance, P&L, balance sheet, cash flow | Foundation | ✔ |
-| Billing - record money in and out with no customer or supplier; posts real double-entry | Accounting | ✔ |
-| Sales - CRM, leads, quotations, sales orders, invoices, payments | Accounting | ✔ (PDF pending) |
-| Purchasing & inventory - suppliers, POs, goods receipt, warehouses, stock moves, barcodes | Accounting | ✔ |
-| OCR & document intelligence - invoice extraction, per-field confidence, duplicate detection, review UI | Purchasing | ✔ |
-| Analytics - dashboard figures, period comparison, trends, rankings, control-account reconciliation | Accounting | ✔ (report builder pending) |
-| AI assistant - conversational interface, RAG over business data, forecasting | Sales, Purchasing | - |
-| Automation - workflow builder, triggers, scheduled jobs, approvals, messaging | Sales | - |
-| Enterprise - API keys, webhooks, SSO, passkeys, compliance | Foundation | - |
-| Production hardening - security review, monitoring, load testing, tuning | all | monitoring ✔, load testing - |
-| **Proof ledger** - Soroban contract, canonical encoding, Merkle seals, seal worker, public verifier | Accounting | ✔ |
-| Settlement - SEP-24/31 anchors, tokenised receivables, invoice financing | Proof ledger | **gated** |
+| Foundation - auth, orgs, RBAC, audit, design system, CI/CD | - | Built |
+| Accounting - chart, journals, ledger, trial balance, P&L, balance sheet, cash flow | Foundation | Built |
+| Billing - record money in and out with no customer or supplier; posts real double-entry | Accounting | Built |
+| Sales - CRM, leads, quotations, sales orders, invoices, payments | Accounting | Built - PDF pending |
+| Purchasing & inventory - suppliers, POs, goods receipt, warehouses, stock moves, barcodes | Accounting | Built |
+| OCR & document intelligence - invoice extraction, per-field confidence, duplicate detection, review UI | Purchasing | Built |
+| Analytics - dashboard figures, period comparison, trends, rankings, control-account reconciliation | Accounting | Built - report builder pending |
+| AI assistant - conversational interface, RAG over business data, forecasting | Sales, Purchasing | Planned |
+| Automation - workflow builder, triggers, scheduled jobs, approvals, messaging | Sales | Planned |
+| Enterprise - API keys, webhooks, SSO, passkeys, compliance | Foundation | Planned |
+| Production hardening - security review, monitoring, load testing, tuning | all | Monitoring and analytics built; load testing pending |
+| **Proof ledger** - Soroban contract, canonical encoding, Merkle seals, seal worker, public verifier | Accounting | **Built** |
+| Settlement - SEP-24/31 anchors, tokenised receivables, invoice financing | Proof ledger | **Gated** |
 
 Every remaining module is unblocked **except settlement**, which is blocked twice
 over: technically on the proof ledger, and administratively on Stellar Builder Team

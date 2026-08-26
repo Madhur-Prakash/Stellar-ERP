@@ -9,7 +9,7 @@
 ![Wasm](https://img.shields.io/badge/wasm-15_KB-8E5B0C?style=flat-square)
 ![Tests](https://img.shields.io/badge/tests-28_adversarial-2EA043?style=flat-square)
 
-[Design rationale](../docs/attestation.md) · [Source](proof_ledger/src/lib.rs) · [Tests](proof_ledger/src/test.rs)
+[Design rationale](../docs/attestation.md) · [Commands](../docs/commands.md#5-the-proof-ledger-contract) · [Source](proof_ledger/src/lib.rs) · [Tests](proof_ledger/src/test.rs)
 
 </div>
 
@@ -182,5 +182,23 @@ The testnet deployment this repository is configured against:
 | **Wasm hash** | `2324b519f8a205a8cae31e1b8ebf3944be1bc5d1d6ec7028cdea3829f5e79246` |
 | **Explorer** | [stellar.expert](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
 
-The wasm hash is published so anyone can rebuild from this source and confirm they
-get the same bytes that are deployed.
+The same record, machine-readable and written by every deploy, is
+[`deployments/testnet.json`](deployments/testnet.json).
+
+### Checking it yourself
+
+```bash
+# 1. What does the network say is at that address?
+stellar contract info interface --network testnet   --id CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR
+
+# 2. Does this source produce the deployed bytes?
+make contract-build     # must print Wasm Hash: 2324b519...
+```
+
+If the second command prints that hash, the code you have just read is the code
+that is running. That is the whole reason the toolchain is pinned and the hash is
+published; without both, the claim is unverifiable and therefore worthless.
+
+Four more ways to inspect a deployment, including the two that do not involve this
+repository or its API at all, are in
+[Commands, section 6](../docs/commands.md#6-seeing-the-deployed-contract).

@@ -16,7 +16,7 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?style=flat-square&logo=flutter&logoColor=white)
 
-[The third ledger](#the-third-ledger) · [Quick start](#quick-start) · [Verify a proof](#verifying-a-proof) · [Documentation](docs/README.md) · [Design rationale](docs/attestation.md)
+[The third ledger](#the-third-ledger) · [Quick start](#quick-start) · [Verify a proof](#verifying-a-proof) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Design rationale](docs/attestation.md)
 
 </div>
 
@@ -88,6 +88,12 @@ involved.
 > It does **not** prove the entries were true when they were made. No cryptographic
 > scheme can. What it eliminates is **retroactive** fabrication — which is how
 > accounts are actually cooked: by editing history to fit a story told later.
+
+You can watch this rather than take it on faith:
+**[demonstrating tamper-evidence](docs/commands.md#7-demonstrating-that-the-records-are-tamper-evident)**
+walks through posting entries, sealing them, exporting a proof, altering one digit
+of it, and watching verification fail at a nameable step - the recomputed leaf no
+longer folds to a root that was published before the edit was made.
 
 That limitation is on the Trust screen, not buried here. So is the sharper one:
 while the signing key sits on the server, the operator could doctor the books
@@ -280,7 +286,11 @@ make up             # starts the whole stack
 | Desktop client | `make desktop` - a native window, not a URL |
 
 Register at <http://localhost:5173/register>, then open **Trust** and switch sealing
-on. `make help` lists every task.
+on.
+
+`make help` lists every task. **[docs/commands.md](docs/commands.md) gives every one
+of them twice - as a `make` target and as the raw commands it runs** - so you are
+never forced through the wrapper to know what it does.
 
 ### Deploying your own contract
 
@@ -397,7 +407,7 @@ undeployable without the blockchain subsystem.
 │       └── verify/          The public verifier
 ├── app_frontend/            Flutter desktop client · Windows · macOS · Linux
 ├── installer/               Inno Setup script for the Windows desktop build
-└── docs/                    Ten documents - start at docs/README.md
+└── docs/                    Eleven documents - start at docs/README.md
 ```
 
 ---
@@ -440,12 +450,16 @@ Each is explained where it lives, in the code.
 
 ```bash
 make check              # lint + typecheck + test, every surface
+make contract-up        # test, build, deploy the contract, and write .env
 make contract-test      # the contract's 28 adversarial tests
 make test               # backend pytest, frontend vitest, flutter test
 make db-check           # migrations round-trip and match the models
 make seal-worker        # run the seal worker standalone
 make verify-proof f=b.json   # check an exported proof bundle against the chain
 ```
+
+Every target, its raw equivalent, and a troubleshooting table:
+**[docs/commands.md](docs/commands.md)**.
 
 ### Quality gates
 
@@ -499,8 +513,8 @@ Three tests are worth naming, because each found a real defect:
 
 ## Documentation
 
-**[docs/](docs/README.md)** is the index. Ten documents, each explaining *why* as
-well as what.
+**[docs/](docs/README.md)** is the index. Eleven documents, each explaining *why*
+as well as what.
 
 | Document | Contents |
 | --- | --- |
@@ -512,6 +526,7 @@ well as what.
 | [API](docs/api.md) | Auth flows, error contract, pagination, endpoints |
 | [Security](docs/security.md) | Threat model and every control, with rationale |
 | [Security audit](docs/security-audit.md) | Findings against running code, each with its fix and how to verify it |
+| [**Commands**](docs/commands.md) | **Every task as `make` and as raw commands.** Setup, running, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, troubleshooting |
 | [Development](docs/development.md) | Local workflow, conventions, testing, adding a module |
 | [Deployment](docs/deployment.md) | VPS setup, the proxy you supply, backups, updates, pre-flight checklist |
 

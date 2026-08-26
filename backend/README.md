@@ -12,7 +12,7 @@
 ![mypy](https://img.shields.io/badge/mypy-strict-1F5082?style=flat-square)
 ![ruff](https://img.shields.io/badge/ruff-lint_and_format-D7FF64?style=flat-square&logo=ruff&logoColor=black)
 
-[Architecture](../docs/architecture.md) · [Database](../docs/database.md) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Development](../docs/development.md) · [Security](../docs/security.md)
+[Architecture](../docs/architecture.md) · [Database](../docs/database.md) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Commands](../docs/commands.md) · [Development](../docs/development.md) · [Security](../docs/security.md)
 
 </div>
 
