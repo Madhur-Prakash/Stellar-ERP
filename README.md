@@ -68,7 +68,7 @@ runs straight into the DPDP Act. The real problem is narrower and harder:
 | --- | --- | --- |
 | **Ledger 1** | The **journal** | Double-entry accounting. What happened to the money. Your PostgreSQL. |
 | **Ledger 2** | The **audit trail** | Append-only record of who did what, with field-level diffs. Your PostgreSQL. |
-| **Ledger 3** | The **proof ledger** | A Soroban contract on Stellar holding cryptographic commitments to the other two. **No business data. No money.** |
+| **Ledger 3** | The **proof ledger** | A Soroban contract on Stellar holding cryptographic commitments to Ledger 1. **No business data. No money.** |
 
 Every accounting period — daily by default — the system hashes each journal entry
 into a Merkle leaf, computes the batch's root, and writes it to the contract with an

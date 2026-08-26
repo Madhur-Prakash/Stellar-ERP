@@ -138,6 +138,21 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# Take the CLI out of the ambient environment's hands.
+#
+# The CLI reads its own connection settings from the environment, and .env holds
+# variables with the same names - including `SOROBAN_RPC_URL=`, which is
+# deliberately blank so the backend falls back to the network default. Anyone who
+# has sourced .env into their shell (`set -a; . .env`, direnv, a shell inside the
+# API container) hands the CLI a *present but empty* rpc-url, and it stops with
+#
+#     error: rpc-url is used but network passphrase is missing
+#
+# which says nothing about where the rpc-url came from. The defaults above have
+# already been read, and every call below passes --network explicitly, so ambient
+# values can only do harm from here on.
+unset SOROBAN_RPC_URL SOROBAN_NETWORK SOROBAN_NETWORK_PASSPHRASE       SOROBAN_ACCOUNT SOROBAN_SECRET_KEY       STELLAR_RPC_URL STELLAR_NETWORK STELLAR_NETWORK_PASSPHRASE       STELLAR_ACCOUNT STELLAR_SECRET_KEY 2>/dev/null || true
+
 # The application calls mainnet 'public' - Stellar's own name for it, and what
 # STELLAR_NETWORK in .env holds. The CLI calls it 'mainnet' and fails with
 # "Failed to find config network for public", a long way from anything that
@@ -174,7 +189,7 @@ confirm() {
 get_env() {
   local key=$1 line
   [ -f "$ENV_FILE" ] || return 0
-  line=$(grep -E "^[[:space:]]*${key}=" -- "$ENV_FILE" 2>/dev/null | head -n 1 || true)
+  line=$(grep -E "^[[:space:]]*${key}[[:space:]]*=" -- "$ENV_FILE" 2>/dev/null | head -n 1 || true)
   [ -n "$line" ] || return 0
   local value=${line#*=}
   value=$(printf '%s' "$value" | sed -e 's/[[:space:]]\{1,\}#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
@@ -208,14 +223,19 @@ is_unset() {
 APPENDED_HEADER=false
 set_env() {
   local key=$1 value=$2 tmp
+  # Quote anything a dotenv reader would otherwise truncate: it stops an unquoted
+  # value at the first space, and treats ` #` as the start of a comment.
+  case "$value" in
+    *[[:space:]]*|*'#'*) value="\"$value\"" ;;
+  esac
   if $DRY_RUN; then return 0; fi
   tmp=$(mktemp) || die "could not create a temporary file"
 
-  if grep -qE "^[[:space:]]*${key}=" -- "$ENV_FILE" 2>/dev/null; then
+  if grep -qE "^[[:space:]]*${key}[[:space:]]*=" -- "$ENV_FILE" 2>/dev/null; then
     awk -v k="$key" -v v="$value" '
       BEGIN { done = 0 }
       {
-        if (!done && $0 ~ "^[[:space:]]*"k"=") { print k "=" v; done = 1 }
+        if (!done && $0 ~ "^[[:space:]]*"k"[[:space:]]*=") { print k "=" v; done = 1 }
         else print
       }
     ' "$ENV_FILE" >"$tmp"   # no `--` here: awk has no end-of-options marker and

@@ -126,7 +126,7 @@ setup: ## First-time setup: env files, dependencies, database
 	@until $(COMPOSE) exec -T postgres pg_isready -q; do sleep 1; done
 	$(MAKE) migrate
 	@echo ""
-	@echo "Setup complete. Run 'make dev' to start."
+	@echo "Setup complete. Run 'make up' to start the stack."
 
 .PHONY: install
 install: ## Install backend and frontend dependencies
