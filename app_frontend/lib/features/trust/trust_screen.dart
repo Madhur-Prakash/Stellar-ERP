@@ -91,8 +91,15 @@ class _TrustScreenState extends ConsumerState<TrustScreen> {
           ),
         ],
       ),
-      data: (AttestationStatus s) => ListView(
-        padding: const EdgeInsets.only(bottom: 32),
+      // A Column, not a ListView, and not a stylistic choice: `AppShell` places
+      // every screen inside `SingleChildScrollView -> Column`, so the screen is
+      // handed *unbounded* height. A ListView needs a bounded one, throws
+      // "Vertical viewport was given unbounded height" during layout, and in a
+      // release build that renders as an empty page - a screen whose entire job is
+      // to report on the books, silently showing nothing. The shell scrolls, and
+      // supplies the padding too.
+      data: (AttestationStatus s) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           PageHeader(
             title: 'Trust',
@@ -339,6 +346,7 @@ class _SealingState extends StatelessWidget {
           if (status.contractUrl != null)
             AppTextLink(
               label: 'View the contract',
+              trailingIcon: LucideIcons.externalLink,
               onTap: () => launchUrl(Uri.parse(status.contractUrl!)),
             ),
         ],
@@ -516,8 +524,16 @@ class _SealRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Row(
+                // A Wrap rather than a Row: the seal number, its status badge and
+                // the explorer link do not fit side by side once the window is
+                // narrow, and a Row there overflowed by ~60px - which in Flutter
+                // means the status badge was simply not drawn. Truncating would be
+                // worse than wrapping: "Seal #5" with no badge reads as a confirmed
+                // seal, and on this screen that is the one thing it must not do.
+                Wrap(
                   spacing: 8,
+                  runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: <Widget>[
                     Text(
                       'Seal #${seal.seq}',
@@ -534,6 +550,7 @@ class _SealRow extends StatelessWidget {
                     if (seal.isConfirmed && seal.explorerUrl != null)
                       AppTextLink(
                         label: 'transaction',
+                        trailingIcon: LucideIcons.externalLink,
                         onTap: () => launchUrl(Uri.parse(seal.explorerUrl!)),
                       ),
                   ],

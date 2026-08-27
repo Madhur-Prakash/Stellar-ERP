@@ -20,13 +20,35 @@ whole subsystem makes.
 from __future__ import annotations
 
 import datetime as dt
+import re
 import uuid
 from typing import Annotated, Any, Literal
 
-from pydantic import Field, StringConstraints
+from pydantic import Field, StringConstraints, field_validator
 
 from app.core.schemas import BaseSchema, ResponseSchema
 from app.modules.attestation.models import SealCadence, SealStatus, SealTrigger
+
+#: "The client did not mention a time", distinct from an explicit ``null`` meaning
+#: "go back to the server's default". The two are genuinely different instructions,
+#: and collapsing them would make it impossible to stop overriding once you had
+#: started. -1 stands in, outside the 0-1439 a real value occupies.
+UNSET_MINUTE = -1
+
+#: ``HH:MM`` on a 24-hour clock. Anchored at both ends so ``"9:00am"`` is rejected
+#: rather than half-parsed into something plausible and wrong.
+TIME_OF_DAY = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)$")
+
+
+def minute_of_day(text: str) -> int:
+    """``"01:30"`` -> ``90``. Assumes :data:`TIME_OF_DAY` has already matched."""
+    hours, minutes = text.split(":")
+    return int(hours) * 60 + int(minutes)
+
+
+def time_of_day(minute: int) -> str:
+    """``90`` -> ``"01:30"``. The inverse of :func:`minute_of_day`."""
+    return f"{minute // 60:02d}:{minute % 60:02d}"
 
 # ---------------------------------------------------------------------------
 # Field types
@@ -74,6 +96,32 @@ class EnableAttestationRequest(BaseSchema):
 
 class SetCadenceRequest(BaseSchema):
     cadence: SealCadence
+
+    #: ``HH:MM`` in the organization's own timezone - any minute of the day, not a
+    #: shortlist of hours. The useful sealing time is whenever nobody is posting,
+    #: and that is 01:00 for one business and 03:30 for another.
+    #:
+    #: Omitted leaves whatever is stored; ``null`` clears it back to the install's
+    #: ``SEAL_DAILY_HOUR``. Told apart by ``model_fields_set`` rather than by a
+    #: sentinel on the wire, so the API stays honest about what it accepts.
+    seal_time: str | None = None
+
+    @field_validator("seal_time")
+    @classmethod
+    def _check_time(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        text = value.strip()
+        if not TIME_OF_DAY.match(text):
+            raise ValueError("seal_time must be HH:MM on a 24-hour clock, for example 01:30")
+        return text
+
+    @property
+    def seal_minute(self) -> int | None:
+        """Minutes past midnight, ``None`` to clear, :data:`UNSET_MINUTE` if omitted."""
+        if "seal_time" not in self.model_fields_set:
+            return UNSET_MINUTE
+        return None if self.seal_time is None else minute_of_day(self.seal_time)
 
 
 class RotateSignerRequest(BaseSchema):
@@ -179,6 +227,14 @@ class AttestationStatusRead(ResponseSchema):
     contract_url: str | None
     org_namespace: str | None
     cadence: SealCadence
+
+    #: The organization's chosen sealing time as ``HH:MM``, and the one actually in
+    #: force. The second is never null, so a screen can state a time without having
+    #: to know the server's configuration - and the first being null is worth
+    #: showing, because "following the server default" is a real answer.
+    seal_time: str | None
+    effective_seal_time: str
+    timezone: str
 
     signer_public_key: str | None
     #: True when the key is held outside this server. Distinguished from "not

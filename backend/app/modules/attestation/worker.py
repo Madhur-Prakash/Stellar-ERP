@@ -55,7 +55,6 @@ import asyncio
 import contextlib
 import datetime as dt
 import signal
-import uuid
 from typing import Any
 
 import app.db.registry  # noqa: F401  - registers every mapper; see below
@@ -128,7 +127,7 @@ async def _seal_due_organizations(session: Any) -> list[dict[str, Any]]:
         if await seal_repo.exists_open(setting.organization_id):
             continue
 
-        if not await _daily_window_open(session, setting.organization_id, seal_repo):
+        if not await _daily_window_open(session, setting, seal_repo):
             continue
 
         try:
@@ -155,24 +154,33 @@ async def _seal_due_organizations(session: Any) -> list[dict[str, Any]]:
     return prepared
 
 
-async def _daily_window_open(
-    session: Any, organization_id: uuid.UUID, seal_repo: SealRepository
-) -> bool:
+async def _daily_window_open(session: Any, setting: Any, seal_repo: SealRepository) -> bool:
     """Whether this organization is due a daily seal.
 
     Due means: the organization's own local date has advanced past the date of its
-    last confirmed seal, and its configured hour has passed.
+    last confirmed seal, and its chosen hour has passed.
 
     **The organization's clock, not the server's.** A business in Asia/Kolkata on a
     server in UTC would otherwise have its "daily" seal fire at 06:30 local, and
     its 23:58 entries would land in the following day's batch - which is not
     wrong, exactly, but it makes "sealed up to yesterday" mean something different
-    from what the owner reads on the screen.
-    """
-    from app.modules.organizations.clock import organization_today
+    from what the owner reads on the screen. The hour is read in that same zone for
+    the same reason: an owner who picks 01:00 means 01:00 where they are.
 
-    local_today = await organization_today(session, organization_id)
-    now_utc = dt.datetime.now(dt.UTC)
+    The time comes from ``AttestationSetting.seal_minute`` when the organization has
+    set one, and from ``SEAL_DAILY_HOUR`` when it has not - so an install-wide
+    default still moves the organizations that never expressed a preference.
+    """
+    from app.modules.organizations.clock import organization_now
+
+    organization_id = setting.organization_id
+    local_now = await organization_now(session, organization_id)
+    local_today = local_now.date()
+    due_minute = (
+        setting.seal_minute
+        if setting.seal_minute is not None
+        else settings.seal_daily_hour * 60
+    )
 
     last = await seal_repo.latest_confirmed(organization_id)
     if last is None:
@@ -185,12 +193,10 @@ async def _daily_window_open(
     if local_today <= last_local_date:
         return False
 
-    # Past the configured hour, measured against the organization's own day. Using
-    # the UTC hour here would make SEAL_DAILY_HOUR mean a different local time for
-    # every tenant.
-    return now_utc.hour >= settings.seal_daily_hour or local_today > last_local_date + dt.timedelta(
-        days=1
-    )
+    # Past the chosen time - or more than a day behind, in which case the time is
+    # ignored so a worker that was down does not skip a day permanently.
+    minute_now = local_now.hour * 60 + local_now.minute
+    return minute_now >= due_minute or local_today > last_local_date + dt.timedelta(days=1)
 
 
 async def reconcile_all() -> dict[str, Any]:

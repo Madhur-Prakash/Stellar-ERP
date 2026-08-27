@@ -231,6 +231,28 @@ class AttestationSetting(Base, UUIDPrimaryKeyMixin, OrgScopedMixin, TimestampMix
         default=SealCadence.DAILY,
     )
 
+    #: The time of day at which a ``DAILY`` seal may fire, as minutes past
+    #: midnight in the organization's own timezone (0-1439). Null means "use the
+    #: install's ``SEAL_DAILY_HOUR``".
+    #:
+    #: **Minutes, not an hour.** The useful sealing time is whenever nobody is
+    #: posting, and that is 01:00 for one business and 03:30 for another whose
+    #: night shift ends at 03:00. An hour column would have made "half past"
+    #: unrepresentable, and widening it later means guessing what a stored 3 meant.
+    #:
+    #: **Nullable rather than defaulted, and the distinction earns its keep.** A
+    #: stored 1 and an unset hour look the same until the operator changes
+    #: ``SEAL_DAILY_HOUR``, at which point every organization that never expressed a
+    #: preference should follow and every organization that did should not. Writing
+    #: the default in at enable time would silently pin thousands of tenants to
+    #: whatever the value happened to be that afternoon.
+    #:
+    #: **The organization's clock, not UTC.** An owner who picks 01:30 means 01:30
+    #: where the business is; comparing against a server time makes one setting
+    #: fire at a different wall-clock moment for every tenant. The worker resolves
+    #: it through :func:`app.modules.organizations.clock.organization_now`.
+    seal_minute: Mapped[int | None] = mapped_column(SmallInteger)
+
     #: When ``register`` was confirmed on chain, and the transaction that did it.
     #: Null means the namespace exists locally but the book does not exist on
     #: chain yet, so nothing can be sealed.
@@ -247,6 +269,13 @@ class AttestationSetting(Base, UUIDPrimaryKeyMixin, OrgScopedMixin, TimestampMix
         CheckConstraint(
             "enabled = false OR (contract_id IS NOT NULL AND network IS NOT NULL)",
             name="enabled_is_configured",
+        ),
+        # A value outside 0-1439 is not a preference, it is one that would never
+        # match and so would stop sealing altogether - silently, which is the one
+        # failure mode this subsystem must not have.
+        CheckConstraint(
+            "seal_minute IS NULL OR (seal_minute >= 0 AND seal_minute <= 1439)",
+            name="seal_minute_is_a_time_of_day",
         ),
     )
 

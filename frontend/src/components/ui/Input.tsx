@@ -6,8 +6,15 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
   label?: string;
   /** Validation message. Its presence switches the field into the error state. */
   error?: string | undefined;
-  /** Guidance below the field, hidden while an error is shown. */
-  hint?: string;
+  /**
+   * Guidance below the field, hidden while an error is shown.
+   *
+   * `ReactNode` rather than `string`, matching `Select` and `Listbox`: a hint often
+   * needs one emphasised word or an inline link, and the three components sitting
+   * next to each other in the same form should not disagree about whether that is
+   * allowed.
+   */
+  hint?: ReactNode;
   leftIcon?: ReactNode;
   rightSlot?: ReactNode;
 }

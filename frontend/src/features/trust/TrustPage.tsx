@@ -35,7 +35,8 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Select } from '@/components/ui/Select';
+import { Input } from '@/components/ui/Input';
+import { Listbox } from '@/components/ui/Listbox';
 import { Skeleton } from '@/components/ui/Skeleton';
 import {
   type AttestationStatus,
@@ -48,11 +49,86 @@ import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { formatDateTime, formatNumber } from '@/lib/format';
 
-const CADENCE_OPTIONS: { value: SealCadence; label: string }[] = [
-  { value: 'daily', label: 'Every day, and when a period closes' },
-  { value: 'on_period_close', label: 'Only when a period closes' },
-  { value: 'manual', label: 'Only when I press the button' },
+const CADENCE_OPTIONS: { value: SealCadence; label: string; detail: string }[] = [
+  {
+    value: 'daily',
+    label: 'Every day, and when a period closes',
+    detail: 'Recommended - narrows the tampering window to a day',
+  },
+  {
+    value: 'on_period_close',
+    label: 'Only when a period closes',
+    detail: 'Leaves a whole period rewritable',
+  },
+  {
+    value: 'manual',
+    label: 'Only when I press the button',
+    detail: 'Closing a period will not seal',
+  },
 ];
+
+/**
+ * The sealing time, as a real time field.
+ *
+ * **A free input rather than a list of hours.** The right moment to seal is
+ * whenever nobody is posting, and that is 01:00 for one business and 03:30 for
+ * another whose night shift ends at 03:00. A dropdown of twenty-four whole hours
+ * made half of those unrepresentable while looking like a complete set of choices.
+ *
+ * Committed on blur and on Enter, not on every keystroke: `<input type="time">`
+ * emits a change for each field as it is filled, so saving on change would fire a
+ * request for 0:00 on the way to 03:30 - and each of those is a real setting that
+ * would take effect if the next keystroke never came.
+ */
+function SealTimeField({
+  value,
+  timezone,
+  following,
+  disabled,
+  onCommit,
+}: {
+  value: string;
+  timezone: string;
+  following: boolean;
+  disabled: boolean;
+  onCommit: (next: string) => void;
+}) {
+  // Seeded once. The parent keys this component on `value`, so a server answer
+  // that differs from what we sent remounts it with the new time - which is the
+  // declarative version of syncing in an effect, and one render cheaper.
+  const [draft, setDraft] = useState(value);
+
+  const commit = () => {
+    if (draft && draft !== value) onCommit(draft);
+    else setDraft(value);
+  };
+
+  return (
+    <Input
+      type="time"
+      label="What time of day"
+      value={draft}
+      disabled={disabled}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          commit();
+        } else if (event.key === 'Escape') {
+          setDraft(value);
+        }
+      }}
+      hint={
+        <>
+          {timezone} - your organization&apos;s clock, not the server&apos;s. Any minute of the
+          day.
+          {following && ' Currently following the server default.'}
+        </>
+      }
+    />
+  );
+}
 
 export function TrustPage() {
   const queryClient = useQueryClient();
@@ -144,7 +220,8 @@ export function TrustPage() {
   });
 
   const setCadence = useMutation({
-    mutationFn: (cadence: SealCadence) => trustApi.setCadence(cadence),
+    mutationFn: ({ cadence, sealTime }: { cadence: SealCadence; sealTime?: string | null }) =>
+      trustApi.setCadence(cadence, sealTime),
     onSuccess: () => {
       toast.success('Sealing schedule updated.');
       invalidate();
@@ -331,14 +408,33 @@ export function TrustPage() {
         />
         <CardBody className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Select
+            <Listbox
               label="How often to seal"
               value={status.cadence}
               options={CADENCE_OPTIONS}
               disabled={!status.enabled || setCadence.isPending}
-              onChange={(event) => setCadence.mutate(event.target.value as SealCadence)}
+              onChange={(next) => setCadence.mutate({ cadence: next as SealCadence })}
               hint="Sealing more often narrows the window in which history could be rewritten. On Stellar it costs a fraction of a cent, so daily is the default."
             />
+
+            {/*
+              Shown only for the daily cadence, because for the other two there is no
+              hour to choose - a disabled control implying otherwise would be worse
+              than no control. `effective_seal_hour` is never null, so the value is
+              real whether or not this organization has expressed a preference.
+            */}
+            {status.cadence === 'daily' && (
+              <SealTimeField
+                key={status.effective_seal_time}
+                value={status.effective_seal_time}
+                timezone={status.timezone}
+                following={status.seal_time === null}
+                disabled={!status.enabled || setCadence.isPending}
+                onCommit={(next) =>
+                  setCadence.mutate({ cadence: status.cadence, sealTime: next })
+                }
+              />
+            )}
 
             <div>
               <span className="text-content-secondary mb-1.5 block text-[13px] font-medium">

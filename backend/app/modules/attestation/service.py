@@ -73,6 +73,7 @@ from app.modules.attestation.repository import (
     SealLeafRepository,
     SealRepository,
 )
+from app.modules.attestation.schemas import UNSET_MINUTE, time_of_day
 from app.modules.attestation.stellar import (
     GENESIS_ROOT,
     BookView,
@@ -151,6 +152,9 @@ class AttestationStatus:
     contract_id: str | None
     org_namespace: str | None
     cadence: SealCadence
+    seal_time: str | None
+    effective_seal_time: str
+    timezone: str
     signer_public_key: str | None
     external_signer: bool
     registered_at: dt.datetime | None
@@ -391,6 +395,11 @@ class AttestationService:
                 f"https://stellar.expert/explorer/{segment}/contract/{setting.contract_id}"
             )
 
+        # Imported here rather than at module scope: attestation is a subscriber to
+        # accounting and organizations, not a peer, and a top-level import would
+        # make the dependency look mutual.
+        from app.modules.organizations.clock import organization_timezone
+
         return AttestationStatus(
             enabled=setting.enabled,
             configured=bool(setting.contract_id and setting.network),
@@ -399,6 +408,15 @@ class AttestationService:
             contract_id=setting.contract_id,
             org_namespace=setting.org_namespace,
             cadence=setting.cadence,
+            seal_time=(
+                time_of_day(setting.seal_minute) if setting.seal_minute is not None else None
+            ),
+            effective_seal_time=time_of_day(
+                setting.seal_minute
+                if setting.seal_minute is not None
+                else settings.seal_daily_hour * 60
+            ),
+            timezone=await organization_timezone(self.session, organization_id),
             signer_public_key=setting.signer_public_key,
             external_signer=setting.external_signer,
             registered_at=setting.registered_at,
@@ -678,11 +696,41 @@ class AttestationService:
         cadence: SealCadence,
         actor: User,
         ctx: RequestContext | None = None,
+        seal_minute: int | None = UNSET_MINUTE,
     ) -> AttestationSetting:
+        """Change the cadence, and optionally the time of day a daily seal fires.
+
+        ``seal_minute`` distinguishes three requests, because they mean three
+        things: :data:`UNSET_MINUTE` leaves the stored value alone, an integer pins
+        the time, and ``None`` clears it so the install's ``SEAL_DAILY_HOUR``
+        applies again. A two-state parameter would make it impossible to stop
+        overriding once you had started.
+        """
         setting = await self.ensure_setting(organization_id)
         before = setting.cadence
+        before_minute = setting.seal_minute
         setting.cadence = cadence
+
+        changes: dict[str, dict[str, object]] = {
+            "cadence": {"before": before.value, "after": cadence.value}
+        }
+        if seal_minute != UNSET_MINUTE:
+            setting.seal_minute = seal_minute
+            if before_minute != seal_minute:
+                changes["seal_time"] = {
+                    "before": time_of_day(before_minute) if before_minute is not None else None,
+                    "after": time_of_day(seal_minute) if seal_minute is not None else None,
+                }
+
         await self.session.flush()
+
+        summary = f"Seal cadence changed from {before.value} to {cadence.value}"
+        if "seal_time" in changes:
+            summary += (
+                f"; daily seal time set to {time_of_day(seal_minute)} local"
+                if seal_minute is not None
+                else "; daily seal time reset to the server default"
+            )
 
         await self.audit.record(
             AuditAction.SETTINGS_UPDATED,
@@ -690,8 +738,8 @@ class AttestationService:
             organization_id=organization_id,
             resource_type="attestation_setting",
             resource_id=setting.id,
-            summary=f"Seal cadence changed from {before.value} to {cadence.value}",
-            changes={"cadence": {"before": before.value, "after": cadence.value}},
+            summary=summary,
+            changes=changes,
             **_audit_ctx(ctx),
         )
         return setting

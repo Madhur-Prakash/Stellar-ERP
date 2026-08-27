@@ -667,10 +667,20 @@ class AppTextLink extends StatefulWidget {
     this.fontWeight = FontWeight.w500,
     this.colour,
     this.hoverColour,
+    this.trailingIcon,
   });
 
   final String label;
   final VoidCallback onTap;
+
+  /// A glyph after the label, for a link that leaves the application.
+  ///
+  /// Colour and blue text say "this is a link"; they say nothing about *where*.
+  /// A desktop app has no address bar and no status bar, so without a marker the
+  /// only way to discover that a link opens a browser is to click it - which, on
+  /// this screen, is the difference between reading a figure and being handed to
+  /// a block explorer. The web counterpart carries the same icon.
+  final IconData? trailingIcon;
   final double fontSize;
   final FontWeight fontWeight;
   final Color? colour;
@@ -725,7 +735,23 @@ class _AppTextLinkState extends State<AppTextLink> {
                   : null,
               decorationColor: colour,
             ),
-            child: Text(widget.label),
+            // A Row only when there is an icon: wrapping every link in one would
+            // change how each sits in its parent, and most of them are inline in
+            // running text where a Row's cross-axis stretch is wrong.
+            child: widget.trailingIcon == null
+                ? Text(widget.label)
+                : Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 4,
+                    children: <Widget>[
+                      Text(widget.label),
+                      Icon(
+                        widget.trailingIcon,
+                        size: widget.fontSize - 1,
+                        color: colour,
+                      ),
+                    ],
+                  ),
           ),
         ),
       ),

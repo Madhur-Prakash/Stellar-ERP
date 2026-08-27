@@ -78,6 +78,12 @@ export interface AttestationStatus {
   contract_url: string | null;
   org_namespace: string | null;
   cadence: SealCadence;
+  /** "HH:MM" this organization chose, or null to follow the server's default. */
+  seal_time: string | null;
+  /** The time actually in force, so the screen can state one either way. */
+  effective_seal_time: string;
+  /** Which clock that hour is on. "Seal at 01:00" is not an instruction without it. */
+  timezone: string;
 
   signer_public_key: string | null;
   /** True when the key is held outside this server - a stronger posture. */
@@ -216,8 +222,17 @@ export const trustApi = {
 
   disable: () => api.post<AttestationStatus>('/attestation/disable', {}),
 
-  setCadence: (cadence: SealCadence) =>
-    api.patch<AttestationStatus>('/attestation/cadence', { cadence }),
+  /**
+   * `sealTime` is "HH:MM" in the organization's own timezone. Omitted leaves the
+   * stored time alone; `null` clears it back to the server's default. The two are
+   * different instructions, so the distinction is carried to the API rather than
+   * collapsed here - the key is simply absent when nothing was said.
+   */
+  setCadence: (cadence: SealCadence, sealTime?: string | null) =>
+    api.patch<AttestationStatus>('/attestation/cadence', {
+      cadence,
+      ...(sealTime === undefined ? {} : { seal_time: sealTime }),
+    }),
 
   rotateSigner: (newAdmin: string) =>
     api.post<AttestationStatus>('/attestation/signer/rotate', { new_admin: newAdmin }),

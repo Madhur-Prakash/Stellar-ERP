@@ -269,6 +269,21 @@ def local_date(instant: dt.datetime, timezone_name: str) -> dt.date:
     string is a configuration error worth logging, not a reason to fail the whole
     dashboard; being off by a few hours beats showing nothing.
     """
+    return local_datetime(instant, timezone_name).date()
+
+
+def local_datetime(instant: dt.datetime, timezone_name: str) -> dt.datetime:
+    """``instant`` expressed in ``timezone_name``, still timezone-aware.
+
+    :func:`local_date` is this, with the time thrown away. Kept separate because one
+    caller needs the *hour*: the seal worker asks whether an organization's chosen
+    sealing time has arrived, and "01:00" has to mean 01:00 where the business is.
+    Comparing a UTC hour against a setting the owner picked in local time makes the
+    same setting fire at a different wall-clock time for every tenant.
+
+    Same fallback and same purity as ``local_date`` - the instant is a parameter, so
+    boundary behaviour is testable without freezing the clock.
+    """
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
     if instant.tzinfo is None:
@@ -277,6 +292,6 @@ def local_date(instant: dt.datetime, timezone_name: str) -> dt.date:
     try:
         zone = ZoneInfo(timezone_name)
     except (ZoneInfoNotFoundError, ValueError, KeyError, ModuleNotFoundError):
-        return instant.date()
+        return instant
 
-    return instant.astimezone(zone).date()
+    return instant.astimezone(zone)

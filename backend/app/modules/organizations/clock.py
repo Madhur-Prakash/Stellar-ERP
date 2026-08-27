@@ -20,7 +20,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.analytics.periods import local_date
+from app.modules.analytics.periods import local_date, local_datetime
 from app.modules.organizations.models import Organization
 
 
@@ -38,3 +38,30 @@ async def organization_today(session: AsyncSession, organization_id: uuid.UUID) 
         select(Organization.timezone).where(Organization.id == organization_id)
     )
     return local_date(dt.datetime.now(dt.UTC), timezone_name or "UTC")
+
+
+async def organization_timezone(session: AsyncSession, organization_id: uuid.UUID) -> str:
+    """The organization's IANA timezone name, or ``"UTC"`` when it has none.
+
+    Exposed because a screen that lets somebody choose a sealing *hour* has to say
+    which clock that hour is on. "Seal at 01:00" is not an instruction until the
+    zone is named, and naming the server's would be the wrong one.
+    """
+    timezone_name = await session.scalar(
+        select(Organization.timezone).where(Organization.id == organization_id)
+    )
+    return timezone_name or "UTC"
+
+
+async def organization_now(session: AsyncSession, organization_id: uuid.UUID) -> dt.datetime:
+    """The current instant in the organization's own timezone, still aware.
+
+    :func:`organization_today` is this with the time discarded, and most callers want
+    that. The seal worker wants the hour: an owner who sets sealing to 01:00 means
+    01:00 where they are, so the comparison has to happen in their zone rather than
+    the server's.
+    """
+    timezone_name = await session.scalar(
+        select(Organization.timezone).where(Organization.id == organization_id)
+    )
+    return local_datetime(dt.datetime.now(dt.UTC), timezone_name or "UTC")

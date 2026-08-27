@@ -159,6 +159,9 @@ def _status(view: AttestationStatus) -> AttestationStatusRead:
         contract_url=view.contract_url,
         org_namespace=view.org_namespace,
         cadence=view.cadence,
+        seal_time=view.seal_time,
+        effective_seal_time=view.effective_seal_time,
+        timezone=view.timezone,
         signer_public_key=view.signer_public_key,
         external_signer=view.external_signer,
         registered_at=view.registered_at,
@@ -305,7 +308,9 @@ async def set_cadence(
     ctx: RequestCtx,
     _: Annotated[None, Depends(require_permission(Permission.SEAL_CONFIGURE))],
 ) -> AttestationStatusRead:
-    await service.set_cadence(organization_id, payload.cadence, user, ctx)
+    await service.set_cadence(
+        organization_id, payload.cadence, user, ctx, seal_minute=payload.seal_minute
+    )
     return _status(await service.status(organization_id))
 
 

@@ -52,13 +52,24 @@ class TrustApi {
     await _client.post<Json>('/attestation/disable', body: <String, dynamic>{}),
   );
 
-  Future<AttestationStatus> setCadence(SealCadence cadence) async =>
-      AttestationStatus.fromJson(
-        await _client.patch<Json>(
-          '/attestation/cadence',
-          body: <String, dynamic>{'cadence': cadence.wire},
-        ),
-      );
+  /// Change the cadence, and optionally the hour a daily seal fires.
+  ///
+  /// [sealHour] omitted leaves the stored hour alone; passing null is not offered
+  /// here because the desktop client has no "go back to the server default"
+  /// affordance - it would need to explain what the server default is, and the
+  /// screen already shows the hour in force either way.
+  Future<AttestationStatus> setCadence(
+    SealCadence cadence, {
+    int? sealHour,
+  }) async => AttestationStatus.fromJson(
+    await _client.patch<Json>(
+      '/attestation/cadence',
+      body: <String, dynamic>{
+        'cadence': cadence.wire,
+        'seal_hour': ?sealHour,
+      },
+    ),
+  );
 
   Future<SealNowResult> sealNow() async => SealNowResult.fromJson(
     await _client.post<Json>('/attestation/seals', body: <String, dynamic>{}),
