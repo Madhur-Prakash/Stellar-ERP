@@ -52,22 +52,20 @@ class TrustApi {
     await _client.post<Json>('/attestation/disable', body: <String, dynamic>{}),
   );
 
-  /// Change the cadence, and optionally the hour a daily seal fires.
+  /// Change the cadence, and optionally the time of day a daily seal fires.
   ///
-  /// [sealHour] omitted leaves the stored hour alone; passing null is not offered
-  /// here because the desktop client has no "go back to the server default"
-  /// affordance - it would need to explain what the server default is, and the
-  /// screen already shows the hour in force either way.
+  /// [sealTime] is `HH:MM` in the organization's own timezone. Omitted leaves the
+  /// stored time alone - the key is simply absent, which is how the API tells "I
+  /// did not mention a time" from "go back to the server default". The second is
+  /// not offered here, because it would need the screen to explain what the server
+  /// default is, and the screen already shows the time in force either way.
   Future<AttestationStatus> setCadence(
     SealCadence cadence, {
-    int? sealHour,
+    String? sealTime,
   }) async => AttestationStatus.fromJson(
     await _client.patch<Json>(
       '/attestation/cadence',
-      body: <String, dynamic>{
-        'cadence': cadence.wire,
-        'seal_hour': ?sealHour,
-      },
+      body: <String, dynamic>{'cadence': cadence.wire, 'seal_time': ?sealTime},
     ),
   );
 

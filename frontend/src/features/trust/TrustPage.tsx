@@ -35,9 +35,9 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/DataTable';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Input } from '@/components/ui/Input';
 import { Listbox } from '@/components/ui/Listbox';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { TimePicker } from '@/components/ui/TimePicker';
 import {
   type AttestationStatus,
   type Seal,
@@ -66,69 +66,6 @@ const CADENCE_OPTIONS: { value: SealCadence; label: string; detail: string }[] =
     detail: 'Closing a period will not seal',
   },
 ];
-
-/**
- * The sealing time, as a real time field.
- *
- * **A free input rather than a list of hours.** The right moment to seal is
- * whenever nobody is posting, and that is 01:00 for one business and 03:30 for
- * another whose night shift ends at 03:00. A dropdown of twenty-four whole hours
- * made half of those unrepresentable while looking like a complete set of choices.
- *
- * Committed on blur and on Enter, not on every keystroke: `<input type="time">`
- * emits a change for each field as it is filled, so saving on change would fire a
- * request for 0:00 on the way to 03:30 - and each of those is a real setting that
- * would take effect if the next keystroke never came.
- */
-function SealTimeField({
-  value,
-  timezone,
-  following,
-  disabled,
-  onCommit,
-}: {
-  value: string;
-  timezone: string;
-  following: boolean;
-  disabled: boolean;
-  onCommit: (next: string) => void;
-}) {
-  // Seeded once. The parent keys this component on `value`, so a server answer
-  // that differs from what we sent remounts it with the new time - which is the
-  // declarative version of syncing in an effect, and one render cheaper.
-  const [draft, setDraft] = useState(value);
-
-  const commit = () => {
-    if (draft && draft !== value) onCommit(draft);
-    else setDraft(value);
-  };
-
-  return (
-    <Input
-      type="time"
-      label="What time of day"
-      value={draft}
-      disabled={disabled}
-      onChange={(event) => setDraft(event.target.value)}
-      onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          commit();
-        } else if (event.key === 'Escape') {
-          setDraft(value);
-        }
-      }}
-      hint={
-        <>
-          {timezone} - your organization&apos;s clock, not the server&apos;s. Any minute of the
-          day.
-          {following && ' Currently following the server default.'}
-        </>
-      }
-    />
-  );
-}
 
 export function TrustPage() {
   const queryClient = useQueryClient();
@@ -424,14 +361,17 @@ export function TrustPage() {
               real whether or not this organization has expressed a preference.
             */}
             {status.cadence === 'daily' && (
-              <SealTimeField
-                key={status.effective_seal_time}
+              <TimePicker
+                label="What time of day"
                 value={status.effective_seal_time}
-                timezone={status.timezone}
-                following={status.seal_time === null}
                 disabled={!status.enabled || setCadence.isPending}
-                onCommit={(next) =>
-                  setCadence.mutate({ cadence: status.cadence, sealTime: next })
+                onChange={(next) => setCadence.mutate({ cadence: status.cadence, sealTime: next })}
+                hint={
+                  <>
+                    {status.timezone} - your organization&apos;s clock, not the server&apos;s. Any
+                    minute of the day.
+                    {status.seal_time === null && ' Currently following the server default.'}
+                  </>
                 }
               />
             )}
@@ -709,25 +649,50 @@ function Advanced({ status }: { status: AttestationStatus }) {
 
 function Explainer() {
   return (
-    <div className="max-w-3xl pt-5">
-      <h3 className="text-content text-sm font-semibold">What the third ledger is</h3>
-      <p className="text-content-secondary mt-1.5 text-[13px] leading-relaxed">
-        Your accounts already keep two ledgers: the <strong>journal</strong>, which records what
-        happened to the money, and the <strong>audit trail</strong>, which records who did it. Both
-        live in your own database - which means both are trusted by you and by nobody else. Anyone
-        with your database password could rewrite either, and no bank, buyer, or auditor could tell.
-      </p>
-      <p className="text-content-secondary mt-2 text-[13px] leading-relaxed">
-        The <strong>proof ledger</strong> is the third. Periodically it computes a single
-        fingerprint of your journal and writes it to a public network. Later, anyone you choose can
-        be handed one invoice and check it against that fingerprint - and see that it has not been
-        altered since. They need no account, no wallet, and no access to anything else in your
-        books.
-      </p>
-      <dl className="mt-4 grid gap-3 sm:grid-cols-2">
+    /*
+      Two columns from `lg` up, and not for decoration: this block used to be
+      `max-w-3xl` inside a full-width card, so on a wide screen it filled the left
+      half and left the right half empty. Simply dropping the cap would have been
+      worse - prose set across 1,500px is unreadable, and this is the passage that
+      has to be read, because it is where the product states what it does *not*
+      prove.
+
+      So the space gets used instead of stretched into: the explanation keeps a
+      readable measure on the left, and the two claim/limitation cards move into
+      the column beside it. Below `lg` it is the original single column.
+    */
+    <div className="grid gap-x-10 gap-y-5 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)]">
+      <div className="min-w-0">
+        <h3 className="text-content text-sm font-semibold">What the third ledger is</h3>
+        <p className="text-content-secondary mt-1.5 text-[13px] leading-relaxed">
+          Your accounts already keep two ledgers: the <strong>journal</strong>, which records what
+          happened to the money, and the <strong>audit trail</strong>, which records who did it.
+          Both live in your own database - which means both are trusted by you and by nobody else.
+          Anyone with your database password could rewrite either, and no bank, buyer, or auditor
+          could tell.
+        </p>
+        <p className="text-content-secondary mt-2 text-[13px] leading-relaxed">
+          The <strong>proof ledger</strong> is the third. Periodically it computes a single
+          fingerprint of your journal and writes it to a public network. Later, anyone you choose
+          can be handed one invoice and check it against that fingerprint - and see that it has not
+          been altered since. They need no account, no wallet, and no access to anything else in
+          your books.
+        </p>
+        <p className="text-content-muted mt-3 text-[12px]">
+          No amount, customer, product, or account number ever leaves this server. Only 32-byte
+          fingerprints, a count, and a total.
+        </p>
+      </div>
+
+      {/*
+        Side by side while they share a row with nothing, stacked once they have a
+        column of their own - so the pair always fills its half rather than
+        floating in it.
+      */}
+      <dl className="grid content-start gap-3 sm:grid-cols-2 lg:grid-cols-1">
         <div className="border-border bg-surface-sunken rounded-lg border p-3">
           <dt className="text-content flex items-center gap-1.5 text-[13px] font-medium">
-            <CheckCircle2 className="text-success size-3.5" />
+            <CheckCircle2 className="text-success size-3.5 shrink-0" />
             What a seal proves
           </dt>
           <dd className="text-content-secondary mt-1 text-[12px] leading-relaxed">
@@ -737,7 +702,7 @@ function Explainer() {
         </div>
         <div className="border-border bg-surface-sunken rounded-lg border p-3">
           <dt className="text-content flex items-center gap-1.5 text-[13px] font-medium">
-            <AlertTriangle className="text-warning size-3.5" />
+            <AlertTriangle className="text-warning size-3.5 shrink-0" />
             What it does not
           </dt>
           <dd className="text-content-secondary mt-1 text-[12px] leading-relaxed">
@@ -746,10 +711,6 @@ function Explainer() {
           </dd>
         </div>
       </dl>
-      <p className="text-content-muted mt-3 text-[12px]">
-        No amount, customer, product, or account number ever leaves this server. Only 32-byte
-        fingerprints, a count, and a total.
-      </p>
     </div>
   );
 }

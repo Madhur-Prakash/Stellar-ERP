@@ -190,9 +190,9 @@ class AttestationStatus {
     required this.configured,
     required this.ready,
     required this.cadence,
-    required this.effectiveSealHour,
+    required this.effectiveSealTime,
     required this.timezone,
-    this.sealHour,
+    this.sealTime,
     required this.externalSigner,
     required this.sealsConfirmed,
     required this.entriesSealed,
@@ -216,19 +216,19 @@ class AttestationStatus {
   final bool ready;
   final SealCadence cadence;
 
-  /// The hour actually in force for a daily seal, 0-23. Never null, so the
+  /// The time actually in force for a daily seal, as `HH:MM`. Never null, so the
   /// screen can state a time whether or not this organization has chosen one.
-  final int effectiveSealHour;
+  final String effectiveSealTime;
 
-  /// Which clock [effectiveSealHour] is on. "Seal at 01:00" is not an
+  /// Which clock [effectiveSealTime] is on. "Seal at 01:30" is not an
   /// instruction until the zone is named, and it is the organization's zone
   /// rather than the server's.
   final String timezone;
 
-  /// The hour this organization chose, or null when it is following the
-  /// install's default. Distinguished from [effectiveSealHour] because the
-  /// screen says so - "following the server default" is worth knowing.
-  final int? sealHour;
+  /// The time this organization chose, or null when it is following the install's
+  /// default. Distinguished from [effectiveSealTime] because the screen says so -
+  /// "following the server default" is worth knowing.
+  final String? sealTime;
 
   /// True when the signing key is held outside this server - a stronger posture,
   /// and distinguished from "not configured" because a null column makes the two
@@ -265,9 +265,9 @@ class AttestationStatus {
     configured: boolOf(json, 'configured'),
     ready: boolOf(json, 'ready'),
     cadence: SealCadence.parse(str(json, 'cadence')),
-    effectiveSealHour: intOf(json, 'effective_seal_hour', 1),
+    effectiveSealTime: strOrNull(json, 'effective_seal_time') ?? '01:00',
     timezone: strOrNull(json, 'timezone') ?? 'UTC',
-    sealHour: (json['seal_hour'] as num?)?.toInt(),
+    sealTime: strOrNull(json, 'seal_time'),
     externalSigner: boolOf(json, 'external_signer'),
     sealsConfirmed: intOf(json, 'seals_confirmed'),
     entriesSealed: intOf(json, 'entries_sealed'),

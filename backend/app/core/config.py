@@ -99,6 +99,26 @@ def _blank_to_none(value: object) -> object:
 OptionalDsn = Annotated[str | None, BeforeValidator(_blank_to_none)]
 
 
+def _hostname_of(value: str | None) -> str:
+    """A bare hostname from whatever was configured - URL, host, or host:port.
+
+    ``TrustedHostMiddleware`` matches on the ``Host`` header with the port removed, so
+    that is the only shape worth keeping. Everything discarded here - scheme, port,
+    path, stray quotes - is something the header can never contain.
+    """
+    text = (value or "").strip().strip('"').strip("'")
+    if not text:
+        return ""
+    if "//" in text:
+        text = text.split("//", 1)[1]
+    text = text.split("/", 1)[0]
+    # A bracketed IPv6 literal keeps its brackets; only a trailing `:port` goes.
+    if text.startswith("["):
+        host, _, _ = text.partition("]")
+        return f"{host}]"
+    return text.split(":", 1)[0].strip()
+
+
 def _site_of(host: str) -> str:
     """A rough registrable domain: the last two labels of a hostname.
 
@@ -164,6 +184,10 @@ class Settings(BaseSettings):
     #: Read only to fold into :attr:`allowed_hosts` - see :meth:`_allow_platform_hostname`.
     #: Nothing else should use it: a deployment on any other platform leaves it unset, and
     #: code that assumes a value here would work in exactly one place.
+    #:
+    #: A **hostname**, not a URL. Render injects a bare one; a human filling this in by
+    #: hand copies the address bar and writes ``https://x.onrender.com``, which is why
+    #: :meth:`_allow_platform_hostname` normalises rather than trusts it.
     render_external_hostname: str | None = None
 
     # ---- No edge-gateway secret ---------------------------------------------
@@ -851,8 +875,17 @@ class Settings(BaseSettings):
 
         Appended rather than substituted, so an explicit ``ALLOWED_HOSTS`` (a custom
         domain, a staging alias) keeps every entry it lists.
+
+        **Normalised, not trusted.** Render injects a bare hostname, but this variable
+        also gets filled in by hand - and a human copies the address bar, which yields
+        ``https://x.onrender.com/``. ``TrustedHostMiddleware`` compares against the
+        ``Host`` header with the port stripped, so it never contains a scheme or a path:
+        an entry carrying either can never match, and appending one reintroduces exactly
+        the 400-on-every-call outage this hook exists to prevent - while *looking* like
+        the hook did its job. Stripping is not a widening of the control: the scheme and
+        path were never part of what is being compared.
         """
-        platform_host = (self.render_external_hostname or "").strip()
+        platform_host = _hostname_of(self.render_external_hostname)
         if platform_host and platform_host not in self.allowed_hosts:
             self.allowed_hosts.append(platform_host)
         return self

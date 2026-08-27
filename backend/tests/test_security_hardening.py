@@ -1230,12 +1230,23 @@ class TestProductionGuardrails:
         "postgres_password": "a-real-password",
         "rate_limit_enabled": True,
         "enforce_origin": True,
+        # Pinned, because `_env_file=None` does NOT isolate this class from the real
+        # process environment - it only stops the dotenv file being read, and
+        # pydantic-settings still reads actual environment variables.
+        #
+        # This mattered: a developer with RENDER_EXTERNAL_HOSTNAME exported had
+        # `_allow_platform_hostname` append it, so `allowed_hosts` was never empty and
+        # the ALLOWED_HOSTS guardrail case stopped firing. A security control that
+        # quietly depends on whose shell runs the suite is not a control.
+        "render_external_hostname": None,
     }
 
     def _build(self, **overrides: Any) -> Any:
         from app.core.config import Settings
 
-        # `_env_file=None` so the developer's own .env cannot make this pass or fail.
+        # `_env_file=None` stops the dotenv file being read. It does not stop real
+        # environment variables, which is why BASE pins everything this class
+        # asserts on - see the note on `render_external_hostname` above.
         return Settings(**{**self.BASE, **overrides}, _env_file=None)
 
     def test_a_correct_production_config_is_accepted(self) -> None:
@@ -1267,3 +1278,52 @@ class TestProductionGuardrails:
         built = Settings(environment="development", _env_file=None, **REQUIRED_BUDGETS)
         assert built.debug is True
         assert built.enforce_origin is True
+
+    @pytest.mark.parametrize(
+        ("configured", "expected"),
+        [
+            ("stellar-erp.onrender.com", "stellar-erp.onrender.com"),
+            # The shape a human produces by copying the address bar. Appended raw, this
+            # can never match a Host header, so every API call answers 400 while the
+            # platform's health probes - which are exempt - keep reporting the service
+            # up. That is the outage `_allow_platform_hostname` exists to prevent, and
+            # it used to reintroduce it.
+            ("https://stellar-erp.onrender.com", "stellar-erp.onrender.com"),
+            ("https://stellar-erp.onrender.com/", "stellar-erp.onrender.com"),
+            ("http://staging.example.com:8000/api", "staging.example.com"),
+            ('"https://quoted.onrender.com"', "quoted.onrender.com"),
+            ("  spaced.example.com  ", "spaced.example.com"),
+        ],
+    )
+    def test_the_platform_hostname_is_normalised_before_it_is_trusted(
+        self, configured: str, expected: str
+    ) -> None:
+        built = self._build(
+            allowed_hosts=["app.example.com"],
+            render_external_hostname=configured,
+        )
+        assert expected in built.allowed_hosts
+        # Nothing with a scheme or a path reaches the list: TrustedHostMiddleware
+        # compares against a Host header, which contains neither.
+        assert not any("/" in host for host in built.allowed_hosts)
+
+    def test_an_explicit_allowed_hosts_keeps_every_entry_it_lists(self) -> None:
+        """Appended, never substituted - a custom domain must survive the fold."""
+        built = self._build(
+            allowed_hosts=["app.example.com", "www.example.com"],
+            render_external_hostname="https://stellar-erp.onrender.com",
+        )
+        assert built.allowed_hosts == [
+            "app.example.com",
+            "www.example.com",
+            "stellar-erp.onrender.com",
+        ]
+
+    def test_a_blank_platform_hostname_adds_nothing(self) -> None:
+        """So an unset variable cannot smuggle an empty entry past the guardrail."""
+        for blank in ("", "   ", None):
+            built = self._build(
+                allowed_hosts=["app.example.com"],
+                render_external_hostname=blank,
+            )
+            assert built.allowed_hosts == ["app.example.com"]

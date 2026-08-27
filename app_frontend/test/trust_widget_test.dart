@@ -38,8 +38,10 @@ void main() {
     seq: 4,
     status: SealStatus.confirmed,
     trigger: SealTrigger.schedule,
-    merkleRoot: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
-    prevRoot: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+    merkleRoot:
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    prevRoot:
+        'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     entryCount: 37,
     debitMinor: '184500000',
     entryDateFrom: '2026-08-01',
@@ -63,8 +65,10 @@ void main() {
     seq: 5,
     status: SealStatus.submitted,
     trigger: SealTrigger.manual,
-    merkleRoot: 'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
-    prevRoot: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+    merkleRoot:
+        'dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd',
+    prevRoot:
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     entryCount: 9,
     debitMinor: '45000000',
     entryDateFrom: '2026-08-26',
@@ -79,6 +83,9 @@ void main() {
     configured: true,
     ready: true,
     cadence: SealCadence.daily,
+    effectiveSealTime: '01:30',
+    timezone: 'Asia/Kolkata',
+    sealTime: '01:30',
     externalSigner: false,
     sealsConfirmed: 4,
     entriesSealed: 412,
@@ -87,7 +94,8 @@ void main() {
     warnings: <String>[],
     network: 'testnet',
     contractId: 'CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR',
-    orgNamespace: 'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    orgNamespace:
+        'eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
     signerPublicKey: 'GDKLGSB2MF7ZXDCFR2VSAPZ5WYI25EKRMRQRVXKQ6FB6FB4EOZN2HSGZ',
     registeredAt: '2026-08-20T09:00:00Z',
     oldestUnsealedAt: '2026-08-26T18:30:00Z',
@@ -102,6 +110,8 @@ void main() {
     configured: true,
     ready: false,
     cadence: SealCadence.daily,
+    effectiveSealTime: '01:00',
+    timezone: 'Asia/Kolkata',
     externalSigner: false,
     sealsConfirmed: 0,
     entriesSealed: 0,
@@ -118,12 +128,33 @@ void main() {
     configured: false,
     ready: false,
     cadence: SealCadence.daily,
+    effectiveSealTime: '01:00',
+    timezone: 'Asia/Kolkata',
     externalSigner: false,
     sealsConfirmed: 0,
     entriesSealed: 0,
     unsealedEntries: 0,
     chain: ChainHealth(reachable: false, error: 'no contract configured'),
     warnings: <String>['ATTESTATION_ENABLED is false on this server.'],
+  );
+
+  /// The manual cadence: nothing is scheduled, so there is no time to choose.
+  const AttestationStatus manual = AttestationStatus(
+    enabled: true,
+    configured: true,
+    ready: true,
+    cadence: SealCadence.manual,
+    effectiveSealTime: '01:00',
+    timezone: 'Asia/Kolkata',
+    externalSigner: false,
+    sealsConfirmed: 4,
+    entriesSealed: 412,
+    unsealedEntries: 0,
+    chain: healthy,
+    warnings: <String>[],
+    network: 'testnet',
+    contractId: 'CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR',
+    lastSeal: confirmed,
   );
 
   const SealPage history = SealPage(
@@ -162,7 +193,9 @@ void main() {
         ],
         child: MaterialApp(
           theme: theme ?? AppTheme.light(),
-          home: Scaffold(body: SingleChildScrollView(child: const TrustScreen())),
+          home: Scaffold(
+            body: SingleChildScrollView(child: const TrustScreen()),
+          ),
         ),
       ),
     );
@@ -178,6 +211,36 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('Trust'), findsOneWidget);
       expect(find.text('Your books are being sealed'), findsOneWidget);
+    });
+
+    testWidgets('offers the chosen sealing time, and opens a picker', (
+      WidgetTester tester,
+    ) async {
+      await pump(tester, sealing);
+
+      expect(find.text('What time of day'), findsOneWidget);
+      expect(find.text('01:30'), findsOneWidget);
+
+      // The whole field opens the panel, which is the reason AppTimeField exists
+      // rather than a native time input - so the tap lands on the field, not on
+      // the clock glyph.
+      await tester.tap(find.text('01:30'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('HOUR'), findsOneWidget);
+      expect(find.text('MINUTE'), findsOneWidget);
+    });
+
+    testWidgets('offers no sealing time when the cadence is not daily', (
+      WidgetTester tester,
+    ) async {
+      // A disabled field implying there is an hour to choose would read worse than
+      // no field at all.
+      await pump(tester, manual);
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('What time of day'), findsNothing);
     });
 
     testWidgets('builds under unbounded height when sealing is off', (

@@ -12,6 +12,7 @@ import '../../widgets/app_badge.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/app_select.dart';
+import '../../widgets/app_time_field.dart';
 import '../../widgets/primitives.dart';
 import '../../widgets/toast.dart';
 
@@ -214,6 +215,12 @@ class _TrustScreenState extends ConsumerState<TrustScreen> {
               await ref.read(trustApiProvider).setCadence(cadence);
               return 'Sealing schedule updated.';
             }, failure: 'Could not change the schedule'),
+            onSealTime: (String time) => _run(() async {
+              await ref
+                  .read(trustApiProvider)
+                  .setCadence(s.cadence, sealTime: time);
+              return 'Daily seal set for $time ${s.timezone}.';
+            }, failure: 'Could not change the sealing time'),
             onEnable: () => _run(() async {
               await ref.read(trustApiProvider).enable();
               return 'Sealing is on. Your books are now committed to Stellar.';
@@ -618,6 +625,7 @@ class _Settings extends StatelessWidget {
     required this.showDetails,
     required this.onToggleDetails,
     required this.onCadence,
+    required this.onSealTime,
     required this.onEnable,
     required this.onDisable,
   });
@@ -627,6 +635,7 @@ class _Settings extends StatelessWidget {
   final bool showDetails;
   final VoidCallback onToggleDetails;
   final ValueChanged<SealCadence> onCadence;
+  final ValueChanged<String> onSealTime;
   final VoidCallback onEnable;
   final VoidCallback onDisable;
 
@@ -660,19 +669,60 @@ class _Settings extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          AppSelect(
-            label: 'How often to seal',
-            value: status.cadence.wire,
-            enabled: status.enabled && !busy,
-            hint:
-                'Sealing more often narrows the window in which history could be '
-                'rewritten. On Stellar it costs a fraction of a cent, so daily is '
-                'the default.',
-            options: <SelectOption>[
-              for (final SealCadence c in SealCadence.values)
-                SelectOption(value: c.wire, label: c.label),
-            ],
-            onChanged: (String wire) => onCadence(SealCadence.parse(wire)),
+          // Two across at width, stacked when narrow - the web's grid.
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints box) {
+              final Widget cadence = AppSelect(
+                label: 'How often to seal',
+                value: status.cadence.wire,
+                enabled: status.enabled && !busy,
+                hint:
+                    'Sealing more often narrows the window in which history could '
+                    'be rewritten. On Stellar it costs a fraction of a cent, so '
+                    'daily is the default.',
+                options: <SelectOption>[
+                  for (final SealCadence c in SealCadence.values)
+                    SelectOption(value: c.wire, label: c.label),
+                ],
+                onChanged: (String wire) => onCadence(SealCadence.parse(wire)),
+              );
+
+              // Only for the daily cadence: for the other two there is no time to
+              // choose, and a disabled field implying otherwise reads worse than no
+              // field at all.
+              final Widget? time = status.cadence == SealCadence.daily
+                  ? AppTimeField(
+                      label: 'What time of day',
+                      value: status.effectiveSealTime,
+                      enabled: status.enabled && !busy,
+                      hint:
+                          // Double-quoted: the copy contains apostrophes, and
+                          // escaping them inside single quotes reads worse than
+                          // switching the delimiter.
+                          "${status.timezone} - your organization's clock, not "
+                          "the server's. Any minute of the day."
+                          "${status.sealTime == null ? ' Currently following the server default.' : ''}",
+                      onChanged: onSealTime,
+                    )
+                  : null;
+
+              if (time == null) return cadence;
+              if (box.maxWidth < 640) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 16,
+                  children: <Widget>[cadence, time],
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                spacing: 16,
+                children: <Widget>[
+                  Expanded(child: cadence),
+                  Expanded(child: time),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 16),
           Align(
@@ -699,6 +749,48 @@ class _Settings extends StatelessWidget {
             style: TextStyle(fontSize: 12, color: t.contentMuted),
           ),
           if (showDetails) _Details(status: status),
+        ],
+      ),
+    );
+  }
+}
+
+/// One label-over-value pair from the details block.
+///
+/// Extracted so the one-column and two-column arrangements share it rather than
+/// each building its own - a duplicated cell is how the two layouts start
+/// disagreeing about padding.
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+
+  final String label;
+  final String? value;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppTokens t = context.tokens;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: t.contentMuted,
+            ),
+          ),
+          const SizedBox(height: 2),
+          SelectableText(
+            value ?? '—',
+            style: TextStyle(
+              fontSize: 12,
+              fontFamily: 'monospace',
+              color: t.content,
+            ),
+          ),
         ],
       ),
     );
@@ -735,32 +827,50 @@ class _Details extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          for (final (String label, String? value) in rows)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: t.contentMuted,
-                    ),
+          // Two columns at width, one when narrow - the same shape the web page
+          // uses. Stacked, these five rows pushed the signing-key note off the
+          // bottom of a desktop window, and that note is the honest limitation the
+          // whole screen is built around.
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints box) {
+              final bool wide = box.maxWidth >= 640;
+              final List<Widget> cells = <Widget>[
+                for (final (String label, String? value) in rows)
+                  _DetailRow(label: label, value: value),
+              ];
+
+              if (!wide) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: cells,
+                );
+              }
+
+              // Paired left-to-right so the reading order matches the single
+              // column: Network beside Contract, namespace beside signer.
+              final List<Widget> pairs = <Widget>[];
+              for (int i = 0; i < cells.length; i += 2) {
+                pairs.add(
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 24,
+                    children: <Widget>[
+                      Expanded(child: cells[i]),
+                      Expanded(
+                        child: i + 1 < cells.length
+                            ? cells[i + 1]
+                            : const SizedBox.shrink(),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 2),
-                  SelectableText(
-                    value ?? '—',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      color: t.content,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: pairs,
+              );
+            },
+          ),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
