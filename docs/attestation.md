@@ -421,6 +421,103 @@ python -m app.modules.attestation.worker
 Same code, same function — the worker is a loop around something the API can also
 call, not a parallel implementation.
 
+### Auto-seal: the cadence
+
+Sealing on a schedule is per organization, not per install, because the choice is
+a business's rather than an operator's.
+
+| Cadence | Seals when |
+| --- | --- |
+| `daily` | **Default and recommended.** Once a day, *and* on every period close |
+| `on_period_close` | Only when an accounting period is closed |
+| `manual` | Only when somebody presses **Seal now** |
+
+Set it on the Trust screen, or:
+
+```
+PATCH /api/v1/attestation/cadence     {"cadence": "daily"}
+```
+
+`daily` is the recommendation and the reason Stellar was chosen. A cadence is a
+statement about how wide the tampering window is: `on_period_close` on monthly
+periods leaves a month, and `manual` leaves however long it has been since anyone
+remembered. At well under a cent per operation, daily costs less than the
+electricity the server draws computing the root, so the cheap option and the
+strong option are the same option — which is not true on a gas-priced network.
+
+`manual` is respected literally. Closing a period does **not** seal under `manual`,
+because a business that asked to seal only when it presses the button has said
+something specific, and closing a period is not pressing the button.
+
+#### The three install-wide knobs
+
+All in `.env`, all applying to every organization on the install:
+
+| Key | Default | What it controls |
+| --- | --- | --- |
+| `SEAL_WORKER_INTERVAL_SECONDS` | `60` | How often the worker wakes to look for work. **Not** the sealing frequency |
+| `SEAL_DAILY_HOUR` | `1` | The earliest UTC hour at which a `daily` seal may fire |
+| `SEAL_MAX_BATCH` | `5000` | The most entries one seal may cover |
+
+`SEAL_WORKER_INTERVAL_SECONDS` is the one people mistake for the cadence. Lowering
+it to `10` does not seal ten times more often; it checks six times more often and
+finds nothing five of those times. What it genuinely affects is how quickly a seal
+that is *already prepared* gets submitted, and how quickly a submission whose
+outcome is unknown gets reconciled.
+
+#### When "daily" actually fires
+
+Three conditions, all of which must hold ([`worker.py`](../backend/app/modules/attestation/worker.py)):
+
+1. The organization's **own local date** has advanced past the date of its last
+   confirmed seal.
+2. `SEAL_DAILY_HOUR` has passed — or two or more local days have gone by, in which
+   case the hour is ignored, so a worker that was down does not skip a day
+   permanently.
+3. No seal is already open for that organization. One in flight is enough.
+
+**The organization's clock, not the server's.** A business in `Asia/Kolkata` on a
+UTC server would otherwise have its "daily" seal fire at 06:30 local, and its 23:58
+entries would land in the following day's batch — not wrong exactly, but it makes
+"sealed up to yesterday" mean something different from what the owner reads on the
+screen.
+
+The first seal is the exception: with nothing sealed yet, the backlog is due
+immediately and no window is waited for. A business that has just switched sealing
+on should not have to wait until tomorrow to see that it worked.
+
+#### What auto-seal does
+
+- Prepares a batch from every journal entry posted since the last seal, in posting
+  order, and computes its Merkle root
+- Submits it to the contract and waits on consensus, off the request path
+- Retries a failed submission up to five times, and parks an **unknown** outcome
+  for the reconciler rather than guessing
+- Reconciles against the chain on every worker start, so local state that
+  disagrees with the contract is corrected from `latest()` rather than trusted
+- Runs in every API replica without a lock, safely: two replicas racing collide on
+  the contract's sequence number and the loser is refused by consensus
+
+#### What auto-seal does not do
+
+- **It does not seal on posting.** Posting an entry records a leaf; it never waits
+  on a network. A ledger whose writes depend on consensus is a ledger that stops
+  when an RPC endpoint does.
+- **It does not make entries true.** It fixes what the books said at a time the
+  network attests to. Fabrication *before* sealing is untouched by it — see
+  [What a seal proves](#what-a-seal-proves--stated-precisely).
+- **It does not re-seal history.** A seal is final. A reversal posted in May is new
+  entries in a new batch; March's root does not change and March's proofs keep
+  verifying.
+- **It does not seal the audit trail row by row.** The commitment covers journal
+  entries; the audit trail is ledger 2 and is covered by the same seal only insofar
+  as it records the entries.
+- **It does not notify anyone when it stops.** Nothing pages you. `days_unsealed`
+  on `GET /attestation/status` is the figure that distinguishes working from
+  silently stopped, and the Trust screen leads with it for that reason.
+- **It does not need the period to be closed**, and closing a period does not wait
+  for it. The close writes the intent; the worker submits it.
+
 ### Checking a bundle before you send it
 
 ```bash

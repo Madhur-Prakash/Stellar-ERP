@@ -421,6 +421,64 @@ To move it to its own process, set `SEAL_WORKER_ENABLED=false` in `.env` and run
 | --- | --- |
 | `make seal-worker` | `cd backend && uv run python -m app.modules.attestation.worker` |
 
+### Auto-seal
+
+Two separate settings, and they are easy to confuse.
+
+**The cadence is per organization** and lives in the database, not in `.env`. Set it
+on the Trust screen, or:
+
+```bash
+curl -X PATCH localhost:8000/api/v1/attestation/cadence \
+  -H "Authorization: Bearer $TOKEN" -H 'content-type: application/json' \
+  --data '{"cadence": "daily"}'
+```
+
+| Cadence | Seals when |
+| --- | --- |
+| `daily` | Once a day, **and** on every period close. The default and the recommendation |
+| `on_period_close` | Only when an accounting period is closed |
+| `manual` | Only when somebody presses **Seal now** |
+
+**The timing knobs are install-wide** and live in `.env`:
+
+```ini
+SEAL_WORKER_INTERVAL_SECONDS=60   # how often the worker LOOKS for work
+SEAL_DAILY_HOUR=1                 # earliest UTC hour a daily seal may fire
+SEAL_MAX_BATCH=5000               # most entries one seal may cover
+```
+
+Or through the deploy script, which writes them the same way it writes the chain
+settings:
+
+```bash
+make contract-up ARGS="--force --set SEAL_DAILY_HOUR=3 --set SEAL_MAX_BATCH=2000"
+```
+
+Restart the API afterwards - these are read at start-up.
+
+> **`SEAL_WORKER_INTERVAL_SECONDS` is not the sealing frequency.** Setting it to
+> `10` does not seal six times more often; it wakes six times more often and finds
+> nothing five of those times. What it actually shortens is the delay before an
+> already-prepared seal is submitted, and before an unknown outcome is reconciled.
+
+Three things you can trigger by hand, whatever the cadence:
+
+| | |
+| --- | --- |
+| `POST /attestation/seals` | Seal now - what the Trust screen's button calls |
+| `POST /attestation/drain` | Submit every seal still owed an outcome |
+| `POST /attestation/reconcile` | Ask the chain what it holds and correct local state |
+
+The last two are what the worker does on its own schedule; the endpoints exist so
+you never have to wait for a tick to find out whether something is stuck.
+
+What auto-seal does and does not do -
+[Proof ledger, Auto-seal](attestation.md#auto-seal-the-cadence). The short version:
+it never seals on posting (posting must never wait on consensus), it never re-seals
+history, and it never tells you when it has stopped - which is why
+`days_unsealed` is the number to watch.
+
 ### Checking a proof bundle from the terminal
 
 | make | raw |
@@ -748,6 +806,8 @@ replace a production database with one mistyped filename.
 | `.env already points at C...` from `contract-up` | Not a failure - the redeploy guard. See [the two refusals](#the-two-refusals). |
 | Backend tests fail on connection | They need real PostgreSQL and Redis. `make services`. |
 | Verifier uses the old contract after a redeploy | `VITE_*` are inlined at build time. `make build`. |
+| `[FAIL] Could not read ... bundle.json` | There is no bundle yet. Export one from an invoice's proof panel, or `GET /attestation/proof/{journal_entry_id}`, and save the response. A bundle that cannot be *read* exits **2**; a bundle that reads and does not verify exits **1** - a typo must never come back looking like a finding about somebody's books. |
+| Seal worker logs an error every 60 seconds and seals nothing | It could not resolve a mapper - a model missing from `app/db/registry.py`. Every ORM class must be imported there, and the standalone worker imports the registry for exactly this reason. |
 | No verification email | Mail goes through the Gmail API only. Without `GMAIL_CREDENTIALS_B64` the link is logged - but logifyx masks `token=...`, so set `LOG_MASK=false`, then `make logs-api`. |
 | `alembic check` clean but writes fail with 409 | A CHECK constraint drifted, which `alembic check` cannot see. Run `make db-check`, which also runs `scripts/check_schema_drift.py`. |
 

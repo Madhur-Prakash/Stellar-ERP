@@ -32,6 +32,21 @@ Running it separately
     python -m app.modules.attestation.worker
 
 Same code, same function, no parallel implementation - which is the point.
+
+That "same code" claim is what made the ``app.db.registry`` import below
+necessary rather than decorative. Relationships are declared with string targets
+(``"Organization"``) so modules need not import each other, and those strings
+resolve against SQLAlchemy's class registry on first use. Under the API every
+class has been imported by the time anything queries, because the routers pull in
+every module. Under ``python -m`` nothing has: only this module's own imports are
+loaded, so the first query failed with
+
+    expression 'Organization' failed to locate a name
+
+and the loop then swallowed it once per pass - a worker that started cleanly,
+logged an error every sixty seconds, and sealed nothing. Registering the mappers
+explicitly is what makes the standalone entry point actually equivalent to the
+in-process one, rather than merely look it.
 """
 
 from __future__ import annotations
@@ -43,6 +58,7 @@ import signal
 import uuid
 from typing import Any
 
+import app.db.registry  # noqa: F401  - registers every mapper; see below
 from app.core.config import settings
 from app.core.logging import configure_logging, flush_logs, get_logger
 from app.db.session import session_scope
