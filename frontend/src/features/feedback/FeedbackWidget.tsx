@@ -14,9 +14,16 @@
  *   report in any product comes from somebody who could not get in.
  * - **The panel says what happens next.** A thank-you that promises a reply the
  *   product cannot deliver is worse than one that says a person will read it.
+ *
+ * It is also **draggable and collapsible**, both persisted. That is not a flourish:
+ * this button has no correct fixed home. Bottom-right belongs to the toaster, so a
+ * button there sits under every success message. Bottom-left overlapped the sidebar's
+ * own footer - the organization switcher and the signed-in address - at the same
+ * z-index. Whichever corner is free depends on the screen, so the person looking at it
+ * decides, and collapsing it to an icon gets it out of the way entirely.
  */
 import { useMutation } from '@tanstack/react-query';
-import { CheckCircle2, MessageSquarePlus, X } from 'lucide-react';
+import { CheckCircle2, ChevronLeft, ChevronRight, MessageSquarePlus, X } from 'lucide-react';
 import { useState } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 
@@ -25,6 +32,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { useAuth } from '@/features/auth/AuthProvider';
 import { type FeedbackKind, feedbackApi, track } from '@/features/feedback/api';
+import { useDraggable } from '@/features/feedback/useDraggable';
 import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 
@@ -44,6 +52,32 @@ export function FeedbackWidget() {
   const [rating, setRating] = useState<number | null>(null);
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
+
+  // Defaults to the right edge, clear of the sidebar, and lifted above the toast
+  // stack rather than sitting under it.
+  const drag = useDraggable('stellarerp.feedback.position', () => ({
+    x: window.innerWidth - 168,
+    y: window.innerHeight - 148,
+  }));
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    try {
+      return window.localStorage.getItem('stellarerp.feedback.collapsed') === '1';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleCollapsed = () => {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      window.localStorage.setItem('stellarerp.feedback.collapsed', next ? '1' : '0');
+    } catch {
+      // Private window. The choice holds for this session.
+    }
+    // The pill changes width, so its clamp bounds change with it.
+    requestAnimationFrame(drag.remeasure);
+  };
 
   const auth = useAuth();
   const routerState = useRouterState();
@@ -76,32 +110,67 @@ export function FeedbackWidget() {
     submit.reset();
   };
 
+  // Which way the panel opens, from where the button ended up. Both the button and the
+  // panel live in one positioned wrapper, so the panel anchors to it with `top-full` /
+  // `bottom-full` and needs no measuring of its own.
+  const openUp = drag.position.y > window.innerHeight / 2;
+  const openLeft = drag.position.x > window.innerWidth / 2;
+
   return (
-    <>
+    <div
+      className="fixed z-40"
+      style={{ left: drag.position.x, top: drag.position.y }}
+    >
       <button
+        ref={drag.ref as React.RefObject<HTMLButtonElement>}
         type="button"
-        onClick={() => setOpen((was) => !was)}
+        {...drag.handlers}
+        onClick={() => {
+          // A drag that ends over the button would otherwise open the panel.
+          if (drag.consumeDrag()) return;
+          setOpen((was) => !was);
+        }}
         aria-expanded={open}
         aria-label="Send feedback"
+        title="Send feedback - drag to move"
         className={cn(
           'bg-surface border-border text-content-secondary hover:text-content hover:border-border-strong',
-          // Bottom-left of the *content*, not of the viewport.
-          //
-          // Bottom-right is the toaster's, and a button under every success message is
-          // a button nobody can press. But plain `left-4` put this on top of the
-          // sidebar's own bottom row - the organization switcher and the signed-in
-          // address - at the same z-index, so the two drew over each other. The
-          // sidebar is `w-[248px]`; 264px clears it with the same 16px gutter the
-          // button already used. Below `lg` the sidebar is a drawer, so `left-4` is
-          // correct there.
-          'focus-visible:ring-primary fixed bottom-4 left-4 z-40 lg:left-[264px]',
-          'inline-flex items-center gap-2',
-          'rounded-full border py-2.5 pr-4 pl-3 text-[13px] font-medium shadow-lg',
+          'focus-visible:ring-primary inline-flex items-center gap-2',
+          'rounded-full border py-2.5 text-[13px] font-medium shadow-lg',
+          collapsed ? 'px-3' : 'pr-2 pl-3',
+          // `transition-colors` only. Transitioning position would make the button
+          // lag the pointer during a drag, which reads as lag rather than as easing.
           'transition-colors focus-visible:ring-2 focus-visible:outline-none',
+          drag.dragging ? 'cursor-grabbing select-none' : 'cursor-grab',
         )}
       >
-        <MessageSquarePlus className="size-4" />
-        Feedback
+        <MessageSquarePlus className="size-4 shrink-0" />
+        {!collapsed && <span>Feedback</span>}
+
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={collapsed ? 'Show the label' : 'Collapse to an icon'}
+          // Stops the parent treating this as the start of a drag.
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => {
+            event.stopPropagation();
+            toggleCollapsed();
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              event.stopPropagation();
+              toggleCollapsed();
+            }
+          }}
+          className={cn(
+            'text-content-muted hover:text-content rounded-full p-0.5',
+            'focus-visible:ring-primary focus-visible:ring-2 focus-visible:outline-none',
+          )}
+        >
+          {collapsed ? <ChevronRight className="size-3.5" /> : <ChevronLeft className="size-3.5" />}
+        </span>
       </button>
 
       {open && (
@@ -110,9 +179,11 @@ export function FeedbackWidget() {
           aria-modal="false"
           aria-label="Send feedback"
           className={cn(
-            // Anchored to the button, so it moves with it past the sidebar.
-            'bg-surface border-border fixed bottom-16 left-4 z-50 lg:left-[264px]',
-            'rounded-xl border shadow-2xl',
+            'bg-surface border-border absolute z-50 rounded-xl border shadow-2xl',
+            // Opens toward the middle of the viewport, so a button parked in a corner
+            // does not push its own panel off-screen.
+            openUp ? 'bottom-full mb-2' : 'top-full mt-2',
+            openLeft ? 'right-0' : 'left-0',
             // Never wider than the viewport on a phone, and never taller than it.
             // `dvh` rather than `vh` so the mobile keyboard shrinking the viewport
             // scrolls the panel instead of pushing the Send button off-screen.
@@ -238,6 +309,6 @@ export function FeedbackWidget() {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
