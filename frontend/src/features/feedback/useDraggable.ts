@@ -85,8 +85,6 @@ function write(key: string, point: Point): void {
 }
 
 export interface Draggable {
-  /** Attach to the element being positioned, for size-aware clamping. */
-  ref: React.RefObject<HTMLElement | null>;
   position: Point;
   dragging: boolean;
   /** Spread onto the drag handle. */
@@ -105,9 +103,18 @@ export interface Draggable {
   remeasure: () => void;
 }
 
-export function useDraggable(storageKey: string, fallback: () => Point): Draggable {
-  const ref = useRef<HTMLElement | null>(null);
-
+/**
+ * The element ref is a **parameter, not part of the return value**, and that is a lint
+ * constraint rather than taste: `react-hooks/refs` treats every property read on an
+ * object that carries a ref as a render-time ref access, so returning it turned
+ * `drag.handlers` and `drag.dragging` into errors at the point of use. Taking it in
+ * keeps exact measurement without that.
+ */
+export function useDraggable(
+  storageKey: string,
+  fallback: () => Point,
+  elementRef: React.RefObject<HTMLElement | null>,
+): Draggable {
   const [position, setPosition] = useState<Point>(() =>
     clamp(read(storageKey) ?? fallback(), ESTIMATED),
   );
@@ -127,9 +134,9 @@ export function useDraggable(storageKey: string, fallback: () => Point): Draggab
   }, []);
 
   const measure = useCallback((): Size => {
-    const rect = ref.current?.getBoundingClientRect();
+    const rect = elementRef.current?.getBoundingClientRect();
     return rect ? { width: rect.width, height: rect.height } : ESTIMATED;
-  }, []);
+  }, [elementRef]);
 
   const remeasure = useCallback(() => {
     apply(clamp(latest.current, measure()));
@@ -188,7 +195,6 @@ export function useDraggable(storageKey: string, fallback: () => Point): Draggab
   }, []);
 
   return {
-    ref,
     position,
     dragging,
     handlers: { onPointerDown, onPointerMove, onPointerUp: end, onPointerCancel: end },

@@ -24,7 +24,7 @@
  */
 import { useMutation } from '@tanstack/react-query';
 import { CheckCircle2, ChevronLeft, ChevronRight, MessageSquarePlus, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouterState } from '@tanstack/react-router';
 
 import { Button } from '@/components/ui/Button';
@@ -55,10 +55,12 @@ export function FeedbackWidget() {
 
   // Defaults to the right edge, clear of the sidebar, and lifted above the toast
   // stack rather than sitting under it.
-  const drag = useDraggable('stellarerp.feedback.position', () => ({
-    x: window.innerWidth - 168,
-    y: window.innerHeight - 148,
-  }));
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const drag = useDraggable(
+    'stellarerp.feedback.position',
+    () => ({ x: window.innerWidth - 168, y: window.innerHeight - 148 }),
+    buttonRef,
+  );
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
       return window.localStorage.getItem('stellarerp.feedback.collapsed') === '1';
@@ -122,7 +124,7 @@ export function FeedbackWidget() {
       style={{ left: drag.position.x, top: drag.position.y }}
     >
       <button
-        ref={drag.ref as React.RefObject<HTMLButtonElement>}
+        ref={buttonRef}
         type="button"
         {...drag.handlers}
         onClick={() => {
