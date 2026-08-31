@@ -127,8 +127,7 @@ export function TimePicker({
     panelRef.current?.querySelectorAll<HTMLElement>('[data-column]').forEach((column) => {
       const selected = column.querySelector<HTMLElement>('[aria-selected="true"]');
       if (!selected) return;
-      column.scrollTop =
-        selected.offsetTop - (column.clientHeight - selected.offsetHeight) / 2;
+      column.scrollTop = selected.offsetTop - (column.clientHeight - selected.offsetHeight) / 2;
     });
   }, [open]);
 

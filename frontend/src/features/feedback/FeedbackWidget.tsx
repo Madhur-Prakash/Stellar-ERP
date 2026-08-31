@@ -119,10 +119,7 @@ export function FeedbackWidget() {
   const openLeft = drag.position.x > window.innerWidth / 2;
 
   return (
-    <div
-      className="fixed z-40"
-      style={{ left: drag.position.x, top: drag.position.y }}
-    >
+    <div className="fixed z-40" style={{ left: drag.position.x, top: drag.position.y }}>
       <button
         ref={buttonRef}
         type="button"

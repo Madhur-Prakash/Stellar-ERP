@@ -98,13 +98,10 @@ export function Listbox({
   );
   const selected = selectedIndex >= 0 ? options[selectedIndex] : undefined;
 
-  const close = useCallback(
-    (returnFocus = true) => {
-      setOpen(false);
-      if (returnFocus) triggerRef.current?.focus();
-    },
-    [],
-  );
+  const close = useCallback((returnFocus = true) => {
+    setOpen(false);
+    if (returnFocus) triggerRef.current?.focus();
+  }, []);
 
   const commit = useCallback(
     (index: number) => {
