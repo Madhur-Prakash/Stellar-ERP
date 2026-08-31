@@ -21,6 +21,7 @@
     "@tanstack/react-router": "^1.132.0",
     "@tanstack/react-table": "^8.21.3",
     "axios": "^1.12.2",
+    "buffer": "^6.0.3",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "lucide-react": "^0.545.0",

@@ -26,6 +26,22 @@
  * account and no idea they are talking to a blockchain.
  */
 
+/*
+ * `Buffer` is a Node global, and nothing in a browser provides one.
+ *
+ * This import used to be absent, on the belief that Vite polyfills it. Vite does
+ * not: there is no polyfill plugin and no `define` for it in `vite.config.ts`. It
+ * appeared to work only because the dev server's dependency pre-bundling left the
+ * SDK's own copy attached to `globalThis`, which the production build does not -
+ * so `/verify` reached step 5 and died with `ReferenceError: Buffer is not defined`
+ * on the deployed site while every local check passed.
+ *
+ * Importing it explicitly is the fix. The package is already here as a dependency
+ * of `@stellar/stellar-base`, and is declared in our own `package.json` as well so
+ * that a hoisting change in a future install cannot quietly remove it again.
+ */
+import { Buffer } from 'buffer';
+
 /** A source account for simulation only. Never signs, never submits. */
 const NULL_ACCOUNT = 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF';
 
@@ -116,8 +132,9 @@ function hexToBytes(hex: string): Buffer {
   for (let index = 0; index < out.length; index += 1) {
     out[index] = Number.parseInt(clean.slice(index * 2, index * 2 + 2), 16);
   }
-  // The SDK's `nativeToScVal` wants a Buffer for `bytes`; Vite polyfills it, and
-  // a plain Uint8Array is silently encoded as a vector of numbers instead.
+  // The SDK's `nativeToScVal` wants a Buffer for `bytes` - a plain Uint8Array is
+  // silently encoded as a vector of numbers instead, which the contract rejects.
+  // `Buffer` is imported at the top of this module; it is not a browser global.
   return Buffer.from(out);
 }
 
