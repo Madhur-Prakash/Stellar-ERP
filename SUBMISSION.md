@@ -16,20 +16,28 @@
 | --- | --- | --- | --- |
 | 1 | Public GitHub repository | Done | [Madhur-Prakash/Stellar-ERP](https://github.com/Madhur-Prakash/Stellar-ERP) |
 | 2 | README with complete documentation | Done | [README.md](README.md) + [fourteen documents](docs/README.md) |
-| 3 | Minimum 15+ meaningful commits | Done - **24** | `git log --oneline \| wc -l` |
+| 3 | Minimum 15+ meaningful commits | Done - **34** | `git log --oneline \| wc -l` |
 | 4 | Live demo link | Done | **[stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app)** - the [verifier](https://stellar-erp-sigma.vercel.app/verify) runs there with no backend. See [Deploying the demo](#deploying-the-demo) |
 | 5 | Contract deployment address | Done | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
-| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | **Partial - 8 of 11** | Product UI and analytics **done**; **mobile outstanding**. [docs/screenshots.md](docs/screenshots.md), carried in the [README](README.md#screenshots) |
-| 7 | Demo video link | **Rendered, needs uploading** | `videos/stellar-erp-launch/renders/video.mp4` - see [Demo video](#demo-video) |
-| 8 | Proof of 10+ user wallet interactions | **In progress** | `make evidence` - see [Wallet interactions](#wallet-interactions) |
-| 9 | Basic user feedback summary | **In progress** | `make evidence` - the widget is live, submissions are not |
+| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | Done - **18** | All three categories covered, plus the verifier passing **and failing**. [docs/screenshots.md](docs/screenshots.md); four in the [README](README.md#screenshots) |
+| 7 | Demo video link | Done | Uploaded and embedded at the top of the [README](README.md) - see [Demo video](#demo-video) |
+| 8 | Proof of 10+ user wallet interactions | **In progress - 8 of 10** | 6 registrations + 2 confirmed seals, each resolving on a public explorer. `make evidence` - see [Wallet interactions](#wallet-interactions) |
+| 9 | Basic user feedback summary | **Outstanding - seeded only** | 12 submissions exist, but `seed_demo.py` wrote all 12. The widget is live; real submissions are not. See [docs/evidence.md](docs/evidence.md) |
 
-Item 7 is rendered and sitting in the repo; it needs uploading and the link pasting
-back here. Item 6 is eight shots in, and the three still missing are named rather than
-glossed over - the two verifier shots and a mobile viewport. Items 8 and 9 need people
-using it. **None of the remaining ones can be written into the repository honestly
-without the underlying thing existing**, which is why they are listed as outstanding
-rather than quietly filled in.
+**Seven of nine are done.** The two that are not both need other people, and neither can
+be closed by writing anything into this repository:
+
+- **Item 8 needs two more on-chain interactions.** Eight exist and every one resolves on
+  a public explorer. Two more organizations switching sealing on would do it - the
+  generator refuses to report ten until there are ten, so this cannot be rounded up.
+- **Item 9 needs real submissions.** All twelve rows in the feedback table were written
+  by the seeder, and `docs/evidence.md` says so at the top of the page rather than
+  letting the count speak for itself.
+
+That distinction is the whole point of [docs/evidence.md](docs/evidence.md): it is
+generated from the live database and the live ledger, it marks its own seeded rows, and
+its generator **exits non-zero while the headline count is short** - so it cannot be
+wired into CI and quietly pass while this file claims otherwise.
 
 ---
 
@@ -101,55 +109,66 @@ A count we assert about ourselves is worth very little. A count that resolves to
 transactions on a public ledger is worth something - which is the argument this
 whole product makes about accounting, so it would be odd not to apply it here.
 
-### Getting to ten
+### Where it stands: 8 of 10
 
-Each organization contributes one `register` plus one transaction per seal. Ten
-interactions is therefore roughly **five organizations that each seal twice**, or
-fewer organizations sealing more often. Every account is funded by Friendbot, so it
-costs nothing:
+From the current [docs/evidence.md](docs/evidence.md):
+
+| | |
+| --- | --- |
+| Organizations with a book on chain | **6** |
+| Organizations that have actually sealed | **1** |
+| Confirmed seals | **2** |
+| **Signed on-chain interactions** | **8** |
+
+Six `register` calls plus two confirmed `seal`s. The table deliberately separates
+*has a book* from *has sealed*, because conflating them is exactly the flattering
+arithmetic a submission should not contain.
+
+### Getting the last two
+
+Each organization contributes one `register` plus one transaction per seal, so **two
+more seals by any organization closes it** - or one more organization switching sealing
+on and sealing once. Every account is funded by Friendbot, so it costs nothing:
 
 1. Register an organization, post two or three journal entries.
 2. Open **Trust**, switch sealing on. That funds the account and registers the book -
    two on-chain transactions already.
 3. Press **Seal now**. One more.
-4. Repeat with the next organization.
+4. `make evidence` to regenerate the table.
 
 ---
 
 ## Screenshots
 
-**Eight captured, three outstanding.** The full gallery, with what each shot shows and
-why that one rather than another, is **[docs/screenshots.md](docs/screenshots.md)**; the
-[README](README.md#screenshots) carries the best four.
+**Eighteen, covering all three required categories.** Full gallery with what each shot
+shows and why: **[docs/screenshots.md](docs/screenshots.md)**. Four are carried in the
+[README](README.md#screenshots).
 
-| File | Screen | Covers |
+### The two that matter
+
+| File | Shot | Why it is the evidence |
 | --- | --- | --- |
-| `product-ui.png` | **Trust** - sealing on, Seal #1 on chain, unbroken chain | *Product UI.* The explorer link, the `WAITING TO BE SEALED · 0` tile, and the signing-key limitation stated in a banner at the top rather than buried |
-| `audit-log.png` | **Audit log** | `attestation.enabled` → `seal.created` → `seal.confirmed` beside the postings they commit - the seal as a lifecycle, on an append-only record with no `updated_at` |
-| `dashboard.png` | **Dashboard** | *Product UI.* The ERP underneath, with recent activity read off the audit trail and a control-reconciliation line |
-| `analytics.png` | **Analytics** | *Analytics.* This financial year against the last, tiles reading "no prior data to compare" rather than a fabricated delta |
-| `accounting.png` | **Accounting** | The double-entry core: five statement tabs, real fiscal-year periods, and "posted entries are immutable" stated on the screen |
-| `accounting-charts.png` | **Accounting**, scrolled | Where the money is, trend over time, totals by type |
-| `roles.png` | **Roles and permissions** | 46 permissions across 8 groups, enforced server-side on every request |
-| `feedback.png` | **Feedback widget**, open | Evidence for item 9 - it reports the screen it was sent from and works signed out |
+| `verify.png` | `/verify`, signed **out**, a verified bundle | Everything else is a signed-in user looking at their own data, which proves nothing to a third party. Here a stranger checks the books and our servers are not in the path: *"Nothing is uploaded"*, a real 2-hash Merkle path folds, and the RPC endpoint is the reader's to change |
+| `verify-tampered.png` | The same bundle, `total_debit` 100 → 1010 | Anything can render a green tick. It fails at **step 3, "Hash the document"** - `20bfba900ea9…` is not the `9a73ba8ca75c…` the bundle claims - and never reaches the network, because it does not need to |
 
-**Still outstanding, and they are the three that matter most:**
+### Checklist item 6, mapped
 
-| File | Shot | Why it is the gap |
-| --- | --- | --- |
-| `verify.png` | `/verify`, signed **out**, a verified bundle | Everything captured is a signed-in user looking at their own data, which proves nothing to a third party. Capturable straight off <https://stellar-erp-sigma.vercel.app/verify> - no backend needed |
-| `verify-tampered.png` | The same bundle, one digit changed, failing | Anything can render a green tick. This is the shot the whole product argues for, and [Commands § 7](docs/commands.md#7-demonstrating-that-the-records-are-tamper-evident) is the exact sequence |
-| `mobile.png` | 390 × 844, the Trust screen | **Required by checklist item 6** (*mobile responsive*) and the only one of the three that is purely a requirement rather than an argument |
+| Required | Covered by |
+| --- | --- |
+| **Product UI** | `product-ui.png` (Trust, two seals, unbroken chain), `dashboard.png`, `accounting.png`, `accounting-charts.png`, `audit-log.png`, `roles.png`, `feedback.png` |
+| **Mobile responsive** | `mobile.png` (Trust, 360 × 740) plus six more viewports: dashboard, analytics, reconciliation, seal history, audit log, settings |
+| **Analytics / monitoring** | `analytics.png` - period against the same period last year, tiles reading *"no prior data to compare"* rather than a fabricated delta |
 
-`monitoring.png` (`GET /attestation/status`, showing `days_unsealed` and
-`chain.agrees_with_local`) would complete the checklist's *analytics/monitoring* pair,
-though `analytics.png` already satisfies the analytics half.
+Three shots carry limitations that a more flattering capture would have cropped: the
+amber signing-key banner on Trust, the *"It does not mean"* card on the verifier, and
+the honest *"no prior data to compare"* on analytics. That is deliberate - see
+[Rules](docs/screenshots.md#rules).
 
-Capture on a **light** theme, matching the existing set at **~1916 × 945** for desktop
-and **390 × 844** for mobile, then drop them in
-[`docs/screenshots/`](docs/screenshots/) under those exact filenames - the gallery and
-the README grid pick them up with no further edits. Full rules:
-[docs/screenshots.md § Rules](docs/screenshots.md#rules).
+**One caveat, stated rather than hidden:** the mobile shots were taken in Chrome's device
+toolbar with DevTools docked, so the panel takes up most of each frame and the phone
+viewport is a strip on the left. The emulated dimensions are legible, which is the
+evidence that matters, but they would look better cropped to the viewport. The layout
+needs nothing; only the framing does.
 
 ---
 
@@ -200,11 +219,17 @@ Three things that will otherwise cost an evening:
 
 ### 1. The launch video - built, rendered
 
-`videos/stellar-erp-launch/renders/video-v2.mp4` - 88s, 1920x1080, narrated, with a
-music bed. (`video-v1.mp4` is the first cut, kept for comparison: same visuals, rougher
-narration, no music.) A
-HyperFrames project: ten HTML compositions on a seek-safe timeline, rendered to MP4.
-The source is in `videos/stellar-erp-launch/` and every frame is re-renderable.
+**Published, and embedded at the top of the [README](README.md):**
+<https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e>
+
+88s, 1920x1080, narrated, with a music bed. A HyperFrames project: ten HTML compositions
+on a seek-safe timeline, rendered to MP4. The source is in `videos/stellar-erp-launch/`
+and every frame is re-renderable; `renders/video-v1.mp4` is the first cut, kept for
+comparison (same visuals, rougher narration, no music).
+
+GitHub hosts the upload, so the README plays it inline with nothing to click through
+and no third-party player. A local copy sits in `docs/videos/`, which is gitignored -
+the published asset above is the canonical link, not the file.
 
 Arc: your books balance and are worthless to your bank → two ledgers, one password →
 keep them private or publish them, both fail → **the thesis** → the third ledger →

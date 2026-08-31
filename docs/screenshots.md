@@ -2,12 +2,12 @@
 
 # Screenshots
 
-**The interface, shot by shot - and why each shot rather than another.**
+**Every screen, shot by shot - and why each shot rather than another.**
 
-![Captured](https://img.shields.io/badge/captured-8-2EA043?style=flat-square)
-![Outstanding](https://img.shields.io/badge/outstanding-3-D29922?style=flat-square)
+![Captured](https://img.shields.io/badge/captured-18-2EA043?style=flat-square)
+![Verifier](https://img.shields.io/badge/verifier-pass_and_fail-4C8BF5?style=flat-square)
+![Mobile](https://img.shields.io/badge/mobile-360_%C3%97_740-8957E5?style=flat-square)
 ![Theme](https://img.shields.io/badge/capture-light_theme-F6F8FA?style=flat-square)
-![Desktop](https://img.shields.io/badge/desktop-1916_%C3%97_945-4C8BF5?style=flat-square)
 
 <!-- nav:start -->
 [Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · **Screenshots** · [Demo video](demo-video.md) · [Evidence](evidence.md) · [Development](development.md) · [Deployment](deployment.md)
@@ -17,206 +17,278 @@
 
 ---
 
-Eight captured, three outstanding. The [root README](../README.md#screenshots) carries
-four; this page carries all of them at full size.
+Eighteen shots, in three groups: **[the verifier](#the-verifier)** (3), **[the product](#the-product)** (8),
+and **[mobile](#mobile)** (7). The [root README](../README.md#screenshots) carries four of them.
 
-Every shot is a real install - `Bharat Cold Storage (demo)` is a seeded organization
-written by `scripts/seed_demo.py`, which is [why the figures are small and why that is
-fine](evidence.md): seeded rows are honest for a screenshot and are explicitly not
-evidence.
+Every shot is a real install against the real testnet contract.
+`Bharat Cold Storage (demo)` is a seeded organization from `scripts/seed_demo.py`,
+which is [why the figures are small and why that is fine](evidence.md): seeded rows are
+honest for a screenshot and are explicitly not evidence.
 
-> **The three outstanding shots are the important ones.** They are the public verifier
-> passing, the verifier failing on a tampered bundle, and a mobile viewport - listed in
-> [Outstanding](#outstanding) rather than quietly omitted, because the first two are
-> the product's actual argument and the third is a submission requirement.
+| Group | Files |
+| --- | --- |
+| [The verifier](#the-verifier) | `verify.png` · `verify-verdict.png` · `verify-tampered.png` |
+| [The product](#the-product) | `product-ui.png` · `audit-log.png` · `dashboard.png` · `analytics.png` · `accounting.png` · `accounting-charts.png` · `roles.png` · `feedback.png` |
+| [Mobile](#mobile) | `mobile.png` · `mobile-trust-seals.png` · `mobile-dashboard.png` · `mobile-analytics.png` · `mobile-reconciliation.png` · `mobile-audit-log.png` · `mobile-settings.png` |
 
 ---
 
-## Captured
+## The verifier
 
-### 1 · Trust - the third ledger
+**This is the product.** Everything in [the product](#the-product) is a signed-in user
+looking at their own data, which proves nothing to a third party. These three are the
+only shots where a stranger checks the books and our servers are not in the path.
 
-The product's whole argument in one screen.
+### 1 · Verified
 
-![Trust screen - the proof ledger, sealing enabled](screenshots/product-ui.png)
+![The public verifier, signed out, with a verified proof bundle](screenshots/verify.png)
 
-<sub><code>product-ui.png</code> · signed in, sealing <b>on</b></sub>
+<sub><code>verify.png</code> · signed out · the whole flow in one frame</sub>
 
-What earns it the first slot:
+The paste box and the green verdict together, so one image shows input and answer.
 
 | In frame | Why it matters |
 | --- | --- |
-| **Seal #1, `On chain`,** with a `transaction` link | The link resolves on Stellar Expert, off our infrastructure - the reader checking us rather than believing us |
-| **`Unbroken chain`** and `CHAIN #1` | The contract refuses a skipped sequence, so a gap would be evidence rather than an absence |
-| **`WAITING TO BE SEALED · 0`** | The figure that says sealing is actually running. "Entries sealed" alone is reassuring and says nothing about *now* |
-| The **amber banner**, top of screen | *"The signing key is held on this server, so a seal proves the books have not changed since it was written - not that they were correct when it was."* |
-| `proves 1 entry with 0 hashes` | A one-entry batch needs no siblings. The Merkle path grows as `log₂(n)`, and this is `n = 1` |
+| **"Checked in your browser, against the Stellar network"** | The subtitle is the claim |
+| **"Nothing is uploaded - the check happens on your device, and the answer does not depend on trusting whoever sent you the file"** | Stated on the page, not just in our docs |
+| **"Use a different Stellar endpoint"** | The RPC is the reader's choice. A scheme pitched as "you need not trust us" cannot quietly require trusting one hosted RPC |
+| `Walk the proof path · 2 sibling hashes` | A real Merkle path being folded, not a one-entry tree with nothing to fold |
+| `Confirm against the Stellar network · seal #2 on testnet` | The step that makes the answer independent |
 
-That banner is the honest limitation, and it sits at the **top** of the screen rather
-than in a footnote. A screenshot cropped to exclude it would sell a stronger product
-than this one is.
+### 2 · The verdict, in full
+
+![The verdict panel and the what-this-tells-you card](screenshots/verify-verdict.png)
+
+<sub><code>verify-verdict.png</code> · scrolled to the verdict</sub>
+
+The same check, scrolled so the honest half is readable. Two things here exist nowhere
+else:
+
+**"Sealed alongside · 4 entries · you were shown only this one."** That is selective
+disclosure stated to the reader. The bank sees one invoice; the other three entries in
+the batch are committed to by hashes it cannot invert.
+
+**The "What this tells you" card**, which spends two of its three sections on limits:
+
+> **It does not mean** — that the figures were correct when they were entered. No
+> cryptographic check can establish that. What it rules out is the document having been
+> changed afterwards to fit a different story - which is how accounts are usually
+> falsified.
+>
+> **What you are not being shown** — anything else in the business's books. The proof
+> carries this one entry and a short list of opaque fingerprints; the rest of the ledger
+> stays private and cannot be reconstructed from it.
+
+A trust product that oversells itself is not a trust product. This card is the proof
+that the principle survived contact with the UI.
+
+### 3 · Altered, and caught
+
+![The verifier rejecting a tampered bundle](screenshots/verify-tampered.png)
+
+<sub><code>verify-tampered.png</code> · one field changed</sub>
+
+**The most valuable shot here.** Anything can render a green tick.
+
+`total_debit` was changed from `100.0000` to `1010.0000` - visible in the paste box, next
+to a `total_credit` still reading `100.0000`. The verdict:
+
+> **The figures in this document are not the figures that were sealed.**
+> Re-hashing the entry produced a different value from the one the bundle claims.
+
+Note **where** it fails: steps 1 and 2 (format, hashing rules) stay green and **step 3,
+"Hash the document", goes red** - the recomputed fingerprint `20bfba900ea97a83…` is not
+the `9a73ba8ca75c98d6…` the bundle claims. It never reaches the network, because it does
+not need to. That is a failure with a nameable cause, not "the file looks wrong".
 
 ---
 
-### 2 · Audit log - Ledger 2
+## The product
 
-![Audit log - the append-only record, showing the seal lifecycle](screenshots/audit-log.png)
+### 4 · Trust - the third ledger
+
+![Trust screen with two seals on chain](screenshots/product-ui.png)
+
+<sub><code>product-ui.png</code> · sealing on, two seals</sub>
+
+| In frame | Why |
+| --- | --- |
+| **Seal #2 and Seal #1, both `On chain`**, each with a `transaction` link | The links resolve on Stellar Expert, off our infrastructure |
+| **`Unbroken chain`** and `CHAIN #2` | Each seal links to the one before it; the contract refuses a skipped sequence, so a gap is evidence rather than an absence |
+| `proves 1 entry with 2 hashes` vs `with 0 hashes` | The two seals side by side show the Merkle path growing as `log₂(n)` - Seal #1 covered one entry, Seal #2 covers four |
+| **`WAITING TO BE SEALED · 0`** | The figure that says sealing is running now. "5 entries sealed" alone says nothing about now |
+| The **amber banner**, at the top | *"The signing key is held on this server… Adding your accountant as a co-signer closes that gap."* |
+
+The banner is the honest limitation, and it is the first thing on the screen rather than
+a footnote. Cropping it out would sell a stronger product than this one is.
+
+### 5 · Audit log - Ledger 2
+
+![Audit log showing the seal lifecycle](screenshots/audit-log.png)
 
 <sub><code>audit-log.png</code> · unfiltered, newest first</sub>
 
-The second ledger, and the best single proof that sealing is a *lifecycle* rather than
-a button. Read top down:
+The second ledger. Read top down and the seal is a *lifecycle*, not a button:
 
 `seal.confirmed` → `seal.created` → `journal_entry.posted` → `attestation.enabled`
 
-Each row carries actor, IP and time. `attestation.enabled` is logged at **`warning`**
-severity rather than `info` - turning the proof ledger on is a governance event, and
-the severity says so. This record has no `updated_at` column, which is the point: a log
-that can be edited is not evidence.
+`attestation.enabled` is logged at **`warning`**, not `info` - turning the proof ledger
+on is a governance event and the severity says so. The table has no `updated_at` column,
+which is the point: a log that can be edited is not evidence.
 
----
-
-### 3 · Dashboard
+### 6 · Dashboard
 
 ![Dashboard](screenshots/dashboard.png)
 
-<sub><code>dashboard.png</code> · signed in, seeded organization</sub>
+<sub><code>dashboard.png</code></sub>
 
-The ERP underneath the argument - worth having because the third ledger only means
-something if there is a real double-entry system beneath it.
+The ERP underneath the argument - the third ledger only means something if there is a
+real double-entry system beneath it. **Recent activity is read off the audit trail**, not
+a separate feed, so shot 5 is what the owner sees on the landing screen. The footer line,
+*"Receivables, payables, and stock all reconcile to the ledger as at 31 Aug 2026"*, is a
+control reconciliation rather than a decoration.
 
-**Recent activity is read off the audit trail**, not a separate feed, so the same
-append-only record from shot 2 is what the owner sees on the landing screen. The line
-at the bottom - *"Receivables, payables, and stock all reconcile to the ledger as at
-31 Aug 2026"* - is a control reconciliation, not a decoration.
+### 7 · Analytics
 
----
-
-### 4 · Analytics
-
-![Analytics](screenshots/analytics.png)
+![Analytics with a like-for-like comparison](screenshots/analytics.png)
 
 <sub><code>analytics.png</code> · this financial year vs. last</sub>
 
-Satisfies the submission checklist's *analytics* requirement.
+The comparison window is stated explicitly - `1 Apr 2026 to 31 Aug 2026, compared against
+1 Apr 2025 to 31 Aug 2025` - and the tiles read **"no prior data to compare"** rather
+than rendering a fabricated or zeroed delta. Under the chart: *"Bars sum exactly to the
+totals above - the series is derived from the same posted entries."*
 
-The header states the comparison window explicitly - `1 Apr 2026 to 31 Aug 2026,
-compared against 1 Apr 2025 to 31 Aug 2025` - and the tiles read **"no prior data to
-compare"** rather than rendering a fabricated or zeroed delta. The note under the chart
-is the one that matters: *"Bars sum exactly to the totals above - the series is derived
-from the same posted entries."*
+### 8 · Accounting
 
-> **This shot is thin, and it is thin honestly.** A young seeded install has no prior
-> year and no invoices, so *Top customers* and *Best-selling lines* both read "Nothing
-> in this period". [Outstanding](#outstanding) says what a stronger version needs.
+![Chart of accounts and how income became profit](screenshots/accounting.png)
 
----
+<sub><code>accounting.png</code> · Chart of accounts, year to date</sub>
 
-### 5 · Accounting
+The subtitle is the whole accounting policy in one line: **"Posted entries are immutable
+- corrections are made by reversal."** Five statement tabs, and a period selector
+carrying real fiscal years (`FY 2026-27`, `FY 2025-26`) rather than rolling windows,
+because Indian statutory reporting is fiscal-year shaped.
 
-![Accounting - chart of accounts and how income became profit](screenshots/accounting.png)
+### 9 · Accounting, the lower charts
 
-<sub><code>accounting.png</code> · Chart of accounts tab, year to date</sub>
-
-The double-entry core. The subtitle is the whole accounting policy in one line:
-**"Posted entries are immutable - corrections are made by reversal."**
-
-Five tabs - Chart of accounts, Journal entries, Trial balance, Profit & loss, Balance
-sheet - and a period selector carrying real fiscal years (`FY 2026-27`, `FY 2025-26`)
-rather than rolling windows, because Indian statutory reporting is fiscal-year shaped.
-
----
-
-### 6 · Accounting - the lower charts
-
-![Accounting charts - where your money is, trend over time, totals by type](screenshots/accounting-charts.png)
+![Where your money is, trend over time, totals by type](screenshots/accounting-charts.png)
 
 <sub><code>accounting-charts.png</code> · the same screen, scrolled</sub>
 
-Kept because it shows what shot 5 cuts off: *Where your money is*, *Trend over time*,
-and *Totals by type*. Every panel names its own basis in the subtitle, and the empty one
+What shot 8 cuts off. Every panel names its own basis in its subtitle, and the empty one
 says **"Nothing spent yet - record money out and the breakdown appears here"** rather
 than drawing an empty donut.
 
----
-
-### 7 · Roles and permissions
+### 10 · Roles and permissions
 
 ![Roles and permissions](screenshots/roles.png)
 
 <sub><code>roles.png</code> · five built-in roles</sub>
 
-**46 permissions across 8 groups**, and the footer states where they are enforced:
-*"The server enforces every one of them on every request."* That sentence is the claim
-worth checking - a permission model enforced only in the client is decoration.
+**46 permissions across 8 groups**, and the footer says where they bite: *"The server
+enforces every one of them on every request."* A permission model enforced only in the
+client is decoration. Note `Proof ledger · 3 of 4` on Accountant against `view only` on
+Viewer - the third ledger is permissioned like every other module, not an owner-only
+escape hatch.
 
-Note `Proof ledger · 3 of 4` on Accountant against `view only` on Viewer: the third
-ledger is permissioned like every other module rather than being an owner-only escape
-hatch.
+### 11 · Feedback widget
 
----
+![The in-app feedback widget](screenshots/feedback.png)
 
-### 8 · Feedback widget
+<sub><code>feedback.png</code> · open over Roles</sub>
 
-![The in-app feedback widget, open](screenshots/feedback.png)
-
-<sub><code>feedback.png</code> · the widget open over Roles</sub>
-
-Evidence for the submission's *user feedback* item. Two details make it real: it says
-**"Sent with the screen you are on (/roles) so we know where to look"**, and it works
-signed out, landing in `POST /feedback`.
+Two details make it real: **"Sent with the screen you are on (/roles) so we know where to
+look"**, and it works signed out - somebody who cannot get past the sign-in screen is
+exactly the person whose report is worth having.
 
 ---
 
-## Outstanding
+## Mobile
 
-Three shots, and they are the three that matter most.
+Seven viewports, captured in Chrome's device toolbar at **360 × 740** (Samsung) and
+**414 × 896** (iPhone), with the emulated dimensions visible in the toolbar.
 
-### A · The verifier, passing - `verify.png`
+> **These are working captures, and it shows.** The DevTools panel occupies most of each
+> frame, leaving the phone viewport as a strip on the left. They are honest evidence of
+> responsive testing - the emulated size is legible, which a plain crop would lose - but
+> for a submission or a slide, re-capture with DevTools undocked or crop to the viewport.
+> Nothing about the layout needs to change; only the framing does.
 
-**The single most important missing shot.** Everything captured above is a signed-in
-user looking at their own data, which proves nothing to a third party. This one is the
-product.
+### 12 · Trust on a phone
 
-Capture it in a **private window, signed out**, at
-<https://stellar-erp-sigma.vercel.app/verify> - the hosted verifier needs no backend, so
-no local stack is required. Must show the **five-step verdict** and the **editable RPC
-field**. No avatar in the corner: a visible session quietly contradicts the "no account"
-claim.
+![Trust screen at 360 by 740](screenshots/mobile.png)
 
-### B · The verifier, failing - `verify-tampered.png`
+<sub><code>mobile.png</code> · 360 × 740 · <b>the responsive shot</b></sub>
 
-**Anything can render a green tick.** Take the bundle from A, change **one digit** of
-one amount, re-verify, and capture the failure naming the step it failed at - the
-recomputed leaf no longer folds to a root that was published before the edit was made.
+The submission checklist's *mobile responsive* item. Nothing clipped, no horizontal
+scroll, and the tiles stacked one per row instead of three across. The amber signing-key
+banner survives the narrow viewport intact rather than being hidden at small widths -
+the limitation is not something the layout is allowed to drop.
 
-[Commands § 7](commands.md#7-demonstrating-that-the-records-are-tamper-evident) is the
-exact sequence. This is the moment the [demo video](demo-video.md) is built around, and
-the pair A + B says more than the other eight combined.
+### 13 · Seal history on a phone
 
-### C · Mobile - `mobile.png`
+![Seal history stacked on mobile](screenshots/mobile-trust-seals.png)
 
-**A submission requirement** (checklist item 6: *mobile responsive*). 390 × 844, the
-Trust screen, device toolbar on. Must show nothing clipped, **no horizontal scroll**,
-and the settings controls stacked rather than side by side. Scroll the page fully before
-capturing - a layout that only breaks below the fold still breaks.
+<sub><code>mobile-trust-seals.png</code> · 360 × 740, scrolled</sub>
 
-### Optional: making the analytics shot stronger
+`CHAIN #2`, `Unbroken chain`, and both seals with their root hashes wrapped rather than
+truncated. A 64-character hash is the hardest thing on this screen to lay out narrow, and
+it is readable.
 
-Shot 4 is honest but sparse. To make it carry real figures, post a few GST invoices
-across two or three months before re-capturing, so *Top customers* and *Best-selling
-lines* populate and the monthly chart shows more than one column. Do **not** fabricate a
-prior year to fill the comparison - "no prior data to compare" is the correct output for
-an install this age.
+### 14 · Dashboard on a phone
 
-### Also worth having, not required
+![Dashboard at 414 by 896](screenshots/mobile-dashboard.png)
 
-`monitoring.png` - `GET /attestation/status`, showing `days_unsealed` and
-`chain.agrees_with_local`. Those two figures are the difference between *sealing works*
-and *sealing stopped silently three weeks ago and nothing said so*.
+<sub><code>mobile-dashboard.png</code> · 414 × 896 (iPhone)</sub>
 
-`desktop.png` - the Flutter client in a native window with the OS title bar in frame,
-the cheapest way to show it is not a wrapped web page.
+The eight-tile figure grid collapsed to one column, amounts intact.
+
+### 15 · Analytics on a phone
+
+![Analytics at 360 by 740](screenshots/mobile-analytics.png)
+
+<sub><code>mobile-analytics.png</code> · 360 × 740</sub>
+
+The period selector becomes a full-width control, and the comparison line wraps to two
+lines rather than truncating - the window a figure covers is not something to hide on a
+small screen.
+
+### 16 · Reconciliation on a phone
+
+![Reconciliation table on mobile](screenshots/mobile-reconciliation.png)
+
+<sub><code>mobile-reconciliation.png</code> · 360 × 740</sub>
+
+**The hardest layout in the app on the narrowest viewport.** A four-column control table
+- CONTROL ACCOUNT / LEDGER / DOCUMENTS / DIFFERENCE - held at 360px with `All reconcile`
+still legible. Financial tables are where responsive design usually gives up and
+scrolls sideways.
+
+### 17 · Audit log on a phone
+
+![Audit log on mobile](screenshots/mobile-audit-log.png)
+
+<sub><code>mobile-audit-log.png</code> · 360 × 740</sub>
+
+Also the best evidence for something the desktop shot predates: the top row is
+**`proof.exported`, at `warning` severity** - *"Exported a proof for entry
+CB-2026-27-0005 against seal #2"*.
+
+**Exporting a proof is a disclosure event, and it is audited like one.** Handing a bundle
+to a bank is the moment a business's opaque namespace stops being opaque to that bank, so
+it belongs in the record at the same severity as switching sealing on. The bundle behind
+[shots 1-3](#the-verifier) is the one this row is recording.
+
+### 18 · Settings on a phone
+
+![Security settings on mobile](screenshots/mobile-settings.png)
+
+<sub><code>mobile-settings.png</code> · 360 × 740</sub>
+
+Two-factor and password, with the policy stated inline. Included because security
+settings are where narrow layouts usually break: inline validation text at 360px is a
+real test.
 
 ---
 
@@ -224,19 +296,17 @@ the cheapest way to show it is not a wrapped web page.
 
 | Rule | Why |
 | --- | --- |
-| **Light theme** | Consistency across the set, and light survives being pasted into a document or a slide |
-| **~1916 × 945 desktop, 390 × 844 mobile** | The captured set is already consistent at this size; match it rather than mixing |
+| **Light theme** | Consistency, and light survives being pasted into a document or a slide |
+| **~1916 × 945 desktop, 360 × 740 mobile** | The set is consistent at these sizes; match them rather than mixing |
 | **PNG, not JPEG** | Text and thin borders - JPEG artefacts around UI type read as a rendering bug |
-| **Real data, or an honest empty state** | A mocked-up figure is an invented artifact in a repository whose entire subject is verifiable records |
+| **Real data, or an honest empty state** | A mocked-up figure is an invented artifact in a repository whose subject is verifiable records |
 | **Redact by re-seeding, never by blurring** | If a value cannot be shown, seed data that can. A blur box reads as something hidden |
-| **No bookmarks bar, no notifications** | They date the shot and leak whatever else was open |
-| **Keep the URL bar on `/verify`** | There the address is part of the claim: it shows the reader is on a page, not inside our app |
+| **Never crop the limitation** | The amber banner on Trust and the "It does not mean" card on `/verify` stay in frame |
+| **Keep the URL bar on the verifier** | There the address is part of the claim - the reader is on a page, not inside our app |
 
-**Producing the states:** `make up`, then `python scripts/seed_demo.py` if the install is
-empty, then [Commands § 7](commands.md#7-demonstrating-that-the-records-are-tamper-evident)
-for shots A and B. The [demo video](demo-video.md) covers the same ground in motion, and
-its take will already contain those frames - pulling stills from it is step 3 of that
-checklist.
+**Reproducing these:** `make up`, `python scripts/seed_demo.py` if the install is empty,
+then [Commands § 7](commands.md#7-demonstrating-that-the-records-are-tamper-evident) for
+the verifier pair. The [demo video](demo-video.md) covers the same ground in motion.
 
 ---
 
@@ -244,17 +314,17 @@ checklist.
 
 | Consumer | Shots |
 | --- | --- |
-| [Root README](../README.md#screenshots) | Trust, Audit log, Dashboard, Analytics - the four-slot grid |
-| [SUBMISSION.md](../SUBMISSION.md#screenshots) | Trust, Analytics and Feedback captured; verifier and mobile outstanding |
-| This page | All eight, plus the three still to capture |
+| [Root README](../README.md#screenshots) | `verify` · `verify-tampered` · `product-ui` · `mobile` |
+| [SUBMISSION.md](../SUBMISSION.md#screenshots) | Product UI, mobile responsive and analytics, mapped to checklist item 6 |
+| This page | All eighteen |
 
 Adding a shot means dropping the file in [`screenshots/`](screenshots/) and adding a
-section here. Only promote it into the README if it earns one of the four slots.
+section here. Only promote it into the README if it displaces one of the four.
 
 ---
 
 <div align="center">
 
-**Next:** [Demo video](demo-video.md) - the same story in motion · [Commands](commands.md) - how to produce the states above · [Evidence](evidence.md) - why seeded rows are not evidence
+**Next:** [Demo video](demo-video.md) - the same story in motion · [Evidence](evidence.md) - the on-chain figures · [Proof ledger](attestation.md) - how the verifier works
 
 </div>

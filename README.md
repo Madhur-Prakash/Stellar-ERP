@@ -309,45 +309,41 @@ is protected by every rule that protects a hand-entered one.
 <tr>
 <td width="50%" valign="top">
 
-![Trust screen - the proof ledger, sealing enabled](docs/screenshots/product-ui.png)
+![The public verifier, signed out, with a verified proof bundle](docs/screenshots/verify.png)
 
-**Trust** - the third ledger. Seal #1 on chain with its explorer link, an unbroken chain, and the signing-key limitation stated at the top rather than buried.
+**`/verify`, signed out** - "Nothing is uploaded". A real Merkle path folds, and the contract is asked over an RPC endpoint the reader can change.
 
 </td>
 <td width="50%" valign="top">
 
-![Audit log - the append-only record, showing the seal lifecycle](docs/screenshots/audit-log.png)
+![The verifier rejecting a tampered bundle](docs/screenshots/verify-tampered.png)
 
-**Audit log** - Ledger 2, append-only. `attestation.enabled` → `seal.created` → `seal.confirmed`, beside the postings they commit.
+**One field changed** - `total_debit` 100 → 1010. It fails at *Hash the document*, before it ever reaches the network.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-![Dashboard](docs/screenshots/dashboard.png)
+![Trust screen with two seals on chain](docs/screenshots/product-ui.png)
 
-**Dashboard** - the ERP underneath. Figures drawn from posted entries, with recent activity read off the audit trail.
+**Trust** - two seals, an unbroken chain, `WAITING TO BE SEALED · 0`, and the signing-key limitation stated at the top.
 
 </td>
 <td width="50%" valign="top">
 
-![Analytics](docs/screenshots/analytics.png)
+![Trust screen at 360 by 740](docs/screenshots/mobile.png)
 
-**Analytics** - this financial year against the last, with the bars derived from the same posted entries as the totals.
+**Mobile**, 360 × 740 - tiles stacked, nothing clipped, and the limitation banner survives the narrow viewport.
 
 </td>
 </tr>
 </table>
 
-Four of eight. The rest - the **Accounting** ledger, **Roles and permissions**, and the
-in-app **feedback** widget - are in **[docs/screenshots.md](docs/screenshots.md)**, at
-full size, each with what it shows and why that shot rather than another.
-
-> **Still to capture:** the public verifier passing, the verifier **failing** on a
-> tampered bundle, and a mobile viewport. Those three are the argument this project
-> actually makes, so the gallery lists them as outstanding rather than quietly
-> shipping without them.
+Four of eighteen. The rest - the audit log with the full seal lifecycle, the dashboard,
+analytics, the double-entry core, roles, the feedback widget, and six more mobile
+viewports - are in **[docs/screenshots.md](docs/screenshots.md)**, at full size, each
+with what it shows and why that shot rather than another.
 
 ---
 

@@ -1,6 +1,6 @@
 # Submission evidence
 
-Generated 2026-08-31T11:07:33+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
+Generated 2026-08-31T11:35:31+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
 
 Contract: [`CCB66KMNINKN…`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR)
 
@@ -16,15 +16,15 @@ Each organization that switches sealing on is given **its own Stellar account**,
 | --- | --- |
 | Organizations with a book | **6** |
 | Organizations that have actually sealed | **1** |
-| Signed on-chain interactions | **7** |
-| Confirmed seals | 1 |
-| Journal entries committed | 1 |
+| Signed on-chain interactions | **8** |
+| Confirmed seals | 2 |
+| Journal entries committed | 5 |
 
 *Signed interactions* counts one `register` per registered book plus every confirmed `seal`. Both are transactions the organization's own key signed.
 
 | Organization | Signer account | Registered | Seals | Entries | Latest seal |
 | --- | --- | --- | --- | --- | --- |
-| Bharat Cold Storage (demo) | [`GC2RXRZNR5JA…`](https://stellar.expert/explorer/testnet/account/GC2RXRZNR5JA43TGNN3E7VXF6QD3HMCB7C4R67JCRVQXIGG4PDAGUWPH) | [`375bfebec260…`](https://stellar.expert/explorer/testnet/tx/375bfebec2606a14e89962d9b572d88dd30de187fdd6101c1dab4c384b4432fd) | 1 | 1 | [`e577181a3814…`](https://stellar.expert/explorer/testnet/tx/e577181a3814380bf2961006cfce8c8f742321b2a2323e366593dcab9e0c3987) |
+| Bharat Cold Storage (demo) | [`GC2RXRZNR5JA…`](https://stellar.expert/explorer/testnet/account/GC2RXRZNR5JA43TGNN3E7VXF6QD3HMCB7C4R67JCRVQXIGG4PDAGUWPH) | [`375bfebec260…`](https://stellar.expert/explorer/testnet/tx/375bfebec2606a14e89962d9b572d88dd30de187fdd6101c1dab4c384b4432fd) | 2 | 5 | [`0355f9521c01…`](https://stellar.expert/explorer/testnet/tx/0355f9521c013a99b9af8280428651096e884b5bcda52988dae219c9ae76bd95) |
 | Konark Hardware (demo) | [`GCLM6TCQQWUT…`](https://stellar.expert/explorer/testnet/account/GCLM6TCQQWUTY46ZBP2TMBLT7ET7YZUNXIKCENFQIB5EXJELUMMFOXM2) | [`3d5bf6ff0bfc…`](https://stellar.expert/explorer/testnet/tx/3d5bf6ff0bfc4863a117d8d585783181c917442b30e7e266277e75b11a2184f8) | 0 | 0 | — |
 | Nirmal Traders (demo) | [`GBNYJZ27OUM3…`](https://stellar.expert/explorer/testnet/account/GBNYJZ27OUM3FNDYCKJFBIJDZBOAF4R7YX2M4NB7JY2AP3VZHO77NC4D) | [`ee1f4eee7725…`](https://stellar.expert/explorer/testnet/tx/ee1f4eee7725555bda96d8123de3c79ce75431c79f842eeff79ab74e5fc69783) | 0 | 0 | — |
 | Saraswati Stationers (demo) | [`GA5XXZEJM253…`](https://stellar.expert/explorer/testnet/account/GA5XXZEJM253LKZ7OVCNFA2BBKLEB4XY5LYZJT5PQWKRPUQK5KXOYB7P) | [`100c642eee7a…`](https://stellar.expert/explorer/testnet/tx/100c642eee7ac25068577170d951efc039bcc5f81461354d532eb20f73d85ce1) | 0 | 0 | — |
@@ -64,17 +64,20 @@ First-party analytics, stored in this install's own PostgreSQL and never sent an
 
 | Action | Events | Organizations | Users |
 | --- | --- | --- | --- |
-| `screen.trust` | 12 | 6 | 6 |
-| `screen.dashboard` | 9 | 6 | 6 |
-| `seal.now` | 8 | 6 | 6 |
+| `screen.trust` | 18 | 6 | 6 |
+| `screen.dashboard` | 14 | 6 | 6 |
+| `seal.now` | 10 | 6 | 6 |
+| `screen.accounting` | 7 | 1 | 1 |
 | `attestation.enabled` | 6 | 6 | 6 |
-| `screen.accounting` | 6 | 1 | 1 |
+| `screen.billing` | 6 | 1 | 1 |
+| `proof.rejected` | 5 | 1 | 1 |
+| `screen.verify` | 5 | 1 | 1 |
+| `screen.analytics` | 4 | 2 | 2 |
 | `screen.sales` | 4 | 1 | 1 |
-| `screen.billing` | 3 | 1 | 1 |
-| `screen.analytics` | 3 | 2 | 2 |
+| `proof.verified` | 3 | 1 | 1 |
+| `screen.accounts` | 2 | 1 | 1 |
+| `screen.settings` | 2 | 1 | 1 |
 | `screen.documents` | 2 | 1 | 1 |
 | `screen.inventory` | 2 | 1 | 1 |
-| `screen.verify` | 2 | 1 | 1 |
-| `screen.accounts` | 2 | 1 | 1 |
 
 The events table has **no free-text payload column**. An open payload is how an analytics table ends up inside the compliance boundary, so actions are allow-listed and the context keys are too.

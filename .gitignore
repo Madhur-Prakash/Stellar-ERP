@@ -74,3 +74,11 @@ token.pickle
 # case-sensitive checkout does not. Nothing else in that folder is an executable - the
 # installer output goes to `installer/dist/`, ignored above.
 installer/*.exe
+# Rendered demo video. ~14 MB of binary that GitHub already hosts: the launch video is
+# uploaded as a release-style attachment and the README embeds that URL, so a committed
+# copy would be a second, heavier source of the same bytes - and a re-render would add
+# another 14 MB to the history rather than replacing it.
+#
+# The source compositions in `videos/stellar-erp-launch/` are text and *are* committed,
+# so every frame stays re-renderable; only the output is ignored.
+docs/videos/

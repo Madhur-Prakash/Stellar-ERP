@@ -217,9 +217,23 @@ github.com/Madhur-Prakash/Stellar-ERP
 
 1. Upload unlisted, or public if you prefer.
 2. Put the link in [SUBMISSION.md](../SUBMISSION.md) row 7 and in the README.
-3. Pull three stills from the take for the [screenshots](../SUBMISSION.md#screenshots)
-   requirement - the Trust screen, the verifier's verdict, and the failure. Capture
-   the mobile shot separately at 390 × 844.
+3. Pull stills from the take for [Screenshots](screenshots.md) if any beat it.
+
+**Steps 2 and 3 are already satisfied for the launch video.** It is published and
+embedded at the top of the [README](../README.md):
+
+<https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e>
+
+And the screenshot requirement is met independently - [eighteen shots](screenshots.md),
+including the verifier both **passing** and **failing**, captured from the running app
+rather than pulled from video frames. Stills from a take are a fallback when there is no
+running deployment to capture; there is one now, so they were shot directly.
+
+What this script still adds that nothing else does: **the real product in motion**. The
+launch video reconstructs those surfaces in typography and diagram; the screenshots
+freeze them. Only a screen recording shows the seal being pressed, the explorer opening,
+and the digit being changed - in one continuous take that cannot be assembled after the
+fact.
 
 <!-- related:start -->
 
