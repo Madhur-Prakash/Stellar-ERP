@@ -23,7 +23,7 @@ export function SkeletonText({ lines = 3, className }: { lines?: number; classNa
 /** Full-page loading state, used while the session bootstraps. */
 export function PageSkeleton() {
   return (
-    <div className="space-y-6 p-6" aria-busy="true" aria-label="Loading">
+    <div className="space-y-6 p-4 sm:p-6" aria-busy="true" aria-label="Loading">
       <div className="space-y-2">
         <Skeleton className="h-7 w-56" />
         <Skeleton className="h-4 w-80" />

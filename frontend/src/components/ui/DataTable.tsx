@@ -82,7 +82,7 @@ export function DataTable<T>({
                 scope="col"
                 className={cn(
                   'text-content-muted px-3 py-2 text-left text-[11px] font-semibold tracking-wide uppercase',
-                  column.numeric && 'text-right',
+                  column.numeric && 'text-right whitespace-nowrap',
                   column.hideOnMobile && 'hidden sm:table-cell',
                   column.className,
                 )}
@@ -107,7 +107,10 @@ export function DataTable<T>({
                   key={column.header}
                   className={cn(
                     'text-content px-3 py-2.5 align-middle',
-                    column.numeric && 'text-right tabular-nums',
+                    // Never wrapped: a money figure broken across two lines reads as two
+                    // numbers. On a narrow screen the wrapper scrolls instead, which is
+                    // what the `overflow-x-auto` above is for.
+                    column.numeric && 'text-right whitespace-nowrap tabular-nums',
                     column.hideOnMobile && 'hidden sm:table-cell',
                     column.className,
                   )}
@@ -139,8 +142,8 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
-      <div>
+    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between">
+      <div className="min-w-0">
         <h1 className="text-content text-[19px] font-semibold tracking-tight">{title}</h1>
         {description && <p className="text-content-muted mt-0.5 text-[13px]">{description}</p>}
       </div>
@@ -164,16 +167,18 @@ export function Pagination({
   if (totalPages <= 1) return null;
 
   return (
-    <div className="border-border flex items-center justify-between border-t px-3 py-2.5">
+    <div className="border-border flex flex-col gap-2 border-t px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
       <p className="text-content-muted text-[12px]">
         Page {page} of {totalPages} · {totalItems} total
       </p>
+      {/* Full-width halves on a phone: these are the two controls a thumb reaches for
+          most on a long list, and a 60-pixel target at the end of a row is a miss. */}
       <div className="flex gap-1.5">
         <button
           type="button"
           onClick={() => onChange(page - 1)}
           disabled={page <= 1}
-          className="border-border text-content hover:bg-surface-sunken rounded-md border px-2.5 py-1 text-[12px] disabled:opacity-40"
+          className="border-border text-content hover:bg-surface-sunken flex-1 rounded-md border px-2.5 py-1.5 text-[12px] disabled:opacity-40 sm:flex-none sm:py-1"
         >
           Previous
         </button>
@@ -181,7 +186,7 @@ export function Pagination({
           type="button"
           onClick={() => onChange(page + 1)}
           disabled={page >= totalPages}
-          className="border-border text-content hover:bg-surface-sunken rounded-md border px-2.5 py-1 text-[12px] disabled:opacity-40"
+          className="border-border text-content hover:bg-surface-sunken flex-1 rounded-md border px-2.5 py-1.5 text-[12px] disabled:opacity-40 sm:flex-none sm:py-1"
         >
           Next
         </button>

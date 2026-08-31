@@ -76,7 +76,7 @@ export function InfoTip({
           role="note"
           className={cn(
             'bg-surface-raised border-border text-content-secondary absolute top-6 z-50',
-            'w-64 rounded-lg border p-3 text-left text-[12px] leading-relaxed shadow-lg',
+            'w-64 max-w-[calc(100vw-2rem)] rounded-lg border p-3 text-left text-[12px] leading-relaxed shadow-lg',
             // Normal flow inside, so paragraphs and lists render as written.
             '[&_p]:mb-1.5 [&_p:last-child]:mb-0 [&_strong]:text-content [&_strong]:font-semibold',
             align === 'left' ? 'left-0' : 'right-0',

@@ -59,6 +59,8 @@ export function Hint({
             'rounded-lg border p-2.5 text-left text-[12px] leading-relaxed font-normal shadow-lg',
             // Rows are `whitespace-nowrap` in places; this text has to wrap.
             'whitespace-normal',
+            // `w-80` is wider than a phone's content column; cap it at the viewport.
+            'max-w-[calc(100vw-2rem)]',
             align === 'right' ? 'right-0' : 'left-0',
             width,
           )}

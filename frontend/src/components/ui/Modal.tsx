@@ -70,25 +70,34 @@ export function Modal({
         if (!inside) onClose();
       }}
       className={cn(
-        'bg-surface border-border text-content m-auto w-[min(92vw,34rem)] rounded-xl border p-0 shadow-lg',
+        'bg-surface border-border text-content m-auto rounded-xl border p-0 shadow-lg',
+        // Sized against the *viewport*, both ways. `dvh` rather than `vh` because the
+        // mobile browser's toolbars and the on-screen keyboard both change the visible
+        // height, and `vh` measures the tallest of those - which is how a dialog ends up
+        // with its footer, and so its submit button, below the fold on a phone.
+        'max-h-[calc(100dvh-1.5rem)] w-[calc(100vw-1.5rem)] max-w-[34rem] overflow-hidden',
         'backdrop:bg-black/40 backdrop:backdrop-blur-sm',
         className,
       )}
     >
-      {/* A form wrapper so Enter submits and the buttons can use `formMethod`. The
-          submit handler lives on the caller's own form inside `children`. */}
-      <div className="border-border border-b px-5 py-4">
-        <h2 className="text-content text-[15px] font-semibold">{title}</h2>
-        {description && <p className="text-content-muted mt-0.5 text-[13px]">{description}</p>}
-      </div>
-
-      <div className="max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>
-
-      {footer && (
-        <div className="border-border bg-surface-sunken/40 flex items-center justify-end gap-2 border-t px-5 py-3">
-          {footer}
+      {/* The flex column lives on a child rather than on the dialog itself: an author
+          `display` on `<dialog>` overrides the UA's `dialog:not([open]) { display: none }`
+          and the dialog would render while closed. `max-h-[inherit]` passes the cap down. */}
+      <div className="flex max-h-[inherit] flex-col">
+        <div className="border-border shrink-0 border-b px-4 py-4 sm:px-5">
+          <h2 className="text-content text-[15px] font-semibold">{title}</h2>
+          {description && <p className="text-content-muted mt-0.5 text-[13px]">{description}</p>}
         </div>
-      )}
+
+        {/* Only this scrolls, so the title stays visible and the footer stays reachable. */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">{children}</div>
+
+        {footer && (
+          <div className="border-border bg-surface-sunken/40 flex shrink-0 flex-wrap items-center justify-end gap-2 border-t px-4 py-3 sm:px-5">
+            {footer}
+          </div>
+        )}
+      </div>
     </dialog>
   );
 }

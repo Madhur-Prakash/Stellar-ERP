@@ -377,8 +377,11 @@ function InvoiceComposer({ onClose }: { onClose: () => void }) {
 
         <div className="space-y-2">
           {lines.map((line, index) => (
-            <div key={index} className="grid grid-cols-12 items-end gap-2">
-              <div className="col-span-12 sm:col-span-5">
+            // Two columns on a phone, twelve from `sm`. The twelve-column grid alone
+            // left the remove button a single column wide - about fifteen pixels on a
+            // 360px screen for a 36px button, which pushed the whole row off the side.
+            <div key={index} className="grid grid-cols-2 items-end gap-2 sm:grid-cols-12">
+              <div className="col-span-2 sm:col-span-5">
                 <Input
                   label={index === 0 ? 'Description' : undefined}
                   placeholder="Widget"
@@ -392,7 +395,7 @@ function InvoiceComposer({ onClose }: { onClose: () => void }) {
                   }
                 />
               </div>
-              <div className="col-span-4 sm:col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <NumberInput
                   label={index === 0 ? 'Qty' : undefined}
                   value={line.quantity}
@@ -405,7 +408,7 @@ function InvoiceComposer({ onClose }: { onClose: () => void }) {
                   }
                 />
               </div>
-              <div className="col-span-4 sm:col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <NumberInput
                   label={index === 0 ? 'Price' : undefined}
                   value={line.unit_price}
@@ -418,7 +421,7 @@ function InvoiceComposer({ onClose }: { onClose: () => void }) {
                   }
                 />
               </div>
-              <div className="col-span-3 sm:col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <NumberInput
                   label={index === 0 ? 'GST %' : undefined}
                   value={line.tax_rate}
@@ -549,7 +552,7 @@ function CustomerList() {
       <CardHeader
         title="Customers"
         action={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               placeholder="Search…"
               value={query}
@@ -557,7 +560,7 @@ function CustomerList() {
                 setQuery(event.target.value);
                 setPage(1);
               }}
-              className="w-48"
+              className="w-full sm:w-48"
             />
             <Button onClick={() => setAdding(true)} className="shrink-0">
               <Plus className="h-3.5 w-3.5" aria-hidden />

@@ -100,7 +100,7 @@ export function AnalyticsPage() {
             value={period}
             onChange={(event) => setPeriod(event.target.value as Period)}
             aria-label="Reporting period"
-            className="border-border bg-surface text-content rounded-lg border px-2.5 py-1.5 text-[13px]"
+            className="border-border bg-surface text-content w-full min-w-0 rounded-lg border px-2.5 py-1.5 text-[13px] sm:w-auto"
           >
             {(options?.options ?? []).map((option) => (
               <option key={option.value} value={option.value}>

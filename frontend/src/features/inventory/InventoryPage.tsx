@@ -453,7 +453,7 @@ function ProductList() {
                   // A hardware scanner types the code then sends Enter.
                   if (event.key === 'Enter' && scan.trim()) lookup.mutate(scan.trim());
                 }}
-                className="w-44"
+                className="w-full sm:w-44"
               />
               <Input
                 placeholder="Search…"
@@ -462,7 +462,7 @@ function ProductList() {
                   setQuery(event.target.value);
                   setPage(1);
                 }}
-                className="w-40"
+                className="w-full sm:w-40"
               />
               <Button size="sm" leftIcon={<Plus />} onClick={() => setCreating(true)}>
                 New

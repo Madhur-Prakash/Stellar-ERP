@@ -654,7 +654,7 @@ function NewMoneyAccountRow({
             hint="What you call it on this screen."
           />
         </div>
-        <div className="w-44">
+        <div className="w-full sm:w-44">
           <Select
             label="Behaves like"
             value={kind}
@@ -853,7 +853,7 @@ function EntryList({
         description="Newest first. Nothing is ever deleted - a correction is an opposite entry."
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <div className="border-border flex overflow-hidden rounded-lg border">
+            <div className="border-border flex max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
               {(
                 [
                   ['all', 'All'],
@@ -867,7 +867,7 @@ function EntryList({
                   onClick={() => onFilter(key)}
                   aria-pressed={filter === key}
                   className={cn(
-                    'px-2.5 py-1.5 text-[12px] font-medium',
+                    'shrink-0 px-2.5 py-1.5 text-[12px] font-medium',
                     filter === key
                       ? 'bg-primary text-white'
                       : 'text-content-muted hover:bg-surface-sunken',
@@ -881,7 +881,7 @@ function EntryList({
               placeholder="Search…"
               value={search}
               onChange={(event) => onSearch(event.target.value)}
-              className="w-40"
+              className="w-full sm:w-40"
             />
           </div>
         }

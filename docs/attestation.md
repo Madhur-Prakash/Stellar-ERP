@@ -505,7 +505,7 @@ on should not have to wait until tomorrow to see that it worked.
   when an RPC endpoint does.
 - **It does not make entries true.** It fixes what the books said at a time the
   network attests to. Fabrication *before* sealing is untouched by it - see
-  [What a seal proves](#what-a-seal-proves--stated-precisely).
+  [What a seal proves](#what-a-seal-proves---stated-precisely).
 - **It does not re-seal history.** A seal is final. A reversal posted in May is new
   entries in a new batch; March's root does not change and March's proofs keep
   verifying.

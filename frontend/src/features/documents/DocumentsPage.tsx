@@ -208,7 +208,7 @@ function DocumentQueue({ onOpen }: { onOpen: (id: string) => void }) {
           title="Document inbox"
           description="Newest first - what arrived this morning should not be buried under old scans."
           action={
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <label className="text-content-secondary flex items-center gap-1.5 text-[12px]">
                 <input
                   type="checkbox"
@@ -228,7 +228,7 @@ function DocumentQueue({ onOpen }: { onOpen: (id: string) => void }) {
                   setPage(1);
                 }}
                 placeholder="Search file, supplier, invoice no."
-                className="w-56"
+                className="w-full sm:w-56"
               />
             </div>
           }

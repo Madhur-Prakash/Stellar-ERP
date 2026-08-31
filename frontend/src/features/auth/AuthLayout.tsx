@@ -34,7 +34,7 @@ export function AuthLayout({
         }}
       />
 
-      <header className="relative flex items-center justify-between px-6 py-5">
+      <header className="relative flex items-center justify-between px-4 py-5 sm:px-6">
         <Link to="/login" className="flex items-center gap-2">
           <span
             className="bg-primary text-primary-content flex h-7 w-7 items-center justify-center rounded-lg text-sm font-bold"
@@ -47,7 +47,7 @@ export function AuthLayout({
         <ThemeToggle />
       </header>
 
-      <main className="relative flex flex-1 items-center justify-center px-6 pb-16">
+      <main className="relative flex flex-1 items-center justify-center px-4 pb-16 sm:px-6">
         <div className="animate-slide-up w-full max-w-[400px]">
           <div className="mb-7 text-center">
             <h1 className="text-content text-[26px] leading-tight font-semibold tracking-[-0.03em]">
@@ -58,7 +58,7 @@ export function AuthLayout({
             )}
           </div>
 
-          <div className="bg-surface border-border rounded-2xl border p-6 shadow-lg">
+          <div className="bg-surface border-border rounded-2xl border p-5 shadow-lg sm:p-6">
             {children}
           </div>
 

@@ -230,6 +230,10 @@
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11'; /* Inter's nicer glyphs */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* An unbroken token wider than a phone - a GSTIN, a transaction hash, a long
+       email - would otherwise widen the page itself and leave every screen
+       side-scrolling. Breaking the token is the lesser evil. */
+    overflow-wrap: break-word;
     /* The theme switch animates; without this the change is a hard cut. */
     transition:
       background-color var(--duration-base) var(--ease-out-quart),
@@ -242,6 +246,39 @@
   h4 {
     letter-spacing: var(--tracking-tight);
     font-weight: 600;
+  }
+
+  /* =========================================================================
+     Mobile form controls
+
+     **iOS Safari zooms the page whenever a focused field's text is under 16px**,
+     and it does not zoom back out - so a 13px input, which is most of this UI,
+     leaves the user pinched into a half-width viewport that they then have to
+     pan around by hand. Every dense-data design that ignores this ends up
+     unusable on an iPhone.
+
+     The fix is to hand the phone 16px and take the density loss. Checkboxes and
+     radios are excluded (they carry no text and are sized by their own rules),
+     and nothing above `sm` is touched, so the desktop UI is unchanged.
+     ========================================================================= */
+  @media (max-width: 639px) {
+    input:not([type='checkbox']):not([type='radio']):not([type='range']),
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+
+  /* Touch targets. A pointer that is a fingertip cannot hit a 20px control, and
+     several of the table row actions here are icon-only. This sets a floor
+     without changing how anything looks. */
+  @media (pointer: coarse) {
+    button,
+    [role='button'],
+    a[href],
+    summary {
+      touch-action: manipulation;
+    }
   }
 
   /* One focus treatment everywhere. `:focus-visible` rather than `:focus` so a

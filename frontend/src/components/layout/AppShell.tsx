@@ -171,6 +171,19 @@ export function AppShell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  // The page behind the mobile drawer must not scroll. Without this, a swipe on the
+  // scrim scrolls the document underneath, so closing the drawer returns the user to a
+  // different part of the page than the one they left - and on iOS the rubber-banding
+  // drags the fixed drawer around with it.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [mobileOpen]);
+
   // Cmd/Ctrl+K opens the palette from anywhere.
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -348,7 +361,7 @@ export function AppShell() {
 
       {/* ---- Content ---- */}
       <div className="lg:pl-[248px]">
-        <header className="glass border-border sticky top-0 z-20 flex h-14 items-center gap-3 border-b px-4 lg:px-6">
+        <header className="glass border-border sticky top-0 z-20 flex h-14 items-center gap-2 border-b px-3 sm:gap-3 sm:px-4 lg:px-6">
           <Button
             variant="ghost"
             size="icon"
@@ -365,10 +378,12 @@ export function AppShell() {
           <button
             type="button"
             onClick={() => setPaletteOpen(true)}
-            className="border-border bg-surface-sunken text-content-muted hover:bg-surface-hover hover:text-content-secondary flex h-8 max-w-72 flex-1 items-center gap-2 rounded-lg border px-2.5 text-[13px] transition-colors"
+            className="border-border bg-surface-sunken text-content-muted hover:bg-surface-hover hover:text-content-secondary flex h-8 min-w-0 max-w-72 flex-1 items-center gap-2 rounded-lg border px-2.5 text-[13px] transition-colors"
           >
             <Search className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            <span className="flex-1 text-left">Search or jump to…</span>
+            {/* Truncates rather than pushing the bell and the theme toggle off a
+                360-pixel screen. */}
+            <span className="flex-1 truncate text-left">Search or jump to…</span>
             <kbd className="border-border bg-surface text-content-muted hidden rounded border px-1.5 py-0.5 font-sans text-[10px] font-medium sm:inline-block">
               ⌘K
             </kbd>
@@ -388,7 +403,7 @@ export function AppShell() {
             the last row of a long table sat flush against the viewport edge with nothing
             below it and looked cut off. `pb-16` guarantees breathing room after the final
             element on every screen. */}
-        <main id="main-content" className="animate-fade-in p-6 pb-10 lg:p-8 lg:pb-12">
+        <main id="main-content" className="animate-fade-in p-4 pb-10 sm:p-6 lg:p-8 lg:pb-12">
           <Outlet />
         </main>
 
@@ -411,14 +426,14 @@ export function PageHeader({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
-      <div>
-        <h1 className="text-content text-[22px] leading-tight font-semibold tracking-[-0.025em]">
+    <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
+      <div className="min-w-0">
+        <h1 className="text-content text-[20px] leading-tight font-semibold tracking-[-0.025em] sm:text-[22px]">
           {title}
         </h1>
         {description && <p className="text-content-muted mt-1 text-[13px]">{description}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="min-w-0 sm:shrink-0">{action}</div>}
     </div>
   );
 }
@@ -434,7 +449,7 @@ export function StagePlaceholder({
   stage: number;
 }) {
   return (
-    <div className="p-6 lg:p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <PageHeader title={title} description={description} />
       <div className="border-border flex flex-col items-center justify-center rounded-xl border border-dashed px-6 py-20 text-center">
         <div

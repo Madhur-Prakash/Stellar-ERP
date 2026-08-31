@@ -29,14 +29,22 @@ export function CardHeader({
 }) {
   return (
     <div
-      className={cn('flex items-start justify-between gap-4 px-5 pt-5 pb-4', className)}
+      className={cn(
+        // Stacked on a phone, side by side from `sm`. A header action is routinely a
+        // search box or a segmented range picker - several hundred pixels of it - and
+        // `shrink-0` beside a narrow title crushed the heading to nothing and pushed
+        // the card past the viewport. Below `sm` the action gets its own full-width
+        // row instead, which is the only arrangement that fits both.
+        'flex flex-col gap-3 px-5 pt-5 pb-4 sm:flex-row sm:items-start sm:justify-between sm:gap-4',
+        className,
+      )}
       {...props}
     >
       <div className="min-w-0">
         {title && <h3 className="text-content truncate text-[15px] font-semibold">{title}</h3>}
         {description && <p className="text-content-muted mt-0.5 text-[13px]">{description}</p>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
+      {action && <div className="min-w-0 sm:shrink-0">{action}</div>}
     </div>
   );
 }

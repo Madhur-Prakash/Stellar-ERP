@@ -475,13 +475,15 @@ function TrialBalanceReport() {
           footer={
             data ? (
               <>
-                <td className="px-3 py-2.5" colSpan={2}>
-                  Total
-                </td>
-                <td className="px-3 py-2.5 text-right tabular-nums">
+                {/* One cell per *rendered* column. "Dealt with" is `hideOnMobile`, so a
+                    `colSpan={2}` here left the footer a column wider than the header
+                    below `sm` and every total sat under the wrong heading. */}
+                <td className="px-3 py-2.5">Total</td>
+                <td className="hidden px-3 py-2.5 sm:table-cell" />
+                <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
                   {formatMoney(data.total_debit)}
                 </td>
-                <td className="px-3 py-2.5 text-right tabular-nums">
+                <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">
                   {formatMoney(data.total_credit)}
                 </td>
               </>
@@ -542,9 +544,9 @@ function ProfitAndLossReport() {
         <CardBody className="space-y-5">
           <ReportSection title="Income" lines={data.income} total={data.total_income} />
           <ReportSection title="Expenses" lines={data.expenses} total={data.total_expenses} />
-          <div className="border-border flex items-center justify-between border-t pt-3">
-            <span className="text-content text-[14px] font-semibold">Net profit</span>
-            <span className="text-content text-[15px] font-semibold tabular-nums">
+          <div className="border-border flex items-center justify-between gap-3 border-t pt-3">
+            <span className="text-content min-w-0 text-[14px] font-semibold">Net profit</span>
+            <span className="text-content shrink-0 text-[15px] font-semibold whitespace-nowrap tabular-nums">
               {formatMoney(data.net_profit)}
             </span>
           </div>
@@ -627,12 +629,14 @@ function BalanceSheetReport() {
         }
       />
       <CardBody className="space-y-4">
-        <div className="border-border flex flex-wrap items-end gap-3 border-b pb-4">
+        <div className="border-border flex flex-col gap-3 border-b pb-4 sm:flex-row sm:flex-wrap sm:items-end">
           {/* A segmented group, not a dropdown - the same control the report range above
               uses. Six mutually exclusive windows are worth showing at once: the choice is
               the point of the screen, and a closed `select` hides five of them behind a
               click. `aria-pressed` rather than a radio group, matching that control. */}
-          <div className="border-border flex overflow-hidden rounded-lg border">
+          {/* Six windows, each with a sentence for a label - far wider than a phone.
+              It scrolls sideways inside the card rather than widening the page. */}
+          <div className="border-border flex max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
             {(
               [
                 ['to_date', 'As things stand'],
@@ -649,7 +653,7 @@ function BalanceSheetReport() {
                 aria-pressed={period === key}
                 onClick={() => setPeriod(key)}
                 className={cn(
-                  'px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap',
+                  'shrink-0 px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap',
                   period === key
                     ? 'bg-primary text-white'
                     : 'text-content-muted hover:bg-surface-sunken',
@@ -663,26 +667,26 @@ function BalanceSheetReport() {
           {/* Only for a custom window. On a named one these are the server's to decide, and
               showing them empty would invite someone to fill one in and override it. */}
           {custom && (
-            <>
+            <div className="grid grid-cols-2 items-start gap-3 sm:flex sm:items-end">
               <Input
                 label="As at"
                 type="date"
                 value={asOf}
                 onChange={(event) => setAsOf(event.target.value)}
-                className="w-40"
+                className="w-full sm:w-40"
               />
               <Input
                 label="Compare with"
                 type="date"
                 value={compareTo}
                 onChange={(event) => setCompareTo(event.target.value)}
-                className="w-40"
+                className="w-full sm:w-40"
                 hint="Optional second column."
               />
-            </>
+            </div>
           )}
 
-          <div className="ml-auto flex gap-2">
+          <div className="flex gap-2 sm:ml-auto">
             <Button
               variant="secondary"
               onClick={() => void download('xlsx')}
@@ -707,9 +711,9 @@ function BalanceSheetReport() {
         ) : (
           <div className="space-y-5">
             {prior && (
-              <div className="text-content-muted flex justify-end gap-6 text-[11px] font-semibold tracking-wider uppercase">
-                <span className="w-32 text-right">{formatDate(sheet.as_of)}</span>
-                <span className="w-32 text-right">{formatDate(prior.as_of)}</span>
+              <div className="text-content-muted flex justify-end gap-4 text-[11px] font-semibold tracking-wider uppercase sm:gap-6">
+                <span className="w-24 shrink-0 text-right sm:w-32">{formatDate(sheet.as_of)}</span>
+                <span className="w-24 shrink-0 text-right sm:w-32">{formatDate(prior.as_of)}</span>
               </div>
             )}
 
@@ -735,16 +739,18 @@ function BalanceSheetReport() {
               priorTotal={prior?.total_equity}
             />
 
-            <div className="border-border flex items-center justify-between border-t pt-3">
-              <span className="text-content text-[14px] font-semibold">Liabilities + equity</span>
-              <div className="flex gap-6">
-                <span className="text-content w-32 text-right text-[15px] font-semibold tabular-nums">
+            <div className="border-border flex items-center justify-between gap-3 border-t pt-3">
+              <span className="text-content min-w-0 text-[14px] font-semibold">
+                Liabilities + equity
+              </span>
+              <div className="flex shrink-0 gap-4 sm:gap-6">
+                <span className="text-content w-24 shrink-0 text-right text-[15px] font-semibold tabular-nums sm:w-32">
                   {/* Displayed for the reader to check against total assets. The
                       authoritative check is `is_balanced`, computed server-side. */}
                   {formatMoney(sheet.total_assets)}
                 </span>
                 {prior && (
-                  <span className="text-content-muted w-32 text-right text-[15px] font-semibold tabular-nums">
+                  <span className="text-content-muted w-24 shrink-0 text-right text-[15px] font-semibold tabular-nums sm:w-32">
                     {formatMoney(prior.total_assets)}
                   </span>
                 )}
@@ -792,10 +798,10 @@ function ReportSection({
           {lines.map((line) => (
             <div
               key={`${line.account_code ?? ''}-${line.label}`}
-              className="flex items-center justify-between py-1 text-[13px]"
+              className="flex items-center justify-between gap-3 py-1 text-[13px]"
               style={{ paddingLeft: `${(line.level - 1) * 12}px` }}
             >
-              <span className="text-content-secondary">
+              <span className="text-content-secondary min-w-0">
                 {line.account_code && (
                   <span className="text-content-muted mr-2 font-mono text-[11px]">
                     {line.account_code}
@@ -803,12 +809,15 @@ function ReportSection({
                 )}
                 {line.label}
               </span>
-              <span className="flex gap-6">
-                <span className="text-content w-32 text-right tabular-nums">
+              {/* `shrink-0` on the figures and `min-w-0` on the label: the account name
+                  wraps on a narrow screen, the amounts never do. A money figure broken
+                  across two lines reads as two numbers. */}
+              <span className="flex shrink-0 gap-4 sm:gap-6">
+                <span className="text-content w-24 shrink-0 text-right tabular-nums sm:w-32">
                   {formatMoney(line.amount)}
                 </span>
                 {comparing && (
-                  <span className="text-content-muted w-32 text-right tabular-nums">
+                  <span className="text-content-muted w-24 shrink-0 text-right tabular-nums sm:w-32">
                     {/* A dash, not a zero, when the account has no counterpart: it did not
                         exist at the earlier date, and "0.00" would assert a balance that was
                         never recorded. */}
@@ -822,12 +831,14 @@ function ReportSection({
           ))}
         </div>
       )}
-      <div className="border-border/60 mt-1.5 flex items-center justify-between border-t pt-1.5 text-[13px] font-medium">
-        <span className="text-content">Total {title.toLowerCase()}</span>
-        <span className="flex gap-6">
-          <span className="text-content w-32 text-right tabular-nums">{formatMoney(total)}</span>
+      <div className="border-border/60 mt-1.5 flex items-center justify-between gap-3 border-t pt-1.5 text-[13px] font-medium">
+        <span className="text-content min-w-0">Total {title.toLowerCase()}</span>
+        <span className="flex shrink-0 gap-4 sm:gap-6">
+          <span className="text-content w-24 shrink-0 text-right tabular-nums sm:w-32">
+            {formatMoney(total)}
+          </span>
           {comparing && (
-            <span className="text-content-muted w-32 text-right tabular-nums">
+            <span className="text-content-muted w-24 shrink-0 text-right tabular-nums sm:w-32">
               {formatMoney(priorTotal)}
             </span>
           )}

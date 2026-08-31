@@ -137,8 +137,11 @@ export function useReportRange(): {
   const invalid = range.to_date < range.from_date;
 
   const control = (
-    <div className="flex flex-wrap items-end justify-end gap-2">
-      <div className="border-border flex overflow-hidden rounded-lg border">
+    // Full width on a phone, hugging the right on a desktop. Seven presets is about
+    // 600 pixels of segmented control - more than a phone has - so below `sm` the
+    // group scrolls sideways *within the card* rather than widening the page.
+    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-end sm:justify-end">
+      <div className="border-border flex max-w-full overflow-x-auto overflow-y-hidden rounded-lg border">
         {presets.map((option) => (
           <button
             key={option.key}
@@ -147,7 +150,7 @@ export function useReportRange(): {
             aria-pressed={preset === option.key}
             onClick={() => setPreset(option.key)}
             className={cn(
-              'px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap',
+              'shrink-0 px-2.5 py-1.5 text-[12px] font-medium whitespace-nowrap',
               preset === option.key
                 ? 'bg-primary text-white'
                 : 'text-content-muted hover:bg-surface-sunken',
@@ -166,7 +169,7 @@ export function useReportRange(): {
             setPreset('custom');
           }}
           className={cn(
-            'px-2.5 py-1.5 text-[12px] font-medium',
+            'shrink-0 px-2.5 py-1.5 text-[12px] font-medium',
             preset === 'custom'
               ? 'bg-primary text-white'
               : 'text-content-muted hover:bg-surface-sunken',
@@ -177,14 +180,14 @@ export function useReportRange(): {
       </div>
 
       {preset === 'custom' && (
-        <div className="flex items-end gap-2">
+        <div className="grid grid-cols-2 items-end gap-2 sm:flex">
           <Input
             type="date"
             label="From"
             value={custom.from_date}
             max={custom.to_date}
             onChange={(event) => setCustom({ ...custom, from_date: event.target.value })}
-            className="w-40"
+            className="w-full sm:w-40"
           />
           <Input
             type="date"
@@ -193,7 +196,7 @@ export function useReportRange(): {
             min={custom.from_date}
             onChange={(event) => setCustom({ ...custom, to_date: event.target.value })}
             error={invalid ? 'Must be on or after the start date' : undefined}
-            className="w-40"
+            className="w-full sm:w-40"
           />
         </div>
       )}

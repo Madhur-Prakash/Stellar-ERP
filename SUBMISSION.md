@@ -19,16 +19,17 @@
 | 3 | Minimum 15+ meaningful commits | Done - **24** | `git log --oneline \| wc -l` |
 | 4 | Live demo link | Done | **[stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app)** - the [verifier](https://stellar-erp-sigma.vercel.app/verify) runs there with no backend. See [Deploying the demo](#deploying-the-demo) |
 | 5 | Contract deployment address | Done | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
-| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | **Outstanding - slots wired** | [docs/screenshots.md](docs/screenshots.md) - every shot specified, slots live in the [README](README.md#screenshots); the PNGs still have to be captured |
+| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | **Partial - 8 of 11** | Product UI and analytics **done**; **mobile outstanding**. [docs/screenshots.md](docs/screenshots.md), carried in the [README](README.md#screenshots) |
 | 7 | Demo video link | **Rendered, needs uploading** | `videos/stellar-erp-launch/renders/video.mp4` - see [Demo video](#demo-video) |
 | 8 | Proof of 10+ user wallet interactions | **In progress** | `make evidence` - see [Wallet interactions](#wallet-interactions) |
 | 9 | Basic user feedback summary | **In progress** | `make evidence` - the widget is live, submissions are not |
 
 Item 7 is rendered and sitting in the repo; it needs uploading and the link pasting
-back here. Item 6 needs a browser - the slots and the capture spec are in place, the
-PNGs are not. Items 8 and 9 need people using it. **None of the remaining ones can be
-written into the repository honestly without the underlying thing existing**, which is
-why they are listed as outstanding rather than quietly filled in.
+back here. Item 6 is eight shots in, and the three still missing are named rather than
+glossed over - the two verifier shots and a mobile viewport. Items 8 and 9 need people
+using it. **None of the remaining ones can be written into the repository honestly
+without the underlying thing existing**, which is why they are listed as outstanding
+rather than quietly filled in.
 
 ---
 
@@ -117,25 +118,38 @@ costs nothing:
 
 ## Screenshots
 
-Not yet captured. The slots are wired - [`docs/screenshots/`](docs/screenshots/) is the
-directory, the [README grid](README.md#screenshots) holds four of them, and
-**[docs/screenshots.md](docs/screenshots.md)** is the full gallery with the capture
-rules. Dropping the PNGs in is all that is left.
+**Eight captured, three outstanding.** The full gallery, with what each shot shows and
+why that one rather than another, is **[docs/screenshots.md](docs/screenshots.md)**; the
+[README](README.md#screenshots) carries the best four.
 
-The five the checklist requires, and why that shot rather than another:
-
-| File | Shot | Must show |
+| File | Screen | Covers |
 | --- | --- | --- |
-| `docs/screenshots/product-ui.png` | Trust screen, signed in, sealing on | The backlog age tile, a confirmed seal with its explorer link, and the **"What it does not"** card. That card is the honest limitation, and a screenshot that crops it out is selling something the product does not do |
-| `docs/screenshots/verify.png` | `/verify`, signed **out**, a verified bundle | The five-step verdict and the editable RPC field. The point is that the reader's own endpoint produced the answer |
-| `docs/screenshots/mobile.png` | 390 × 844, the Trust screen | Nothing clipped, no horizontal scroll, the settings controls stacked rather than side by side |
-| `docs/screenshots/analytics.png` | Analytics dashboard | Real figures with a like-for-like comparison |
-| `docs/screenshots/monitoring.png` | `GET /attestation/status` or the Sentry project | `days_unsealed` and `chain.agrees_with_local` - the two figures that distinguish sealing working from sealing having silently stopped |
+| `product-ui.png` | **Trust** - sealing on, Seal #1 on chain, unbroken chain | *Product UI.* The explorer link, the `WAITING TO BE SEALED · 0` tile, and the signing-key limitation stated in a banner at the top rather than buried |
+| `audit-log.png` | **Audit log** | `attestation.enabled` → `seal.created` → `seal.confirmed` beside the postings they commit - the seal as a lifecycle, on an append-only record with no `updated_at` |
+| `dashboard.png` | **Dashboard** | *Product UI.* The ERP underneath, with recent activity read off the audit trail and a control-reconciliation line |
+| `analytics.png` | **Analytics** | *Analytics.* This financial year against the last, tiles reading "no prior data to compare" rather than a fabricated delta |
+| `accounting.png` | **Accounting** | The double-entry core: five statement tabs, real fiscal-year periods, and "posted entries are immutable" stated on the screen |
+| `accounting-charts.png` | **Accounting**, scrolled | Where the money is, trend over time, totals by type |
+| `roles.png` | **Roles and permissions** | 46 permissions across 8 groups, enforced server-side on every request |
+| `feedback.png` | **Feedback widget**, open | Evidence for item 9 - it reports the screen it was sent from and works signed out |
 
-Capture on a **light** theme at **1440 × 900** for the desktop shots and **390 × 844**
-for mobile, then drop them in [`docs/screenshots/`](docs/screenshots/). The README grid
-and the gallery both pick them up with no further edits - the slots already point at
-those filenames. Full rules: [docs/screenshots.md § Rules](docs/screenshots.md#rules).
+**Still outstanding, and they are the three that matter most:**
+
+| File | Shot | Why it is the gap |
+| --- | --- | --- |
+| `verify.png` | `/verify`, signed **out**, a verified bundle | Everything captured is a signed-in user looking at their own data, which proves nothing to a third party. Capturable straight off <https://stellar-erp-sigma.vercel.app/verify> - no backend needed |
+| `verify-tampered.png` | The same bundle, one digit changed, failing | Anything can render a green tick. This is the shot the whole product argues for, and [Commands § 7](docs/commands.md#7-demonstrating-that-the-records-are-tamper-evident) is the exact sequence |
+| `mobile.png` | 390 × 844, the Trust screen | **Required by checklist item 6** (*mobile responsive*) and the only one of the three that is purely a requirement rather than an argument |
+
+`monitoring.png` (`GET /attestation/status`, showing `days_unsealed` and
+`chain.agrees_with_local`) would complete the checklist's *analytics/monitoring* pair,
+though `analytics.png` already satisfies the analytics half.
+
+Capture on a **light** theme, matching the existing set at **~1916 × 945** for desktop
+and **390 × 844** for mobile, then drop them in
+[`docs/screenshots/`](docs/screenshots/) under those exact filenames - the gallery and
+the README grid pick them up with no further edits. Full rules:
+[docs/screenshots.md § Rules](docs/screenshots.md#rules).
 
 ---
 

@@ -266,11 +266,11 @@ export function MembersPage() {
               <table className="w-full text-left text-[13px]">
                 <thead className="border-border bg-surface-sunken/50 border-y">
                   <tr className="text-content-muted text-[11px] font-semibold tracking-wide uppercase">
-                    <th className="px-5 py-2.5">Member</th>
-                    <th className="px-5 py-2.5">Role</th>
-                    <th className="px-5 py-2.5">Status</th>
-                    <th className="px-5 py-2.5">Last active</th>
-                    <th className="px-5 py-2.5" />
+                    <th className="px-3 py-2.5 whitespace-nowrap sm:px-5">Member</th>
+                    <th className="px-3 py-2.5 whitespace-nowrap sm:px-5">Role</th>
+                    <th className="px-3 py-2.5 whitespace-nowrap sm:px-5">Status</th>
+                    <th className="px-3 py-2.5 whitespace-nowrap sm:px-5">Last active</th>
+                    <th className="px-3 py-2.5 sm:px-5" />
                   </tr>
                 </thead>
                 <tbody className="divide-border divide-y">
@@ -278,7 +278,7 @@ export function MembersPage() {
                     const isSelf = member.user.id === user?.id;
                     return (
                       <tr key={member.id} className="hover:bg-surface-hover/50">
-                        <td className="px-5 py-3">
+                        <td className="px-3 py-3 sm:px-5">
                           <div className="flex items-center gap-2.5">
                             <Avatar
                               src={member.user.avatar_url}
@@ -302,7 +302,7 @@ export function MembersPage() {
                           </div>
                         </td>
 
-                        <td className="px-5 py-3">
+                        <td className="px-3 py-3 sm:px-5">
                           {/* The owner's role is fixed - the server rejects the
                               change, so the control is not offered. */}
                           {can('member:update') && !member.is_owner ? (
@@ -328,7 +328,7 @@ export function MembersPage() {
                           )}
                         </td>
 
-                        <td className="px-5 py-3">
+                        <td className="px-3 py-3 sm:px-5">
                           {member.is_owner ? (
                             <Badge tone="primary">Owner</Badge>
                           ) : member.status === 'active' ? (
@@ -342,7 +342,7 @@ export function MembersPage() {
                           )}
                         </td>
 
-                        <td className="text-content-muted px-5 py-3 text-[12px]">
+                        <td className="text-content-muted px-3 py-3 text-[12px] whitespace-nowrap sm:px-5">
                           {member.last_active_at
                             ? formatRelative(member.last_active_at)
                             : member.user.last_login_at
@@ -350,7 +350,7 @@ export function MembersPage() {
                               : 'Never'}
                         </td>
 
-                        <td className="px-5 py-3 text-right">
+                        <td className="px-3 py-3 text-right sm:px-5">
                           {can('member:remove') && !member.is_owner && !isSelf ? (
                             <div className="flex justify-end gap-1">
                               {member.status === 'active' ? (

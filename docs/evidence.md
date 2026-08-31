@@ -1,10 +1,6 @@
 # Submission evidence
 
-<!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Screenshots](screenshots.md) · [Demo video](demo-video.md) · **Evidence** · [Development](development.md) · [Deployment](deployment.md)
-<!-- nav:end -->
-
-Generated 2026-08-31T10:08:59+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
+Generated 2026-08-31T11:07:33+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
 
 Contract: [`CCB66KMNINKN…`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR)
 
@@ -19,21 +15,21 @@ Each organization that switches sealing on is given **its own Stellar account**,
 | | |
 | --- | --- |
 | Organizations with a book | **6** |
-| Organizations that have actually sealed | **0** |
-| Signed on-chain interactions | **6** |
-| Confirmed seals | 0 |
-| Journal entries committed | 0 |
+| Organizations that have actually sealed | **1** |
+| Signed on-chain interactions | **7** |
+| Confirmed seals | 1 |
+| Journal entries committed | 1 |
 
 *Signed interactions* counts one `register` per registered book plus every confirmed `seal`. Both are transactions the organization's own key signed.
 
 | Organization | Signer account | Registered | Seals | Entries | Latest seal |
 | --- | --- | --- | --- | --- | --- |
-| Sunrise Dairy Supply (demo) | [`GDGESNIAEKMI…`](https://stellar.expert/explorer/testnet/account/GDGESNIAEKMI6QT5U7U7TAK6CCVJUH5HZKOCU5CZOGCSHIGARARWIVL5) | [`98c6cd1d19d8…`](https://stellar.expert/explorer/testnet/tx/98c6cd1d19d8cd9edaa493c1e03fbf60f55b83cb1985bfe259c7298cc3723d3f) | 0 | 0 | - |
-| Saraswati Stationers (demo) | [`GDC6CXNIKXXZ…`](https://stellar.expert/explorer/testnet/account/GDC6CXNIKXXZABUEN2624UH3U7GJCHUXEWYIPQLDXUZC3YKFL2YHB4WK) | [`de48baa51721…`](https://stellar.expert/explorer/testnet/tx/de48baa517216d1c299bc1c32c297b8f3f189e4e731eeec5c7719a95521cbad4) | 0 | 0 | - |
-| Gurgaon Print Works (demo) | [`GCYWHTRB5THL…`](https://stellar.expert/explorer/testnet/account/GCYWHTRB5THL67LYTOHKQ5DGETAOEXC44YQNCPGN33XHUWAD7KQL6W5B) | [`a449d9f00c6a…`](https://stellar.expert/explorer/testnet/tx/a449d9f00c6ad53c0f3d45284449aa76340ca040ce4c6964099f53e5032458b6) | 0 | 0 | - |
-| Vidarbha Agro Tools (demo) | [`GAHACP7GPNDT…`](https://stellar.expert/explorer/testnet/account/GAHACP7GPNDTH2XKNEVBREGJXEFRQD2Y2N6HP3HVFAYFNY5FDEPM447Z) | [`b6d9dcf1ce37…`](https://stellar.expert/explorer/testnet/tx/b6d9dcf1ce37b856ff4342cdea2c6419e61a0ad5d4d9d6b93e3cc126effa8197) | 0 | 0 | - |
-| Konark Hardware (demo) | [`GAHFFJ5QOLZI…`](https://stellar.expert/explorer/testnet/account/GAHFFJ5QOLZIB5526R7A56DGBGWYJKAMCOYK4EP7GF5DPKVRBS4W5ZHF) | [`7bb33ea2bd61…`](https://stellar.expert/explorer/testnet/tx/7bb33ea2bd61dc16680023d6fc9dd00c4ccd354ffb3e53aec6dba3ed818f052c) | 0 | 0 | - |
-| Kaveri Textiles (demo) | [`GDCC4VNV7JKL…`](https://stellar.expert/explorer/testnet/account/GDCC4VNV7JKLGNKA2KWBAPFB4M2IA5BKTWH4RBWI4HHSBWUTSDLAKZWI) | [`d4c7262f68aa…`](https://stellar.expert/explorer/testnet/tx/d4c7262f68aa6e76980fef0b1413fe0cc65a19e7ca70a6f2e1abcca2e026b553) | 0 | 0 | - |
+| Bharat Cold Storage (demo) | [`GC2RXRZNR5JA…`](https://stellar.expert/explorer/testnet/account/GC2RXRZNR5JA43TGNN3E7VXF6QD3HMCB7C4R67JCRVQXIGG4PDAGUWPH) | [`375bfebec260…`](https://stellar.expert/explorer/testnet/tx/375bfebec2606a14e89962d9b572d88dd30de187fdd6101c1dab4c384b4432fd) | 1 | 1 | [`e577181a3814…`](https://stellar.expert/explorer/testnet/tx/e577181a3814380bf2961006cfce8c8f742321b2a2323e366593dcab9e0c3987) |
+| Konark Hardware (demo) | [`GCLM6TCQQWUT…`](https://stellar.expert/explorer/testnet/account/GCLM6TCQQWUTY46ZBP2TMBLT7ET7YZUNXIKCENFQIB5EXJELUMMFOXM2) | [`3d5bf6ff0bfc…`](https://stellar.expert/explorer/testnet/tx/3d5bf6ff0bfc4863a117d8d585783181c917442b30e7e266277e75b11a2184f8) | 0 | 0 | — |
+| Nirmal Traders (demo) | [`GBNYJZ27OUM3…`](https://stellar.expert/explorer/testnet/account/GBNYJZ27OUM3FNDYCKJFBIJDZBOAF4R7YX2M4NB7JY2AP3VZHO77NC4D) | [`ee1f4eee7725…`](https://stellar.expert/explorer/testnet/tx/ee1f4eee7725555bda96d8123de3c79ce75431c79f842eeff79ab74e5fc69783) | 0 | 0 | — |
+| Saraswati Stationers (demo) | [`GA5XXZEJM253…`](https://stellar.expert/explorer/testnet/account/GA5XXZEJM253LKZ7OVCNFA2BBKLEB4XY5LYZJT5PQWKRPUQK5KXOYB7P) | [`100c642eee7a…`](https://stellar.expert/explorer/testnet/tx/100c642eee7ac25068577170d951efc039bcc5f81461354d532eb20f73d85ce1) | 0 | 0 | — |
+| Deccan Auto Spares (demo) | [`GBR2TDA6VIZC…`](https://stellar.expert/explorer/testnet/account/GBR2TDA6VIZCR65WGOX5VSHHLV2QT6KQPOY6D3QYVROP274L574STTAF) | [`9e08ebc2ad73…`](https://stellar.expert/explorer/testnet/tx/9e08ebc2ad73068a562c00228966d523e038a07db0c56d1d00ade78a648fc01c) | 0 | 0 | — |
+| Kaveri Textiles (demo) | [`GC2Y6QSFMXU6…`](https://stellar.expert/explorer/testnet/account/GC2Y6QSFMXU6E4NAMBUVLMPQKVMSXSVTEODGOEUD5GS24NJY7CSDXLF2) | [`f8fdd7a29ed8…`](https://stellar.expert/explorer/testnet/tx/f8fdd7a29ed838685f3fd2f01dcdbd43d539712e3c6b36889e9d5b4fd1f68042) | 0 | 0 | — |
 
 The signer's secret is never selected by the query behind this table, so it cannot appear here even by accident.
 
@@ -68,10 +64,17 @@ First-party analytics, stored in this install's own PostgreSQL and never sent an
 
 | Action | Events | Organizations | Users |
 | --- | --- | --- | --- |
-| `seal.now` | 10 | 6 | 6 |
-| `screen.trust` | 8 | 6 | 6 |
+| `screen.trust` | 12 | 6 | 6 |
+| `screen.dashboard` | 9 | 6 | 6 |
+| `seal.now` | 8 | 6 | 6 |
 | `attestation.enabled` | 6 | 6 | 6 |
-| `screen.dashboard` | 6 | 5 | 5 |
-| `screen.analytics` | 1 | 1 | 1 |
+| `screen.accounting` | 6 | 1 | 1 |
+| `screen.sales` | 4 | 1 | 1 |
+| `screen.billing` | 3 | 1 | 1 |
+| `screen.analytics` | 3 | 2 | 2 |
+| `screen.documents` | 2 | 1 | 1 |
+| `screen.inventory` | 2 | 1 | 1 |
+| `screen.verify` | 2 | 1 | 1 |
+| `screen.accounts` | 2 | 1 | 1 |
 
 The events table has **no free-text payload column**. An open payload is how an analytics table ends up inside the compliance boundary, so actions are allow-listed and the context keys are too.

@@ -100,13 +100,16 @@ export function AuditPage() {
 
       <Card className="mb-4">
         <CardBody className="flex flex-wrap items-center gap-3 py-4">
-          <Filter className="text-content-muted h-4 w-4" aria-hidden />
+          <Filter className="text-content-muted hidden h-4 w-4 sm:block" aria-hidden />
 
+          {/* A native select is as wide as its widest option, and an action name like
+              `organization.member.invitation.resend` is wider than a phone. Full width
+              on its own row below `sm`, capped above it. */}
           <select
             value={action}
             onChange={(event) => setAction(event.target.value)}
             aria-label="Filter by action"
-            className="border-border bg-surface text-content h-8 rounded-md border px-2.5 text-[13px]"
+            className="border-border bg-surface text-content h-8 w-full min-w-0 rounded-md border px-2.5 text-[13px] sm:w-auto sm:max-w-64"
           >
             <option value="">All actions</option>
             {(actions ?? []).map((value) => (
@@ -120,7 +123,7 @@ export function AuditPage() {
             value={severity}
             onChange={(event) => setSeverity(event.target.value)}
             aria-label="Filter by severity"
-            className="border-border bg-surface text-content h-8 rounded-md border px-2.5 text-[13px]"
+            className="border-border bg-surface text-content h-8 w-full min-w-0 rounded-md border px-2.5 text-[13px] sm:w-auto"
           >
             <option value="">All severities</option>
             <option value="info">Info</option>

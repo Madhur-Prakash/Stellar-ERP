@@ -97,7 +97,7 @@ export function Footer() {
   })).filter((section) => section.items.length > 0);
 
   return (
-    <footer className="border-border text-content-muted mt-2 border-t px-6 pt-7 pb-6 text-[12px] lg:px-8">
+    <footer className="border-border text-content-muted mt-2 border-t px-4 pt-7 pb-6 text-[12px] sm:px-6 lg:px-8">
       <div className="flex flex-col gap-8 lg:flex-row lg:justify-between">
         {/* Identity and premise. */}
         <div className="max-w-xs">
@@ -115,7 +115,7 @@ export function Footer() {
         </div>
 
         {/* Navigation, from the sidebar's own list. */}
-        <nav aria-label="Footer" className="flex flex-wrap gap-x-12 gap-y-6">
+        <nav aria-label="Footer" className="flex flex-wrap gap-x-8 gap-y-6 sm:gap-x-12">
           {columns.map((section) => (
             <div key={section.title}>
               <p className="text-content-secondary mb-2 text-[11px] font-semibold tracking-wide uppercase">
@@ -180,7 +180,9 @@ export function Footer() {
           This software is self-hosted ERP and accounting platform
         </p>
 
-        <p className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+        {/* A keyboard shortcut is not an affordance on a touch device, and the line
+            reads as an instruction the reader cannot follow. */}
+        <p className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap sm:flex">
           <Command className="h-3.5 w-3.5" aria-hidden />
           Press
           <kbd className="border-border bg-surface-sunken text-content-secondary rounded border px-1.5 py-0.5 font-sans text-[11px]">

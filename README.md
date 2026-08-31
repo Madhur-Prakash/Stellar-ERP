@@ -305,55 +305,49 @@ is protected by every rule that protects a hand-entered one.
 
 ## Screenshots
 
-<!--
-  SCREENSHOT SLOTS - drop the PNGs into docs/screenshots/ and they appear here.
-  Until then each slot renders as its alt text, which is intentional.
-  Capture specs, what each shot must show, and the full seven-shot gallery:
-  docs/screenshots.md
--->
-
 <table>
 <tr>
 <td width="50%" valign="top">
 
 ![Trust screen - the proof ledger, sealing enabled](docs/screenshots/product-ui.png)
 
-**Trust** - the third ledger. Backlog age, a confirmed seal with its explorer link, and the *"What it does not"* card.
+**Trust** - the third ledger. Seal #1 on chain with its explorer link, an unbroken chain, and the signing-key limitation stated at the top rather than buried.
 
 </td>
 <td width="50%" valign="top">
 
-![The verifier, signed out, with a verified proof bundle](docs/screenshots/verify.png)
+![Audit log - the append-only record, showing the seal lifecycle](docs/screenshots/audit-log.png)
 
-**`/verify`** - signed out. Five-step verdict, and an RPC endpoint the reader can change.
+**Audit log** - Ledger 2, append-only. `attestation.enabled` → `seal.created` → `seal.confirmed`, beside the postings they commit.
 
 </td>
 </tr>
 <tr>
 <td width="50%" valign="top">
 
-![Analytics dashboard](docs/screenshots/analytics.png)
+![Dashboard](docs/screenshots/dashboard.png)
 
-**Analytics** - real figures with a like-for-like comparison beside them.
+**Dashboard** - the ERP underneath. Figures drawn from posted entries, with recent activity read off the audit trail.
 
 </td>
 <td width="50%" valign="top">
 
-![Trust screen at 390 × 844](docs/screenshots/mobile.png)
+![Analytics](docs/screenshots/analytics.png)
 
-**Mobile**, 390 × 844 - nothing clipped, no horizontal scroll.
+**Analytics** - this financial year against the last, with the bars derived from the same posted entries as the totals.
 
 </td>
 </tr>
 </table>
 
-Four of seven. The rest - the verifier **failing** on a tampered bundle, the monitoring
-figures that distinguish *sealing works* from *sealing stopped silently*, and the native
-desktop window - are in **[docs/screenshots.md](docs/screenshots.md)**, at full size,
-each with what it has to have in frame and why that shot rather than another.
+Four of eight. The rest - the **Accounting** ledger, **Roles and permissions**, and the
+in-app **feedback** widget - are in **[docs/screenshots.md](docs/screenshots.md)**, at
+full size, each with what it shows and why that shot rather than another.
 
-> Images not showing? The slots are wired to `docs/screenshots/`, waiting for the files.
-> [The gallery](docs/screenshots.md) names each one and how to capture it.
+> **Still to capture:** the public verifier passing, the verifier **failing** on a
+> tampered bundle, and a mobile viewport. Those three are the argument this project
+> actually makes, so the gallery lists them as outstanding rather than quietly
+> shipping without them.
 
 ---
 
