@@ -22,6 +22,8 @@
 
 </div>
 
+https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e
+
 > **This is a fork of [Madhur-Prakash/Personal-ERP](https://github.com/Madhur-Prakash/Personal-ERP),
 > extended with a third ledger on Stellar.** Personal ERP is the self-hosted
 > accounting system underneath — double-entry, GST, purchasing, inventory, OCR,
