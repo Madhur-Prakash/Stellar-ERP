@@ -216,7 +216,7 @@ async def trend(
 
     Explicit dates override ``period``. Both exist because they answer different needs:
     the presets keep a dashboard aligned with the organization's fiscal calendar, while a
-    custom range is what someone reconciling one particular fortnight wants — and a chart
+    custom range is what someone reconciling one particular fortnight wants - and a chart
     sitting beside a report filtered to those dates has to cover the same window, or the
     two quietly disagree.
     """

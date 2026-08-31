@@ -287,7 +287,7 @@ export function TrustPage() {
             !status.chain.reachable
               ? 'unreachable'
               : status.chain.head === null
-                ? '—'
+                ? '-'
                 : `#${String(status.chain.head)}`
           }
           sub={
@@ -572,7 +572,7 @@ function SealList({ seals }: { seals: Seal[] }) {
             <div className="shrink-0 text-right">
               {/* No timestamp until the network gives one. */}
               <p className="text-content-secondary text-[13px]">
-                {seal.sealed_at ? formatDateTime(seal.sealed_at) : '—'}
+                {seal.sealed_at ? formatDateTime(seal.sealed_at) : '-'}
               </p>
               <p className="text-content-muted text-[12px]">
                 {seal.sealed_at
@@ -608,7 +608,7 @@ function Advanced({ status }: { status: AttestationStatus }) {
         {rows.map(([label, value]) => (
           <div key={label} className="min-w-0">
             <dt className="text-content-muted text-[12px] font-medium">{label}</dt>
-            <dd className="text-content mt-0.5 font-mono text-[12px] break-all">{value ?? '—'}</dd>
+            <dd className="text-content mt-0.5 font-mono text-[12px] break-all">{value ?? '-'}</dd>
           </div>
         ))}
       </dl>

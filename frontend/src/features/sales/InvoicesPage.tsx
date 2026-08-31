@@ -68,7 +68,7 @@ export function InvoicesPage() {
 
   const setTab = (next: Tab) => {
     // Close the composer on the way out. It belongs to the Invoices tab, and a
-    // half-written invoice hovering above the customer list is confusing — worse, the
+    // half-written invoice hovering above the customer list is confusing - worse, the
     // "New invoice" button is only on that tab, so there was no way to dismiss it.
     setComposing(false);
     // `replace` keeps tab switching out of the back stack.

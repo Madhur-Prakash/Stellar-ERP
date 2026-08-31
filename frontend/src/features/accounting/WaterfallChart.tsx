@@ -35,7 +35,7 @@ interface Step {
   label: string;
   /** Invisible lifter, so the visible bar floats at the running total. */
   base: number;
-  /** Height of the visible bar. Always positive — direction is carried by `sign`. */
+  /** Height of the visible bar. Always positive - direction is carried by `sign`. */
   delta: number;
   sign: 'up' | 'down' | 'total';
   /** The exact decimal, for the tooltip and the label. */
@@ -44,7 +44,7 @@ interface Step {
   runningTotal: string;
 }
 
-/** Costs below this share of income are folded together — a wall of slivers is unreadable. */
+/** Costs below this share of income are folded together - a wall of slivers is unreadable. */
 const MAX_COST_STEPS = 8;
 
 function buildSteps(report: ProfitAndLoss): Step[] {

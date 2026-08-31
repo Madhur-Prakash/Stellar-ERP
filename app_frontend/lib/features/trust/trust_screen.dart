@@ -179,7 +179,7 @@ class _TrustScreenState extends ConsumerState<TrustScreen> {
                   value: !s.chain.reachable
                       ? 'unreachable'
                       : s.chain.head == null
-                      ? '—'
+                      ? '-'
                       : '#${s.chain.head}',
                   sub: !s.chain.reachable
                       ? (s.chain.error ?? 'could not be read')
@@ -593,7 +593,7 @@ class _SealRow extends StatelessWidget {
             children: <Widget>[
               // No timestamp until the network gives one.
               Text(
-                seal.sealedAt == null ? '—' : formatDateTime(seal.sealedAt!),
+                seal.sealedAt == null ? '-' : formatDateTime(seal.sealedAt!),
                 style: TextStyle(fontSize: 13, color: t.contentSecondary),
               ),
               Text(
@@ -784,7 +784,7 @@ class _DetailRow extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           SelectableText(
-            value ?? '—',
+            value ?? '-',
             style: TextStyle(
               fontSize: 12,
               fontFamily: 'monospace',

@@ -228,7 +228,7 @@ export interface RecordEntryBody {
   category_id?: string;
   money_account_id?: string;
   reference?: string;
-  /** Who the money came from or went to. Required — the API rejects a blank. */
+  /** Who the money came from or went to. Required - the API rejects a blank. */
   party: string;
 }
 

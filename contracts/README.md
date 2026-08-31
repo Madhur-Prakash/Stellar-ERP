@@ -2,7 +2,7 @@
 
 # proof_ledger
 
-**Ledger 3. A Soroban contract holding cryptographic commitments to a business's books — and nothing else.**
+**Ledger 3. A Soroban contract holding cryptographic commitments to a business's books - and nothing else.**
 
 ![Rust](https://img.shields.io/badge/Rust-1.96-DEA584?style=flat-square&logo=rust&logoColor=white)
 ![SDK](https://img.shields.io/badge/soroban--sdk-27.0.6-1C6B4C?style=flat-square)
@@ -25,8 +25,8 @@ timestamp at which the network accepted it.
 product, no salary, no account number, no document. Nothing personal is written,
 so there is nothing here a data-erasure request could need to reach.
 
-The organisation is identified by 32 opaque bytes — `SHA-256(organization_id ‖
-install_salt)` — so the record is unlinkable to a named business until the business
+The organisation is identified by 32 opaque bytes - `SHA-256(organization_id ‖
+install_salt)` - so the record is unlinkable to a named business until the business
 itself discloses the namespace to a counterparty.
 
 ---
@@ -39,7 +39,7 @@ re-enforces, at the boundary, the same rules the journal enforces internally.
 | Invariant | Enforced how |
 | --- | --- |
 | **Append-only** | No `update`, no `delete`, and no administrative override on a written seal |
-| **Strict sequencing** | `seq` must be exactly `head + 1`, so a skipped period is not a missing record — it is evidence |
+| **Strict sequencing** | `seq` must be exactly `head + 1`, so a skipped period is not a missing record - it is evidence |
 | **Chain continuity** | `prev` must equal the stored root, so rewriting one period means re-sealing every period after it |
 | **The network timestamps it** | `seal` takes no `at` argument; it is read from `env.ledger().timestamp()` |
 
@@ -48,7 +48,7 @@ timestamp would make every claim the whole subsystem makes worthless.
 
 ### Why there is no admin override
 
-The obvious convenience — an `admin_fix_seal` for when something goes wrong — would
+The obvious convenience - an `admin_fix_seal` for when something goes wrong - would
 reintroduce exactly the problem this ledger exists to remove. If the operator can
 rewrite a seal, a seal proves nothing about the operator. A permanently wrong seal
 is recoverable (the business explains it, and the chain shows both the error and
@@ -74,7 +74,7 @@ the only question that matters. It returns `false` for a missing seal rather tha
 panicking, so a hand-edited proof shows a red tick instead of a crash.
 
 `rotate` is the upgrade path to 2-of-3 co-signing. It requires **both** the outgoing
-and incoming accounts to authorise — the outgoing so a stolen key alone cannot hand
+and incoming accounts to authorise - the outgoing so a stolen key alone cannot hand
 the book away, the incoming so a book cannot be parked on an account that never
 agreed to hold it and can therefore never seal again.
 
@@ -84,7 +84,7 @@ agreed to hold it and can therefore never seal again.
 | --- | --- | --- |
 | 1 | `AlreadyRegistered` | A book exists for that namespace |
 | 2 | `NotRegistered` | No book for that namespace |
-| 3 | `SequenceOutOfOrder` | `seq != head + 1`. **On a retry this is success in disguise** — a previous attempt landed |
+| 3 | `SequenceOutOfOrder` | `seq != head + 1`. **On a retry this is success in disguise** - a previous attempt landed |
 | 4 | `ChainBroken` | `prev` does not match the stored root; the caller's history has diverged |
 | 5 | `EmptySeal` | `count == 0`. Sealing nothing is not an attestation |
 | 6 | `PeriodOutOfOrder` | `to < from`, or a window starting before the last one ended |
@@ -102,8 +102,8 @@ Everything is `persistent`, with the TTL extended on every touch.
 
 `temporary` would be wrong to the point of dangerous: an expired temporary entry is
 gone, and a missing seal in an append-only chain is indistinguishable from evidence
-of tampering. A persistent entry that outlives its TTL is *archived*, not deleted —
-restoring it is a fee, not a loss — and a proof bundle carries the root anyway, so
+of tampering. A persistent entry that outlives its TTL is *archived*, not deleted -
+restoring it is a fee, not a loss - and a proof bundle carries the root anyway, so
 a restore is only ever needed to re-read what the verifier already holds.
 
 Seals are keyed `(namespace, seq)` rather than held in a `Vec` on the book. A
@@ -146,7 +146,7 @@ between them; the lower-level targets take the CLI's name.
 
 The toolchain is pinned in [`rust-toolchain.toml`](rust-toolchain.toml). A Soroban
 deployment is addressed by the hash of its wasm, so "compiles with whatever rustc
-is installed" would mean the deployed hash cannot be reproduced — and a reviewer
+is installed" would mean the deployed hash cannot be reproduced - and a reviewer
 could not confirm that the code they read is the code that is running.
 
 ---
@@ -160,9 +160,9 @@ only proved sealing works would prove nothing worth knowing.
 
 Two are worth reading first:
 
-- `a_duplicate_submission_is_rejected_by_the_contract` — the idempotency guarantee
+- `a_duplicate_submission_is_rejected_by_the_contract` - the idempotency guarantee
   the backend's whole ambiguous-failure design rests on.
-- `the_network_sets_the_timestamp_not_the_caller` — proves the timestamp moves with
+- `the_network_sets_the_timestamp_not_the_caller` - proves the timestamp moves with
   the ledger and cannot be supplied.
 
 `should_panic(expected = "Error(Contract, #3)")` matches on the error **code**

@@ -130,7 +130,7 @@ function ChartOfAccounts() {
   const { range, control } = useReportRange();
 
   const { data, isLoading } = useQuery({
-    // Balances are point-in-time, so only the end of the range applies — "cash over
+    // Balances are point-in-time, so only the end of the range applies - "cash over
     // March" is not a number.
     queryKey: ['accounts', range.to_date],
     queryFn: () => accountingApi.accounts({ as_of: range.to_date }),

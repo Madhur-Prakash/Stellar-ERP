@@ -47,7 +47,7 @@ from app.modules.attestation.service import AttestationService
 from app.modules.feedback.service import FeedbackService, UsageService
 
 #: Rendered where a figure is genuinely absent, rather than a misleading zero.
-NONE = "—"
+NONE = "-"
 
 #: The marker `scripts/seed_demo.py` stamps on everything it writes.
 #:

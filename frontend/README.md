@@ -103,13 +103,13 @@ The first four run in CI on every push - this is the one surface CI fully covers
 
 ## Deployed
 
-**<https://stellar-erp-sigma.vercel.app>** — this client, built by `npm run build` and
+**<https://stellar-erp-sigma.vercel.app>** - this client, built by `npm run build` and
 served as static files from Vercel. [`vercel.json`](vercel.json) is the whole
 configuration: one rewrite sending every path to `index.html`, because TanStack Router
 owns routing and a hard refresh on `/verify` would otherwise 404 at the CDN.
 
 The `VITE_*` values are set as Vercel build environment variables rather than read from
-the repo-root `.env`, which does not exist there. The three chain values matter most —
+the repo-root `.env`, which does not exist there. The three chain values matter most -
 get `VITE_SOROBAN_CONTRACT_ID` wrong and the verifier checks proofs against the wrong
 book, confidently.
 
@@ -118,7 +118,7 @@ signed-in screens on the hosted client do not connect; run the stack locally for
 
 **`/verify` works there regardless**, because it queries a public Soroban RPC endpoint
 from the browser and never calls our API at all. A static host with no backend
-reachable is enough to check a proof — which is the point of building it this way, not
+reachable is enough to check a proof - which is the point of building it this way, not
 a happy accident. See [Deployment § 0](../docs/deployment.md#0-two-shapes-and-which-one-this-is).
 
 ---

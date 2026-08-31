@@ -402,7 +402,7 @@ class TestInventoryWritesFromTheUi:
     """The payloads the new inventory forms send, executed against the real endpoints.
 
     Worth pinning because the update schema is `extra="forbid"` and the frontend type was
-    `Partial<Product>` — which let read-only fields like `sku` and `quantity_on_hand`
+    `Partial<Product>` - which let read-only fields like `sku` and `quantity_on_hand`
     type-check and then 422 at runtime, the same class of bug as the customer city field.
     """
 
@@ -520,7 +520,7 @@ class TestInventoryWritesFromTheUi:
     async def test_a_transfer_moves_stock_without_changing_its_value(
         self, authed_client: AsyncClient, api: str, ready_books: Organization
     ) -> None:
-        """Nothing was bought, sold, or lost — only the location changed."""
+        """Nothing was bought, sold, or lost - only the location changed."""
         product = (
             await authed_client.post(
                 f"{api}/products", json={"name": "Widget", "purchase_price": "50"}

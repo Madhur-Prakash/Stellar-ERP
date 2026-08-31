@@ -195,9 +195,9 @@ reaches a user, a page, or a decompiler. So the property enforced is *"this requ
 arrived through our edge"* - which is checkable, and is what the requirement actually
 means in a deployment where the frontend is served from that same edge.
 
-> **SUPERSEDED — the gateway check has since been removed.** Every `GATEWAY_SECRET` /
+> **SUPERSEDED - the gateway check has since been removed.** Every `GATEWAY_SECRET` /
 > `X-Gateway-Key` / `GatewayGuardMiddleware` reference in the rest of this report is
-> historical. The stack turned out to have no edge of its own — it sits behind whatever the
+> historical. The stack turned out to have no edge of its own - it sits behind whatever the
 > operator runs in front, which is the `ALLOW_DIRECT_BACKEND_ACCESS=true` topology this
 > section already described as the escape hatch. The `infra/nginx/` configuration the
 > control depended on was never in the repository, so the check had no counterpart to stamp
@@ -209,7 +209,7 @@ means in a deployment where the frontend is served from that same edge.
 > re-adding it would require. `OriginGuardMiddleware` keeps the origin half.
 >
 > Its removal also fixed a live outage it was causing: it rejected the browser's CORS
-> preflight — which by specification cannot carry a custom header — from *outside*
+> preflight - which by specification cannot carry a custom header - from *outside*
 > `CORSMiddleware`, so the response had no `Access-Control-Allow-Origin` and every call from
 > the frontend failed with an error pointing at the CORS configuration. See
 > [security.md](security.md#there-is-no-edge-gateway-deliberately).

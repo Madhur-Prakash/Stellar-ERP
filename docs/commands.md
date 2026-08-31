@@ -106,7 +106,7 @@ make setup           # the same work, without the checks or the summary
 `deployment` is the one to reach for on a machine you have not built on before. It
 verifies `uv`, `node` and `docker` are present and prints what is missing rather than
 failing part-way through with a bare `command not found`, then runs `setup`, then
-prints the two commands you actually need next — which was the part people were
+prints the two commands you actually need next - which was the part people were
 reading the Makefile source to find.
 
 ### raw
@@ -147,8 +147,8 @@ uv run python scripts/seed_demo.py --organizations 12 --entries 5
 uv run python scripts/seed_demo.py --wipe     # removes the feedback/usage rows it wrote
 ```
 
-Every row is written through the **real services** — registration, organization
-creation, `post_simple`, the feedback service — not by direct INSERT, so the seeded
+Every row is written through the **real services** - registration, organization
+creation, `post_simple`, the feedback service - not by direct INSERT, so the seeded
 data satisfies every invariant the application enforces. A seeder writing its own SQL
 would happily produce an unbalanced journal entry, and the trial balance is the first
 thing anyone opens on a populated install.
@@ -157,7 +157,7 @@ Re-running is safe: existing accounts are skipped. Sign in as any of them with
 `Sealed#Books-2026`.
 
 > **Seeded rows are for screenshots and demos, not for evidence.** They are marked in
-> three places — the email domain, the organization name suffix, the feedback contact —
+> three places - the email domain, the organization name suffix, the feedback contact -
 > and [`make evidence`](#5-the-proof-ledger-contract) detects the marker and prints a
 > warning banner, because it reads the same tables. The checklist's *user feedback
 > summary* and *10+ wallet interactions* both mean real people. `--wipe` before quoting

@@ -577,7 +577,7 @@ class TestTrendAcceptsExplicitDates:
     """A chart beside a report filtered to custom dates must cover the same window.
 
     Without this the accounting screen's range filter could move every panel except the
-    trend, and two charts side by side would show different periods — a reliable way to
+    trend, and two charts side by side would show different periods - a reliable way to
     draw a wrong conclusion from correct numbers.
     """
 
@@ -655,7 +655,7 @@ class TestWaterfallSourceMatchesTheDashboard:
         self, authed_client: AsyncClient, api: str, books: Organization
     ) -> None:
         """The waterfall steps down once per expense line, so the steps must add up to the
-        total it claims to decompose — otherwise the bars and the closing figure disagree."""
+        total it claims to decompose - otherwise the bars and the closing figure disagree."""
         today = dt.date.today()
         report = (
             await authed_client.get(

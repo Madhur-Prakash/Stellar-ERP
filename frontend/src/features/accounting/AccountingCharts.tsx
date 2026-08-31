@@ -1,8 +1,8 @@
 /**
  * Charts for the accounting screens.
  *
- * **Bars, not pie charts.** A cash account can hold a negative balance — it does right
- * now, which is itself a signal worth seeing — and a negative value has no possible pie
+ * **Bars, not pie charts.** A cash account can hold a negative balance - it does right
+ * now, which is itself a signal worth seeing - and a negative value has no possible pie
  * slice. A pie would have to drop it, hide it, or plot its absolute value, and all three
  * are lies about the books. Horizontal bars handle a negative naturally and are easier
  * to read against a label besides.
@@ -11,7 +11,7 @@
  * a balance; plotting the rest is 110 bars of nothing that bury the four that matter.
  *
  * **`Number()` appears here and nowhere else.** Recharts plots pixels, and a pixel
- * position does not need exact decimal arithmetic — but a figure someone reads does, so
+ * position does not need exact decimal arithmetic - but a figure someone reads does, so
  * every datum carries its original decimal string and the tooltips format from that. The
  * geometry is approximate; every number on screen is exact.
  */
@@ -71,7 +71,7 @@ interface BalanceDatum {
  * and code order scatters the answer across the chart.
  */
 /**
- * Balance-sheet types only — the accounts that represent something you hold or owe.
+ * Balance-sheet types only - the accounts that represent something you hold or owe.
  *
  * Income and expense accounts are deliberately excluded even though they carry balances.
  * They are *running totals* of what has been earned and spent, not places money sits, and
@@ -111,7 +111,7 @@ export function AccountBalancesChart({ accounts }: { accounts: Account[] }) {
         action={
           <InfoTip label="account balances" align="right">
             <p>
-              What you actually have and owe, biggest first — cash, bank, stock, money owed to you,
+              What you actually have and owe, biggest first - cash, bank, stock, money owed to you,
               money you owe. Blue is an asset, amber a liability.
             </p>
             <p>
@@ -193,7 +193,7 @@ export function AccountBalancesChart({ accounts }: { accounts: Account[] }) {
 }
 
 /**
- * Net balance per account type — the accounting equation, drawn.
+ * Net balance per account type - the accounting equation, drawn.
  *
  * Assets on one side, liabilities and equity on the other, with income and expenses
  * feeding the difference. Seeing them side by side is the fastest way to sanity-check a
@@ -320,7 +320,7 @@ export function CashMovementChart({ entries }: { entries: JournalEntry[] }) {
               rather than money, so it does not appear here.
             </p>
             <p>
-              A reversed entry and its reversal both show, one in each direction — which is exactly
+              A reversed entry and its reversal both show, one in each direction - which is exactly
               what cancelling out looks like.
             </p>
           </InfoTip>

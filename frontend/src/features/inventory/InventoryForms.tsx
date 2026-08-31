@@ -1,5 +1,5 @@
 /**
- * Inventory write forms — product, warehouse, stock adjustment, transfer.
+ * Inventory write forms - product, warehouse, stock adjustment, transfer.
  *
  * **There is no delete, and that is deliberate.** A product named on a posted bill or a
  * stock movement cannot be removed without leaving a ledger entry pointing at nothing, so
@@ -9,7 +9,7 @@
  *
  * **A stock adjustment writes to the ledger, so it asks for a reason.** Correcting stock
  * up or down changes the value of your inventory and posts the difference to an expense
- * account — it is a write-off with no commercial document behind it, which is exactly what
+ * account - it is a write-off with no commercial document behind it, which is exactly what
  * an auditor looks for. A blank reason makes that unanswerable months later.
  */
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -139,7 +139,7 @@ export function ProductFormModal({
       title={editing ? `Edit ${product.name}` : 'New product'}
       description={
         editing
-          ? 'The SKU cannot be changed — it may already be printed on a label or quoted on a bill.'
+          ? 'The SKU cannot be changed - it may already be printed on a label or quoted on a bill.'
           : 'Only a name is required. A SKU is generated if you leave it blank.'
       }
       footer={
@@ -277,7 +277,7 @@ export function WarehouseFormModal({ open, onClose }: { open: boolean; onClose: 
       open={open}
       onClose={onClose}
       title="New location"
-      description="A shop, a godown, a van — anywhere stock physically sits."
+      description="A shop, a godown, a van - anywhere stock physically sits."
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={create.isPending}>
@@ -375,7 +375,7 @@ export function StockAdjustModal({
       toast.success('Stock adjusted', {
         // Formatted the way the tables format it, so the toast and the row it just
         // changed do not disagree about the same number.
-        description: `${movement.product_name} — now ${formatMoney(movement.balance_after).replace('₹', '')} on hand`,
+        description: `${movement.product_name} - now ${formatMoney(movement.balance_after).replace('₹', '')} on hand`,
       });
       onClose();
     },
@@ -390,7 +390,7 @@ export function StockAdjustModal({
       open={open}
       onClose={onClose}
       title="Adjust stock"
-      description="For a stock take, breakage, or theft — anything that changes stock with no bill behind it."
+      description="For a stock take, breakage, or theft - anything that changes stock with no bill behind it."
       footer={
         <>
           <Button variant="ghost" onClick={onClose} disabled={adjust.isPending}>
@@ -452,7 +452,7 @@ export function StockAdjustModal({
         <Input
           label="Reason"
           required
-          placeholder="Stock take 29 July — two units damaged"
+          placeholder="Stock take 29 July - two units damaged"
           value={reason}
           onChange={(event) => setReason(event.target.value)}
           hint="Required. This writes off value with no document behind it, so the reason is the only record of why."
@@ -494,7 +494,7 @@ export function StockTransferModal({ open, onClose }: { open: boolean; onClose: 
     onSuccess: (movements) => {
       invalidate();
       toast.success('Stock transferred', {
-        description: `${movements.length} movements recorded — no effect on total value.`,
+        description: `${movements.length} movements recorded - no effect on total value.`,
       });
       onClose();
     },
@@ -573,7 +573,7 @@ export function StockTransferModal({ open, onClose }: { open: boolean; onClose: 
         />
 
         <p className="text-content-muted text-[12px]">
-          A transfer records two movements — out of one location, into the other — and no ledger
+          A transfer records two movements - out of one location, into the other - and no ledger
           entry, because nothing was bought, sold, or lost. Only the location changed.
         </p>
 

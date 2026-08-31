@@ -2,7 +2,7 @@
 
 # Stellar ERP
 
-**A self-hosted ERP whose books a bank can verify — without ever seeing them.**
+**A self-hosted ERP whose books a bank can verify - without ever seeing them.**
 
 [![Live demo](https://img.shields.io/badge/live_demo-stellar--erp--sigma.vercel.app-2EA043?style=flat-square&logo=vercel&logoColor=white)](https://stellar-erp-sigma.vercel.app)
 [![Verifier](https://img.shields.io/badge/verifier-no_account_needed-4C8BF5?style=flat-square)](https://stellar-erp-sigma.vercel.app/verify)
@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e
 
 > **This is a fork of [Madhur-Prakash/Personal-ERP](https://github.com/Madhur-Prakash/Personal-ERP),
 > extended with a third ledger on Stellar.** Personal ERP is the self-hosted
-> accounting system underneath — double-entry, GST, purchasing, inventory, OCR,
+> accounting system underneath - double-entry, GST, purchasing, inventory, OCR,
 > analytics. Everything under [The third ledger](#the-third-ledger) is what this
 > repository adds, and it is kept deliberately separable: the accounting core does
 > not import it, and `ATTESTATION_ENABLED=false` removes it entirely.
@@ -38,29 +38,29 @@ https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e
 | | |
 | --- | --- |
 | **Web client** | **<https://stellar-erp-sigma.vercel.app>** |
-| **Verifier** — *no account, no wallet, no backend* | **<https://stellar-erp-sigma.vercel.app/verify>** |
+| **Verifier** - *no account, no wallet, no backend* | **<https://stellar-erp-sigma.vercel.app/verify>** |
 | **Contract** | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) on Stellar Testnet |
 | **Source** | [github.com/Madhur-Prakash/Stellar-ERP](https://github.com/Madhur-Prakash/Stellar-ERP) |
 
 **Start at `/verify`.** It is the one screen that needs nothing from us: it re-encodes
 the entry, folds the Merkle path, and queries a public Soroban RPC endpoint *from your
-browser*. There is no API call to our server in that flow at all — which is the whole
+browser*. There is no API call to our server in that flow at all - which is the whole
 point, and why it keeps working on a static host.
 
 **The rest of the app needs a backend, and ours is not public.** The API is
-self-hosted on an Ubuntu server that is deliberately kept private — an ERP holds a
+self-hosted on an Ubuntu server that is deliberately kept private - an ERP holds a
 business's ledger, its customers and its supplier terms, so a permanently exposed demo
 instance full of real double-entry data is not a thing this project is willing to
 publish. That is the same argument the product itself makes: the books stay private,
 and only the proof is public.
 
 So signed-in screens on the hosted client will not connect. To see them, run the stack
-yourself — **[Quick start](#quick-start)** is two commands — or look at
+yourself - **[Quick start](#quick-start)** is two commands - or look at
 **[Screenshots](#screenshots)**.
 
 | Want to… | Where |
 | --- | --- |
-| Check a proof someone sent you | [The live verifier](https://stellar-erp-sigma.vercel.app/verify) — works right now |
+| Check a proof someone sent you | [The live verifier](https://stellar-erp-sigma.vercel.app/verify) - works right now |
 | Inspect the contract without trusting us | [Six ways](docs/commands.md#6-seeing-the-deployed-contract), two of which trust us not at all |
 | See the signed-in product | [Screenshots](#screenshots), or [run it locally](#quick-start) |
 | Watch tamper-evidence happen | [Demonstrating it](docs/commands.md#7-demonstrating-that-the-records-are-tamper-evident) |
@@ -77,7 +77,7 @@ the third option: your server, your PostgreSQL, no vendor in between.
 **But sovereignty costs you credibility, and nobody puts that on the invoice.**
 
 This ERP already keeps two ledgers, and both are built carefully. Posted journal
-entries have no edit path — correction is by reversal. The audit trail has no
+entries have no edit path - correction is by reversal. The audit trail has no
 `updated_at`, because a log that can be edited is not evidence.
 
 All of that is real engineering and all of it is worthless to a third party. Those
@@ -91,7 +91,7 @@ underwriting a working-capital line asks for bank statements instead, and prices
 difference as risk. A corporate buyer running supplier diligence cannot use them.
 Neither can a marketplace, an insurer, or an investor.
 
-The answer is **not** to put the books on a blockchain — publishing a business's
+The answer is **not** to put the books on a blockchain - publishing a business's
 ledger exposes its margins, customers, supplier terms and salaries, and in India it
 runs straight into the DPDP Act. The real problem is narrower and harder:
 
@@ -108,7 +108,7 @@ runs straight into the DPDP Act. The real problem is narrower and harder:
 | **Ledger 2** | The **audit trail** | Append-only record of who did what, with field-level diffs. Your PostgreSQL. |
 | **Ledger 3** | The **proof ledger** | A Soroban contract on Stellar holding cryptographic commitments to Ledger 1. **No business data. No money.** |
 
-Every accounting period — daily by default — the system hashes each journal entry
+Every accounting period - daily by default - the system hashes each journal entry
 into a Merkle leaf, computes the batch's root, and writes it to the contract with an
 entry count, a control total, and the window it covers. Later, anyone the business
 chooses can be handed **one invoice** plus about `log₂(n)` sibling hashes and check
@@ -124,7 +124,7 @@ involved.
 > and the business cannot back-date.
 >
 > It does **not** prove the entries were true when they were made. No cryptographic
-> scheme can. What it eliminates is **retroactive** fabrication — which is how
+> scheme can. What it eliminates is **retroactive** fabrication - which is how
 > accounts are actually cooked: by editing history to fit a story told later.
 
 You can watch this rather than take it on faith:
@@ -135,25 +135,25 @@ longer folds to a root that was published before the edit was made.
 
 That limitation is on the Trust screen, not buried here. So is the sharper one:
 while the signing key sits on the server, the operator could doctor the books
-*before* sealing — which is why the default cadence is daily, why the seals form a
+*before* sealing - which is why the default cadence is daily, why the seals form a
 hash chain the network timestamps, and why `POST /attestation/signer/rotate` moves
 the book onto a 2-of-3 multisig with the business's accountant.
 
 ### Why Stellar
 
 **Cost is the feasibility argument, not a nice-to-have.** A proof written once a
-year leaves a twelve-month window in which history can be rewritten freely — which
+year leaves a twelve-month window in which history can be rewritten freely - which
 is exactly the window fraud lives in. Stellar charges under one US cent per hundred
 thousand operations, so sealing *every day* costs less than the electricity the
 server draws computing the root. On a gas-priced network the same product must
 either seal rarely and destroy the guarantee, or charge more than the software
 costs.
 
-Three more, in short: **Soroban enforces rather than stores** — the contract refuses
+Three more, in short: **Soroban enforces rather than stores** - the contract refuses
 a skipped sequence, so a gap is evidence rather than an absence; **native multisig
 is a protocol primitive**, so 2-of-3 co-signing is a `set_options` call rather than
 a contract to write and audit forever; and **the road from proof to money is on the
-same network** — SEP-24/31 anchors, SEP-41 receivables — though that work is gated
+same network** - SEP-24/31 anchors, SEP-41 receivables - though that work is gated
 and not built.
 
 Full reasoning, and every decision behind the implementation, in
@@ -166,7 +166,7 @@ Full reasoning, and every decision behind the implementation, in
 | **Network** | Stellar Testnet |
 | **Contract** | [`CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
 | **Wasm hash** | `2324b519f8a205a8cae31e1b8ebf3944be1bc5d1d6ec7028cdea3829f5e79246` |
-| **Source** | [`contracts/proof_ledger`](contracts/README.md) — 15 KB of wasm, 8 exported functions, 28 adversarial tests |
+| **Source** | [`contracts/proof_ledger`](contracts/README.md) - 15 KB of wasm, 8 exported functions, 28 adversarial tests |
 
 `make contract-build` reproduces that exact hash from this source, so anyone can
 confirm the deployed bytes are the bytes in this repository.
@@ -180,14 +180,14 @@ the ERP.
 
 1. A business opens **Trust** and presses **Seal now** (or lets the daily schedule
    do it). The batch's root goes on chain.
-2. On any invoice, it exports a **proof bundle** — a small JSON file containing that
+2. On any invoice, it exports a **proof bundle** - a small JSON file containing that
    one entry, its Merkle path, the seal reference, and the encoding spec.
 3. It emails the file to its bank.
 4. The bank opens **`/verify`**, drops the file in, and gets a verdict.
 
 Step 4 runs **entirely in the reader's browser**. It re-encodes the entry, hashes
 it, folds the Merkle path, and asks the contract directly whether that root is what
-it holds — over an RPC endpoint the reader can change, on screen. Our API is not
+it holds - over an RPC endpoint the reader can change, on screen. Our API is not
 consulted for the answer at any point, which is the only reason the answer is worth
 anything.
 
@@ -201,9 +201,9 @@ make verify-proof f=bundle.json          # against the live chain
 It exits 0 or 1, so it fits in a pipeline. It is **our** code, and it says so in its
 own output - which is exactly why the browser verifier exists as well.
 
-That is why the hashing rules are implemented **twice** — once in
+That is why the hashing rules are implemented **twice** - once in
 [Python](backend/app/modules/attestation/canonical.py), once in
-[TypeScript](frontend/src/features/trust/canonical.ts) — and why
+[TypeScript](frontend/src/features/trust/canonical.ts) - and why
 [a test asserts the two produce identical bytes](frontend/src/features/trust/canonical.test.ts)
 against a pinned golden vector on every CI run. A single shared implementation would
 be cheaper and would mean the verifier is running our code.
@@ -306,7 +306,7 @@ is protected by every rule that protects a hand-entered one.
 ## Screenshots
 
 <!--
-  SCREENSHOT SLOTS — drop the PNGs into docs/screenshots/ and they appear here.
+  SCREENSHOT SLOTS - drop the PNGs into docs/screenshots/ and they appear here.
   Until then each slot renders as its alt text, which is intentional.
   Capture specs, what each shot must show, and the full seven-shot gallery:
   docs/screenshots.md
@@ -316,16 +316,16 @@ is protected by every rule that protects a hand-entered one.
 <tr>
 <td width="50%" valign="top">
 
-![Trust screen — the proof ledger, sealing enabled](docs/screenshots/product-ui.png)
+![Trust screen - the proof ledger, sealing enabled](docs/screenshots/product-ui.png)
 
-**Trust** — the third ledger. Backlog age, a confirmed seal with its explorer link, and the *"What it does not"* card.
+**Trust** - the third ledger. Backlog age, a confirmed seal with its explorer link, and the *"What it does not"* card.
 
 </td>
 <td width="50%" valign="top">
 
 ![The verifier, signed out, with a verified proof bundle](docs/screenshots/verify.png)
 
-**`/verify`** — signed out. Five-step verdict, and an RPC endpoint the reader can change.
+**`/verify`** - signed out. Five-step verdict, and an RPC endpoint the reader can change.
 
 </td>
 </tr>
@@ -334,22 +334,22 @@ is protected by every rule that protects a hand-entered one.
 
 ![Analytics dashboard](docs/screenshots/analytics.png)
 
-**Analytics** — real figures with a like-for-like comparison beside them.
+**Analytics** - real figures with a like-for-like comparison beside them.
 
 </td>
 <td width="50%" valign="top">
 
 ![Trust screen at 390 × 844](docs/screenshots/mobile.png)
 
-**Mobile**, 390 × 844 — nothing clipped, no horizontal scroll.
+**Mobile**, 390 × 844 - nothing clipped, no horizontal scroll.
 
 </td>
 </tr>
 </table>
 
-Four of seven. The rest — the verifier **failing** on a tampered bundle, the monitoring
+Four of seven. The rest - the verifier **failing** on a tampered bundle, the monitoring
 figures that distinguish *sealing works* from *sealing stopped silently*, and the native
-desktop window — are in **[docs/screenshots.md](docs/screenshots.md)**, at full size,
+desktop window - are in **[docs/screenshots.md](docs/screenshots.md)**, at full size,
 each with what it has to have in frame and why that shot rather than another.
 
 > Images not showing? The slots are wired to `docs/screenshots/`, waiting for the files.

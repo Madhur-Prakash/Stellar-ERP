@@ -114,19 +114,19 @@ sufficient alone.
 ### There is no edge gateway, deliberately
 
 "Only our frontend may call the API" has an honest form and a wishful one, and this
-deployment can satisfy neither — so it claims neither.
+deployment can satisfy neither - so it claims neither.
 
 **A shipped client cannot authenticate itself.** The React bundle is JavaScript the
 browser is handed on request. Any header, token or signature the *client* holds is
 readable by whoever holds the client and replayable from `curl`. There is no client-side
-version of this control, and `X-Gateway-Key` was never sent by the frontend — that was the
+version of this control, and `X-Gateway-Key` was never sent by the frontend - that was the
 point, not an omission.
 
 **Only an edge could,** and there isn't one of ours. This service runs behind whatever the
 operator puts in front, not behind an edge we configure and ship, so there is nothing
 positioned to inject a server-side value. A `GATEWAY_SECRET` check was removed rather than left half-wired.
 
-What it *would* have bought, if a proxy is ever added: it closes the **side door** — the
+What it *would* have bought, if a proxy is ever added: it closes the **side door** - the
 backend reachable at its own address, where the edge's TLS, logging, IP rules and rate
 limits are all skipped. That matters most when an origin IP behind a CDN leaks. It does
 **not** make the API private; anyone may still walk through the front door, it only
@@ -135,7 +135,7 @@ requires that they use it.
 Re-adding it needs three things, and the third is the one that bites:
 
 1. A proxy config stamping the header on every forwarded request.
-2. That config **overwriting** any client-supplied value, not passing one through —
+2. That config **overwriting** any client-supplied value, not passing one through -
    otherwise the check is satisfied by the very caller it exists to stop.
 3. An exemption for CORS preflights. A preflight cannot carry a custom header by
    specification; gating it produced `No 'Access-Control-Allow-Origin' header is present`

@@ -57,7 +57,7 @@ raised to about 25% of RAM on anything larger.
 
 **This repository's own deployment is the split shape.** The web client is on Vercel
 at <https://stellar-erp-sigma.vercel.app>; the API is on a private Ubuntu server that
-is not published. Everything in sections 1-8 still applies to the API half — the split
+is not published. Everything in sections 1-8 still applies to the API half - the split
 changes three things and nothing else:
 
 - **`CORS_ORIGINS` must name the client's origin exactly.** Two hostnames means every
@@ -67,12 +67,12 @@ changes three things and nothing else:
   backwards and you get `400 Invalid host header` on every call while health probes
   keep reporting the service up.
 - **The client is built, not served by us.** `VITE_*` values are inlined at build time,
-  so changing the contract id means a rebuild and a redeploy of the static bundle — a
+  so changing the contract id means a rebuild and a redeploy of the static bundle - a
   restart picks up nothing. [`frontend/README.md`](../frontend/README.md) has the build.
 
 **The verifier is the exception to all of it.** `/verify` talks to a public Soroban RPC
 endpoint from the reader's browser and never calls our API, so it works on a static
-host with no backend reachable at all. That is not a deployment trick — it is the
+host with no backend reachable at all. That is not a deployment trick - it is the
 reason the check is worth anything, and [why the encoding is implemented
 twice](attestation.md).
 

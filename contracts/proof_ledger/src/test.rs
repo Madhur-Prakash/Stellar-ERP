@@ -7,7 +7,7 @@
 //! worth knowing.
 //!
 //! `#[should_panic(expected = "...")]` matches on the host's error text, which
-//! includes the contract error code — `Error(Contract, #3)` for
+//! includes the contract error code - `Error(Contract, #3)` for
 //! [`Error::SequenceOutOfOrder`]. Matching the code rather than a message keeps
 //! the assertions pinned to the enum discriminants, so renaming a variant cannot
 //! silently make a test pass for the wrong reason.
@@ -204,7 +204,7 @@ fn the_network_sets_the_timestamp_not_the_caller() {
 }
 
 // -----------------------------------------------------------------------------
-// Sequencing — the idempotency guarantee
+// Sequencing - the idempotency guarantee
 // -----------------------------------------------------------------------------
 #[test]
 #[should_panic(expected = "Error(Contract, #3)")]

@@ -1,10 +1,10 @@
 #![no_std]
-//! # Proof Ledger — Ledger 3
+//! # Proof Ledger - Ledger 3
 //!
 //! The third ledger of Stellar ERP. Ledger 1 is the double-entry journal and
 //! Ledger 2 is the audit trail; both live in the business's own PostgreSQL and
 //! are therefore trusted only by the business. This contract holds cryptographic
-//! *commitments* to those two, so that a stranger — a bank, a buyer, an auditor —
+//! *commitments* to those two, so that a stranger - a bank, a buyer, an auditor -
 //! can establish that the books they are shown today are the books that existed
 //! when they were sealed.
 //!
@@ -28,7 +28,7 @@
 //! internally:
 //!
 //! * **Append-only.** A written seal is never updated or deleted. There is no
-//!   `update`, no `delete`, and — deliberately — no administrative override. An
+//!   `update`, no `delete`, and - deliberately - no administrative override. An
 //!   admin who could rewrite a seal would reintroduce the exact problem this
 //!   ledger exists to remove.
 //! * **Strict sequencing.** A seal's `seq` must be exactly `head + 1`. A business
@@ -36,7 +36,7 @@
 //!   every subsequent seal would be rejected.
 //! * **Chain continuity.** A seal's `prev` must equal the stored root of the
 //!   previous seal. Rewriting history therefore means re-sealing every period
-//!   after the one that was altered — and each of those re-seals carries the
+//!   after the one that was altered - and each of those re-seals carries the
 //!   network's own timestamp, so the back-dating is not merely detectable, it is
 //!   permanent and loud.
 //! * **The network timestamps it, not the caller.** [`ProofLedger::seal`] takes
@@ -52,7 +52,7 @@
 //!
 //! It does **not** prove the entries were true when they were made. No
 //! cryptographic scheme can. What it eliminates is *retroactive* fabrication,
-//! which is how accounts are actually cooked in practice — by editing history to
+//! which is how accounts are actually cooked in practice - by editing history to
 //! fit a story told later.
 //!
 //! ## Storage durability
@@ -61,7 +61,7 @@
 //! touch. `temporary` would be wrong to the point of being dangerous: an expired
 //! temporary entry is gone, and a missing seal in an append-only chain is
 //! indistinguishable from evidence of tampering. A persistent entry that outlives
-//! its TTL is *archived*, not deleted — restoring it is a fee, not a loss — and
+//! its TTL is *archived*, not deleted - restoring it is a fee, not a loss - and
 //! the proof bundle a business hands a verifier carries the root anyway, so a
 //! restore is only ever needed to re-read what the verifier already holds.
 
@@ -84,7 +84,7 @@ const DAY_IN_LEDGERS: u32 = 17_280;
 const TTL_THRESHOLD: u32 = DAY_IN_LEDGERS * 30;
 
 /// Extend to 120 days. Comfortably inside every current network's
-/// `max_entry_ttl`, so the call cannot fail for asking too much — which it would,
+/// `max_entry_ttl`, so the call cannot fail for asking too much - which it would,
 /// and the seal would fail with it.
 const TTL_EXTEND_TO: u32 = DAY_IN_LEDGERS * 120;
 
@@ -138,14 +138,14 @@ pub enum Error {
 ///
 /// Eight fields, and each is here because a verifier needs it:
 ///
-/// * `root`, `prev`, `seq` — the chain itself.
-/// * `count` and `debits` — control totals. They let a verifier sanity-check the
+/// * `root`, `prev`, `seq` - the chain itself.
+/// * `count` and `debits` - control totals. They let a verifier sanity-check the
 ///   statements they were handed *without* walking every Merkle path: if the
 ///   business claims 412 entries totalling ₹1.2 crore for March and the seal says
 ///   409 and ₹1.19 crore, the conversation is over before anyone hashes anything.
-/// * `from` and `to` — which period this is, so a verifier can tell that the
+/// * `from` and `to` - which period this is, so a verifier can tell that the
 ///   twelve seals they were shown actually tile the year with no month missing.
-/// * `at` — when the network accepted it. Set here, never by the caller.
+/// * `at` - when the network accepted it. Set here, never by the caller.
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Seal {
@@ -157,7 +157,7 @@ pub struct Seal {
     pub prev: BytesN<32>,
     /// How many journal entries this root covers.
     pub count: u32,
-    /// Sum of the period's debits in minor units — paise, cents. An integer, so
+    /// Sum of the period's debits in minor units - paise, cents. An integer, so
     /// the control total that reaches the chain cannot drift the way a decimal
     /// rendered through a float would.
     pub debits: i128,
@@ -179,8 +179,8 @@ pub struct Seal {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Book {
     /// The account authorised to seal and to rotate. In the intended deployment
-    /// this is a 2-of-3 multisig account — the business, its chartered
-    /// accountant, and a neutral signer — which is what raises the claim from
+    /// this is a 2-of-3 multisig account - the business, its chartered
+    /// accountant, and a neutral signer - which is what raises the claim from
     /// "unchanged since T" to "unchanged since T, and a professional carrying
     /// statutory liability co-signed it".
     pub admin: Address,
@@ -191,7 +191,7 @@ pub struct Book {
     /// `at` of the newest seal; `0` when the book is empty. Lets a monitor answer
     /// "how long since this business last sealed?" in one call.
     pub sealed_at: u64,
-    /// `to` of the newest seal — the accounting date the books are sealed up to,
+    /// `to` of the newest seal - the accounting date the books are sealed up to,
     /// which is the figure a lender actually wants. `sealed_at` says when the
     /// seal was written; this says what it covers.
     pub covered_to: u64,
@@ -273,7 +273,7 @@ impl ProofLedger {
     /// Open a book for `org`, administered by `admin`.
     ///
     /// `org` is expected to be `SHA-256(organization_id ‖ install_salt)`, but the
-    /// contract does not and cannot check that — it is 32 opaque bytes here. What
+    /// contract does not and cannot check that - it is 32 opaque bytes here. What
     /// matters on chain is only that it is stable and that whoever chose it can
     /// authorise against it.
     ///
@@ -322,7 +322,7 @@ impl ProofLedger {
     ///   outbox and a worker submits it; when that submission times out, the
     ///   worker does not know whether it landed. Resubmitting is safe precisely
     ///   because a seal that already landed makes the retry's `seq` stale, and
-    ///   consensus — not our retry logic — rejects it.
+    ///   consensus - not our retry logic - rejects it.
     /// * `prev` must equal the stored root. A local database that has diverged
     ///   from the chain is stopped here rather than silently forking.
     /// * `count` must be non-zero, `to` must not precede `from`, and `from` must
@@ -371,7 +371,7 @@ impl ProofLedger {
         }
         // Periods tile forwards. A reversal dated into a later period is a new
         // leaf in that later period, never an edit to a sealed one, so the
-        // accounting model never needs to seal backwards — and forbidding it
+        // accounting model never needs to seal backwards - and forbidding it
         // removes the only shape in which a business could interleave a
         // fabricated period between two real ones.
         if book.head > 0 && from < book.covered_to {
@@ -529,7 +529,7 @@ impl ProofLedger {
     ///
     /// The upgrade path from a single key to 2-of-3 co-signing: the business
     /// creates a multisig account, then rotates the book onto it. Both the
-    /// outgoing and incoming admin must authorise — the outgoing so a stolen key
+    /// outgoing and incoming admin must authorise - the outgoing so a stolen key
     /// alone cannot hand the book away silently, the incoming so a book cannot be
     /// parked on an account that never agreed to hold it and can therefore never
     /// seal again.

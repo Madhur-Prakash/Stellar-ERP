@@ -156,7 +156,7 @@ export interface TrialBalanceRow {
   gross_debit: Money;
   gross_credit: Money;
   /** The parties this account has dealt with, as typed. Empty when its entries named
-   *  nobody. Not split by direction — that belongs to a transaction, not a balance. */
+   *  nobody. Not split by direction - that belongs to a transaction, not a balance. */
   parties: string[];
   account_id: string;
   code: string;

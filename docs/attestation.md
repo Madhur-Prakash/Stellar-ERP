@@ -20,13 +20,13 @@
 
 This ERP keeps two ledgers, and both are built carefully:
 
-- **Ledger 1 — the journal.** Every entry balances, enforced as a database `CHECK`.
+- **Ledger 1 - the journal.** Every entry balances, enforced as a database `CHECK`.
   Posted entries have no edit path; correction is by reversal, leaving both the
   mistake and its cancellation on the record.
-- **Ledger 2 — the audit trail.** Append-only by construction: no `updated_at`,
+- **Ledger 2 - the audit trail.** Append-only by construction: no `updated_at`,
   no soft delete, no update path in the repository.
 
-Both are **self-attested**. They are immutable because no code path mutates them —
+Both are **self-attested**. They are immutable because no code path mutates them -
 which protects the business against its own staff, its own bugs and its own
 accidents, and protects nobody at all against the business. In a self-hosted
 install the person holding the database password is the owner. Two minutes in
@@ -56,30 +56,30 @@ arrives eleven months late.
 
 ---
 
-## What a seal proves — stated precisely
+## What a seal proves - stated precisely
 
 > A seal proves that the books presented today are **byte-identical to the books
 > that existed when the seal was written**, and that the seal was written at a time
 > the network attests to and the business cannot back-date.
 >
 > It does **not** prove the entries were true when they were made. No cryptographic
-> scheme can. What it eliminates is **retroactive** fabrication — which is the
+> scheme can. What it eliminates is **retroactive** fabrication - which is the
 > overwhelming majority of real books-cooking, because accounts are usually cooked
 > by editing history to fit a story told later.
 
 Overclaiming here is how this kind of project loses credibility, so the limitation
-is on the Trust screen as well as in this document — including the sharper version
+is on the Trust screen as well as in this document - including the sharper version
 of it:
 
 **While the signing key is held on the server, the operator could doctor the books
 *before* sealing.** Three things narrow that, in increasing strength:
 
 1. **Seal often.** The default cadence is daily, which makes the tampering window a
-   day rather than a year. This is affordable only because of Stellar's fees — see
+   day rather than a year. This is affordable only because of Stellar's fees - see
    [Why Stellar](#why-stellar).
 2. **The hash chain plus network timestamps.** Each seal references its
    predecessor's root, so rewriting one period requires re-sealing every period
-   after it — and the network attests to when each seal actually happened, so
+   after it - and the network attests to when each seal actually happened, so
    back-dating is not merely detectable, it is loud and permanent.
 3. **2-of-3 co-signing.** `POST /attestation/signer/rotate` moves the book onto a
    Stellar multisig account whose signers are the business, its chartered
@@ -117,7 +117,7 @@ reaches the chain afterwards.
 
 Dependencies in this codebase point inward, and accounting is the contract sales,
 purchasing and billing are built against. It must not acquire a dependency on a
-module that sits above it — an `import` from accounting into attestation would mean
+module that sits above it - an `import` from accounting into attestation would mean
 the ledger could no longer be tested, reasoned about, or deployed without the
 blockchain subsystem.
 
@@ -143,7 +143,7 @@ never notices.
 door**, and it is the reason the whole subsystem can be trusted.
 
 A Merkle root is only meaningful if the same journal entry hashes to the same 32
-bytes forever — across a Python upgrade, a schema migration, a refactor, a
+bytes forever - across a Python upgrade, a schema migration, a refactor, a
 different machine, and a re-implementation in TypeScript written by somebody who
 has never read the file. Once a root is on chain, every proof issued against it
 depends on the encoding being reproducible. Change one byte of it and every
@@ -153,7 +153,7 @@ So the rules are deliberately paranoid:
 
 | Rule | Why |
 | --- | --- |
-| **Field order is hand-written, never derived from the ORM** | Built from `__table__.columns`, a later migration adding a column would silently enter the hash — and a migration is exactly the kind of change nobody reviews for cryptographic consequences |
+| **Field order is hand-written, never derived from the ORM** | Built from `__table__.columns`, a later migration adding a column would silently enter the hash - and a migration is exactly the kind of change nobody reviews for cryptographic consequences |
 | **Every value is length-prefixed, and absent ≠ empty** | `narration=""` and `narration=None` must not share a leaf; the difference between them is what a dispute turns on |
 | **Money is a fixed-width `i128` of minor units** | `Decimal("100.00")` and `Decimal("100.0000")` are the same number and different strings, and a round-trip through the database can change which one you hold |
 | **Leaf and node hashes are domain-separated** (`0x00` / `0x01`) | Without it, an interior node's 64-byte preimage could be presented as leaf data and a second preimage constructed for free |
@@ -163,7 +163,7 @@ So the rules are deliberately paranoid:
 ### What is deliberately not hashed
 
 **An entry's status.** This was a real bug, caught by the reversal test. A leaf
-commits to what was *recorded*, not to what later happened to it — and this ledger
+commits to what was *recorded*, not to what later happened to it - and this ledger
 corrects by reversal, so `posted` becoming `reversed` is the normal path for any
 entry. With the status in the hash, a business would have sealed its March books,
 issued a credit note in May, and found that its March invoice no longer verified.
@@ -184,7 +184,7 @@ proof bundle as display metadata, explicitly labelled as not covered.
 
 RFC 6962, **not** the Bitcoin construction. The obvious tree duplicates the last
 node when a level has an odd count, and two different leaf lists can then produce
-the same root — so a proof for one can be presented as a proof for the other. RFC
+the same root - so a proof for one can be presented as a proof for the other. RFC
 6962 splits at the largest power of two below `n`, which is unambiguous for every
 `n`, and it is specified precisely enough that two independent implementations can
 be checked against each other rather than against each other's bugs.
@@ -192,7 +192,7 @@ be checked against each other rather than against each other's bugs.
 The point of a tree rather than one hash over the period is **selective
 disclosure**: a business can prove one invoice without revealing the other four
 hundred. It sends the entry plus about `log₂(n)` sibling hashes, and the siblings
-are opaque — a verifier learns that other entries exist and nothing about what they
+are opaque - a verifier learns that other entries exist and nothing about what they
 say.
 
 ### The encoding exists twice, on purpose
@@ -200,7 +200,7 @@ say.
 `canonical.py` and
 [`canonical.ts`](../frontend/src/features/trust/canonical.ts) implement the same
 specification independently. If the verifier called the server for a verdict, a
-verifier would have gained nothing — a compromised backend would answer
+verifier would have gained nothing - a compromised backend would answer
 `valid: true` for anything.
 
 The cost is that the two can drift, and the failure mode is catastrophic and
@@ -219,8 +219,8 @@ has already been sealed.** A daily seal covers an open month; the next day bring
 three more entries dated inside it. And a bill for March genuinely arrives on 3
 April.
 
-If the sealing unit were the month, either the March root would have to change —
-which the contract forbids, correctly — or those entries would never be sealed.
+If the sealing unit were the month, either the March root would have to change -
+which the contract forbids, correctly - or those entries would never be sealed.
 
 So the unit is a **batch**: leaves `(last_sealed, cutoff]` in per-organization
 posting order. Batches are consecutive and non-overlapping by construction, which
@@ -235,7 +235,7 @@ second claim is the one a naive design accidentally makes and cannot keep.
 
 ## The contract
 
-[`contracts/proof_ledger`](../contracts/proof_ledger) — Rust, ~15 KB of wasm, eight
+[`contracts/proof_ledger`](../contracts/proof_ledger) - Rust, ~15 KB of wasm, eight
 exported functions, 28 adversarial tests.
 
 ```rust
@@ -255,11 +255,11 @@ pub struct Seal {
 | --- | --- |
 | `register(org, admin)` | A second book for a namespace that already has one |
 | `seal(org, seq, root, prev, count, debits, from, to)` | `seq != head + 1`, `prev != stored root`, `count == 0`, `to < from`, `from < covered_to`, an all-zero root |
-| `get(org, seq)` / `latest(org)` / `verify(org, seq, root)` / `history(...)` | — reads |
+| `get(org, seq)` / `latest(org)` / `verify(org, seq, root)` / `history(...)` | - reads |
 | `rotate(org, new_admin)` | A rotation not authorised by **both** accounts |
 
 There is no `update`, no `delete`, and **no administrative override on a written
-seal** — an admin who could rewrite a seal would reintroduce the exact problem this
+seal** - an admin who could rewrite a seal would reintroduce the exact problem this
 ledger exists to remove.
 
 `seal` takes no `at` parameter. The timestamp is read from
@@ -277,7 +277,7 @@ so there is nothing a DPDP Act or GDPR erasure request could need to reach.
 
 The organisation is identified by `org_ns = SHA-256(organization_id ‖ salt)`, so
 the on-chain record is unlinkable to a named business until the business itself
-discloses the namespace — which is exactly what handing a counterparty a proof
+discloses the namespace - which is exactly what handing a counterparty a proof
 bundle does, deliberately, one counterparty at a time.
 
 ---
@@ -290,7 +290,7 @@ outage must not block a month-end close.
 
 The transactional outbox handles the easy half. The hard half is this: **the submit
 times out and we do not know whether it landed.** Resubmitting risks a double seal;
-not resubmitting risks a gap — and a gap in this design is indistinguishable from
+not resubmitting risks a gap - and a gap in this design is indistinguishable from
 evidence of tampering, so it is not a benign failure mode.
 
 The resolution is one sentence: **the chain, not the database, is the authority on
@@ -303,7 +303,7 @@ what has been sealed.**
   reconciler resolves it against `latest()` on the next pass and on every startup.
 - A seal that fails permanently releases its leaves back to the head of the
   backlog, keeps its own row for the record, and lets the replacement **reuse the
-  same sequence number** — because the contract's `head` never moved, so that
+  same sequence number** - because the contract's `head` never moved, so that
   number is still the only one it will accept. Two partial unique indexes
   (`WHERE status <> 'failed'`) exist for exactly this.
 
@@ -315,7 +315,7 @@ Notarising a hash is possible on any chain. These are reasons this product is
 materially worse, or infeasible, elsewhere.
 
 **Cost is the feasibility argument, not a nice-to-have.** An attestation is only
-worth something if it happens often — a proof written once a year leaves a
+worth something if it happens often - a proof written once a year leaves a
 twelve-month window in which history can be rewritten freely, which is exactly the
 window fraud lives in. Stellar charges under one US cent per hundred thousand
 operations, so a daily seal costs less than the electricity the server draws
@@ -324,7 +324,7 @@ destroy the guarantee, or charge more than the software costs.
 
 **Soroban enforces rather than stores.** A chain that accepts any hash handed to it
 is a log; this is a referee. The contract re-enforces the ledger's own invariants
-at the boundary, so a skipped period is not a missing record — it is evidence.
+at the boundary, so a skipped period is not a missing record - it is evidence.
 
 **Native multisig is a protocol primitive.** 2-of-3 co-signing is a `set_options`
 call, not a contract to write and audit forever. Getting the same property
@@ -334,7 +334,7 @@ the rest of the product.
 **The road from proof to money is on the same network.** Once a receivable is
 attested, SEP-24/SEP-6 anchors and SEP-31 give it a settlement rail, and SEP-41 /
 the Stellar Asset Contract are where it becomes a transferable instrument. That
-work is **gated** and not built — see the roadmap in the submission — but it is on
+work is **gated** and not built - see the roadmap in the submission - but it is on
 the same ledger the proof already lives on.
 
 ---
@@ -344,7 +344,7 @@ the same ledger the proof already lives on.
 | Table | Rows | Notes |
 | --- | --- | --- |
 | `attestation_setting` | one per organization | Whether sealing is on, the namespace, the contract, the signer. The signing seed is **Fernet-encrypted** with the same key material as a TOTP secret |
-| `seal_leaf` | one per posted entry | The canonical hash. No `updated_at` — a leaf cannot change. Partial index on the unsealed backlog, which is the only part ever scanned |
+| `seal_leaf` | one per posted entry | The canonical hash. No `updated_at` - a leaf cannot change. Partial index on the unsealed backlog, which is the only part ever scanned |
 | `seal` | one per batch | **This row is also the outbox.** A separate outbox table would be a second record of the same fact |
 
 `Numeric(38, 0)` for `debit_minor`, not `BIGINT`: a lifetime turnover in paise
@@ -363,13 +363,13 @@ control total that silently wraps is worse than none.
 | `POST /attestation/seals` | `seal:write` | Seal now |
 | `POST /attestation/reconcile` | `seal:write` | Correct local state from the chain |
 | `GET /attestation/proof/{id}` | `proof:export` | A self-contained proof bundle for one entry |
-| `GET /attestation/adoption` | **superuser** | Every organization with a book, install-wide — and the transaction hashes to check it with |
-| `POST /verify/bundle` | **none** | Check a bundle — a convenience, never the authority |
+| `GET /attestation/adoption` | **superuser** | Every organization with a book, install-wide - and the transaction hashes to check it with |
+| `POST /verify/bundle` | **none** | Check a bundle - a convenience, never the authority |
 | `GET /verify/chain/{namespace}` | **none** | A namespace's seals, read from the chain |
 | `GET /verify/network` | **none** | Chain coordinates, so the browser can read the contract without us |
 | `GET /verify/spec` | **none** | The canonical encoding, so anybody can reimplement it |
 
-The full surface — fourteen authenticated routes and these four — is in
+The full surface - fourteen authenticated routes and these four - is in
 [API](api.md#proof-ledger---attestation).
 
 `seal:write` is deliberately **not** implied by `journal:post`, for the same reason
@@ -384,14 +384,14 @@ the head transaction hash so the answer can be checked on a public explorer by
 somebody who does not have to believe us.
 
 `/verify/*` is the only unauthenticated router in the application. It exists
-because the verifier — a bank's credit officer, an auditor, a buyer — has been
+because the verifier - a bank's credit officer, an auditor, a buyer - has been
 handed a proof bundle and needs a verdict, and requiring an account would defeat
 the whole design. What it returns is either computed from a bundle the caller
 already sent, or already public on the Stellar ledger; none of the four handlers
 issues a single SQL statement, and a test counts them to keep it that way. All four
 are rate-limited separately from the global budget.
 
-The last two exist so the *browser* needs nothing from us but the page — they are
+The last two exist so the *browser* needs nothing from us but the page - they are
 what turns "trust our verdict" into "here are the coordinates, check it yourself".
 
 ---
@@ -418,7 +418,7 @@ To run it separately, set `SEAL_WORKER_ENABLED=false` in the API and run:
 python -m app.modules.attestation.worker
 ```
 
-Same code, same function — the worker is a loop around something the API can also
+Same code, same function - the worker is a loop around something the API can also
 call, not a parallel implementation.
 
 ### Auto-seal: the cadence
@@ -443,7 +443,7 @@ statement about how wide the tampering window is: `on_period_close` on monthly
 periods leaves a month, and `manual` leaves however long it has been since anyone
 remembered. At well under a cent per operation, daily costs less than the
 electricity the server draws computing the root, so the cheap option and the
-strong option are the same option — which is not true on a gas-priced network.
+strong option are the same option - which is not true on a gas-priced network.
 
 `manual` is respected literally. Closing a period does **not** seal under `manual`,
 because a business that asked to seal only when it presses the button has said
@@ -471,14 +471,14 @@ Three conditions, all of which must hold ([`worker.py`](../backend/app/modules/a
 
 1. The organization's **own local date** has advanced past the date of its last
    confirmed seal.
-2. `SEAL_DAILY_HOUR` has passed — or two or more local days have gone by, in which
+2. `SEAL_DAILY_HOUR` has passed - or two or more local days have gone by, in which
    case the hour is ignored, so a worker that was down does not skip a day
    permanently.
 3. No seal is already open for that organization. One in flight is enough.
 
 **The organization's clock, not the server's.** A business in `Asia/Kolkata` on a
 UTC server would otherwise have its "daily" seal fire at 06:30 local, and its 23:58
-entries would land in the following day's batch — not wrong exactly, but it makes
+entries would land in the following day's batch - not wrong exactly, but it makes
 "sealed up to yesterday" mean something different from what the owner reads on the
 screen.
 
@@ -504,7 +504,7 @@ on should not have to wait until tomorrow to see that it worked.
   on a network. A ledger whose writes depend on consensus is a ledger that stops
   when an RPC endpoint does.
 - **It does not make entries true.** It fixes what the books said at a time the
-  network attests to. Fabrication *before* sealing is untouched by it — see
+  network attests to. Fabrication *before* sealing is untouched by it - see
   [What a seal proves](#what-a-seal-proves--stated-precisely).
 - **It does not re-seal history.** A seal is final. A reversal posted in May is new
   entries in a new batch; March's root does not change and March's proofs keep
@@ -544,7 +544,7 @@ browser verifier or their own RPC - this exists so a business can catch a bad ex
 **The age of the backlog, not the seal count.** "412 entries sealed" is reassuring
 and says nothing about now. `days_unsealed` on `GET /attestation/status` is the
 only figure that distinguishes sealing working from sealing having silently
-stopped — the two are otherwise identical from the outside. The Trust screen leads
+stopped - the two are otherwise identical from the outside. The Trust screen leads
 with it, and `chain.agrees_with_local == false` outranks everything else.
 
 <!-- related:start -->
@@ -553,9 +553,9 @@ with it, and `chain.agrees_with_local == false` outranks everything else.
 
 ## Related reading
 
-- [Accounting](accounting.md) — the ledger this commits to, and the reversal rule the encoding had to respect
-- [Architecture](architecture.md) — the inward-pointing dependency rule the hook seam exists to preserve
-- [Security](security.md) — how the signing key is stored, and what an error report is allowed to carry
+- [Accounting](accounting.md) - the ledger this commits to, and the reversal rule the encoding had to respect
+- [Architecture](architecture.md) - the inward-pointing dependency rule the hook seam exists to preserve
+- [Security](security.md) - how the signing key is stored, and what an error report is allowed to carry
 
 [All documentation](README.md)
 <!-- related:end -->

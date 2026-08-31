@@ -7,7 +7,7 @@
  *
  * **A donut is safe here and deliberately not used for balances.** Expense totals are
  * non-negative by construction, so every value has a real slice. A balance can be
- * negative — cash is, right now — and a negative has no slice at all: a pie would have to
+ * negative - cash is, right now - and a negative has no slice at all: a pie would have to
  * drop it, hide it, or plot its absolute value, and all three misrepresent the books.
  */
 import { ChartPie, LineChart as LineChartIcon } from 'lucide-react';
@@ -71,7 +71,7 @@ interface SliceDatum {
   share: number;
 }
 
-/** Small categories are folded together — twelve two-percent slivers is a colour key. */
+/** Small categories are folded together - twelve two-percent slivers is a colour key. */
 const MAX_SLICES = 7;
 
 export function SpendingMixChart({ accounts }: { accounts: Account[] }) {
@@ -197,7 +197,7 @@ const SERIES_LABELS: Record<string, string> = {
  * Income, spending, and profit month by month.
  *
  * Lines for income and spending because this is a series over time and direction is the
- * primary reading. Profit is filled instead, so a loss shows as area below the axis — a
+ * primary reading. Profit is filled instead, so a loss shows as area below the axis - a
  * shaded region reads faster than a line dipping under a gridline.
  */
 export function TrendChart({ points }: { points: TrendPoint[] | undefined }) {

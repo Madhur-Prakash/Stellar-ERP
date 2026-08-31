@@ -81,7 +81,7 @@ export async function verifyBundle(
 
   // ---- 1. Format ---------------------------------------------------------
   if (bundle?.format !== BUNDLE_FORMAT) {
-    steps.push(step('format', 'Recognise the proof format', false, String(bundle?.format ?? '—')));
+    steps.push(step('format', 'Recognise the proof format', false, String(bundle?.format ?? '-')));
     return {
       verified: false,
       headline: 'This file is not a proof bundle this page understands.',

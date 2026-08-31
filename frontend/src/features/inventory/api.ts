@@ -250,7 +250,7 @@ export const inventoryApi = {
     reorder_level?: Money;
   }) => api.post<Product>('/products', body),
   /**
-   * Mirrors `ProductUpdate`, which is `extra="forbid"` — `Partial<Product>` was wrong
+   * Mirrors `ProductUpdate`, which is `extra="forbid"` - `Partial<Product>` was wrong
    * here, because it let read-only fields like `sku` and `quantity_on_hand` type-check
    * and then 422 at runtime. `sku` is genuinely not updatable: it may already be printed
    * on a label or quoted on a bill.
