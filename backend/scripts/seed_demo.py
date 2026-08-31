@@ -244,6 +244,40 @@ async def wipe() -> int:
         return removed
 
 
+async def verify_existing() -> int:
+    """Mark any already-seeded account verified.
+
+    Runs before every seed. Registration skips an account that exists, so without
+    this a run made before verification was handled would stay permanently
+    unusable - twelve accounts, all refusing to sign in, and re-running the seeder
+    would report "already exists" and change nothing.
+
+    Scoped to the reserved seed domain, so it can never touch a real user.
+    """
+    from sqlalchemy import select, update
+
+    from app.modules.users.models import User
+
+    async with session_scope() as session:
+        result = await session.execute(
+            update(User)
+            .where(
+                User.email.like(f"%@{EMAIL_DOMAIN}"),
+                User.email_verified_at.is_(None),
+            )
+            .values(email_verified_at=dt.datetime.now(dt.UTC))
+        )
+        repaired = result.rowcount or 0
+        total = len(
+            (await session.execute(select(User.id).where(User.email.like(f"%@{EMAIL_DOMAIN}"))))
+            .scalars()
+            .all()
+        )
+    if repaired:
+        print(f"  verified {repaired} pre-existing seeded account(s) of {total}")
+    return repaired
+
+
 async def seed(*, organizations: int, entries: int, dry_run: bool) -> int:
     from app.modules.accounting.models import JournalType
     from app.modules.accounting.service import PostingService
@@ -272,6 +306,8 @@ async def seed(*, organizations: int, entries: int, dry_run: bool) -> int:
         print(f"would add {len(FEEDBACK)} feedback row(s)")
         return 0
 
+    await verify_existing()
+
     for name, owner_name in BUSINESSES[:organizations]:
         email = f"{_slugify(owner_name)}@{EMAIL_DOMAIN}"
         org_name = f"{name} {NAME_SUFFIX}"
@@ -281,6 +317,15 @@ async def seed(*, organizations: int, entries: int, dry_run: bool) -> int:
         try:
             async with session_scope() as session:
                 auth = AuthService(session)
+
+                # Skip the verification email. `register` issues a token into Redis and
+                # hands the mailer an address at a reserved domain that can never
+                # receive it - twelve times over, for nothing.
+                async def _skip_verification_email(_user: object) -> None:
+                    return None
+
+                auth._dispatch_verification_email = _skip_verification_email  # type: ignore[method-assign]
+
                 user, organization_id = await auth.register(
                     RegisterRequest(
                         email=email,
@@ -290,6 +335,18 @@ async def seed(*, organizations: int, entries: int, dry_run: bool) -> int:
                     ),
                     ctx,
                 )
+
+                # Mark verified, exactly as the invitation path does in `register`
+                # itself - there, redeeming an invite grants verification "implicitly"
+                # because the invite already proved control of the address.
+                #
+                # A seeded address proves nothing, but there is nobody to prove it and
+                # no link to click. Without this the accounts are unusable: `login`
+                # raises `EmailNotVerifiedError` for an unverified user, so a seeded
+                # install would look populated and refuse every sign-in.
+                user.email_verified_at = dt.datetime.now(dt.UTC)
+                await session.flush()
+
                 if organization_id is None:
                     print(f"  ! {org_name}: registered without an organization, skipped")
                     continue
