@@ -239,6 +239,16 @@ shell: ## Open a Python shell with the app importable
 psql: ## Open psql against the development database
 	$(COMPOSE) exec postgres psql -U stellarerp -d stellarerp
 
+# Piped in on stdin rather than mounted, so it works whether postgres is in the compose
+# stack or on the host - the container has no copy of this repository.
+#
+# `-v ON_ERROR_STOP=1` so a typo in the SQL fails the target instead of printing an
+# error mid-output and exiting 0, which is how a broken query ends up screenshotted.
+.PHONY: feedback-summary
+feedback-summary: ## Feedback counts, real rows separated from seeded ones
+	@$(COMPOSE) exec -T postgres psql -U stellarerp -d stellarerp \
+		-v ON_ERROR_STOP=1 < backend/scripts/feedback_summary.sql
+
 .PHONY: redis-cli
 redis-cli: ## Open redis-cli against the development Redis
 	$(COMPOSE) exec redis redis-cli
