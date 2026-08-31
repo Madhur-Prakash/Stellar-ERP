@@ -479,6 +479,22 @@ Recorded because each cost real time:
   `await import`-ed precisely so the billing screen never pays for it, and a
   `vendor` rule matching it pulled all ~940 kB back into the eager bundle -
   silently, because the build still succeeded. It needs its own chunk entry.
+- **`Buffer` is not a browser global, and Vite does not polyfill it.**
+  `features/trust/chain.ts` used it bare, on a comment's word that Vite supplied one.
+  It does not: there is no polyfill plugin and no `define` for it. The dev server's
+  dependency pre-bundling happened to leave the Stellar SDK's own copy on
+  `globalThis`, so every local check passed - `npm run dev`, `make check`, the whole
+  test suite - while the **production bundle threw `ReferenceError: Buffer is not
+  defined` on the deployed `/verify`**, at step 5, the one step that talks to the
+  chain. Import it explicitly (`import { Buffer } from 'buffer'`) and keep the package
+  in `package.json` rather than relying on a transitive hoist.
+
+  **The wider lesson is the one worth keeping:** the failure was invisible to every
+  gate because nothing exercises the *built* bundle in a *real browser*. The CLI
+  verifier could not catch it either - Node has `Buffer`. A smoke test that loads
+  `dist/` in a headless browser and verifies a pinned bundle end to end is the only
+  thing that would have, and its absence is why the flagship screen was broken in
+  production while CI was green.
 - **RFC 6962 inclusion proofs are innermost-first.** Emitting siblings
   outermost-first verifies correctly for n ≤ 2 and fails for every larger tree.
   Getting that order wrong is the single easiest way to make this subsystem accuse

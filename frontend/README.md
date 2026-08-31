@@ -136,6 +136,7 @@ Each of these exists because breaking it caused a real bug. The full list lives 
 | **Semantic colour tokens only** | `bg-surface`, never `bg-zinc-900`. Dark mode is one set of variable overrides, and a literal colour silently breaks it |
 | **A navigation control is a `<Link>`** | Use `buttonClasses()` on it. A `<button>` that navigates loses middle-click and "open in new tab"; a `<Link>` inside a `<button>` is invalid HTML |
 | **Route guards read auth from router context** | Guards run in `beforeLoad`, before the component mounts. React context is unreachable there, and reading it inside the component renders the page first and redirects after - flashing content the user is not entitled to |
+| **Never reach for a Node global** | `Buffer`, `process`, `__dirname` do not exist in a browser and nothing here polyfills them. `Buffer` used bare in `trust/chain.ts` passed every local check - the dev server's pre-bundling left the SDK's copy on `globalThis` - and threw `ReferenceError` in the production bundle, on `/verify`, at the only step that talks to the chain. Import it: `import { Buffer } from 'buffer'` |
 
 Type-aware ESLint is on, so `no-floating-promises` and `no-misused-promises` catch
 the class of bug TypeScript alone misses. `void promise` is the explicit opt-out.
