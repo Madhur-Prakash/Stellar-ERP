@@ -4,7 +4,7 @@
 
 **Every screen, shot by shot - and why each shot rather than another.**
 
-![Captured](https://img.shields.io/badge/captured-21-2EA043?style=flat-square)
+![Captured](https://img.shields.io/badge/captured-22-2EA043?style=flat-square)
 ![Verifier](https://img.shields.io/badge/verifier-pass_and_fail-4C8BF5?style=flat-square)
 ![Mobile](https://img.shields.io/badge/mobile-360_%C3%97_740-8957E5?style=flat-square)
 ![Theme](https://img.shields.io/badge/capture-light_theme-F6F8FA?style=flat-square)
@@ -17,8 +17,8 @@
 
 ---
 
-Twenty-one shots in four groups: **[the verifier](#the-verifier)** (3),
-**[the product](#the-product)** (8), **[monitoring](#monitoring)** (3), and
+Twenty-two shots in four groups: **[the verifier](#the-verifier)** (3),
+**[the product](#the-product)** (9), **[monitoring](#monitoring)** (3), and
 **[mobile](#mobile)** (7). The [root README](../README.md#screenshots) carries four.
 
 Every shot is a real install against the real testnet contract.
@@ -29,7 +29,7 @@ honest for a screenshot and are explicitly not evidence.
 | Group | Files |
 | --- | --- |
 | [The verifier](#the-verifier) | `verify.png` · `verify-verdict.png` · `verify-tampered.png` |
-| [The product](#the-product) | `product-ui.png` · `audit-log.png` · `dashboard.png` · `analytics.png` · `accounting.png` · `accounting-charts.png` · `roles.png` · `feedback.png` |
+| [The product](#the-product) | `product-ui.png` · `audit-log.png` · `dashboard.png` · `analytics.png` · `accounting.png` · `accounting-charts.png` · `roles.png` · `feedback.png` · `feedback-summary.png` |
 | [Monitoring](#monitoring) | `monitoring.png` · `monitoring-chain-check.png` · `seal-nothing-to-commit.png` |
 | [Mobile](#mobile) | `mobile.png` · `mobile-trust-seals.png` · `mobile-dashboard.png` · `mobile-analytics.png` · `mobile-reconciliation.png` · `mobile-audit-log.png` · `mobile-settings.png` |
 
@@ -206,6 +206,28 @@ exactly the person whose report is worth having.
 
 ---
 
+### 12 · The feedback table
+
+![All feedback rows queried from the database](screenshots/feedback-summary.png)
+
+<sub><code>feedback-summary.png</code> · every row in the <code>feedback</code> table</sub>
+
+The inbox behind [shot 11](#11--feedback-widget), read straight out of PostgreSQL -
+received, type, rating, screen, status and the message.
+
+**Two of these fourteen are real; twelve are seeded**, and the timestamps show it: the
+seeded batch all landed at `10:14:34` in one `scripts/seed_demo.py` run, while the two
+at `12:20` and `12:29` arrived separately through the widget. [Evidence](evidence.md)
+declares the same split from the same table, so the two never disagree.
+
+`Screen` is the column that earns its place. `/trust`, `/verify`, `/billing`,
+`/documents` - the widget sends the route the person was on, which is what turns "this
+is confusing" into a filed bug. It is also why the widget works signed out: a report
+from somebody stuck at the sign-in screen is the one you most want, and a form behind
+the sign-in would never hear from them.
+
+---
+
 ## Monitoring
 
 Three shots for the checklist's *monitoring* half. Sentry is wired but **off** -
@@ -214,7 +236,7 @@ Three shots for the checklist's *monitoring* half. Sentry is wired but **off** -
 than a gap: *"a hard dependency on a third-party error tracker would contradict [the
 promise] on the same page that promises it."* So this install monitors itself.
 
-### 12 · The two figures that matter
+### 13 · The two figures that matter
 
 ![Terminal showing attestation status and health checks](screenshots/monitoring.png)
 
@@ -232,7 +254,7 @@ A green uptime chart shows none of this. *"The service is up"* and *"the books a
 being sealed"* are different questions, and only the second one is what this product
 promises.
 
-### 13 · Monitoring from the UI
+### 14 · Monitoring from the UI
 
 ![Trust screen after checking the chain](screenshots/monitoring-chain-check.png)
 
@@ -242,7 +264,7 @@ The same reconciliation as a button, for an operator who is not going to curl an
 **"The chain and your database agree."** It re-reads the contract live rather than
 reporting a cached status, which is why it is a button and not a badge.
 
-### 14 · A seal it refused to write
+### 15 · A seal it refused to write
 
 ![Seal now reporting nothing to commit](screenshots/seal-nothing-to-commit.png)
 
@@ -271,7 +293,7 @@ Seven viewports, captured in Chrome's device toolbar at **360 × 740** (Samsung)
 > for a submission or a slide, re-capture with DevTools undocked or crop to the viewport.
 > Nothing about the layout needs to change; only the framing does.
 
-### 15 · Trust on a phone
+### 16 · Trust on a phone
 
 ![Trust screen at 360 by 740](screenshots/mobile.png)
 
@@ -282,7 +304,7 @@ scroll, and the tiles stacked one per row instead of three across. The amber sig
 banner survives the narrow viewport intact rather than being hidden at small widths -
 the limitation is not something the layout is allowed to drop.
 
-### 16 · Seal history on a phone
+### 17 · Seal history on a phone
 
 ![Seal history stacked on mobile](screenshots/mobile-trust-seals.png)
 
@@ -292,7 +314,7 @@ the limitation is not something the layout is allowed to drop.
 truncated. A 64-character hash is the hardest thing on this screen to lay out narrow, and
 it is readable.
 
-### 17 · Dashboard on a phone
+### 18 · Dashboard on a phone
 
 ![Dashboard at 414 by 896](screenshots/mobile-dashboard.png)
 
@@ -300,7 +322,7 @@ it is readable.
 
 The eight-tile figure grid collapsed to one column, amounts intact.
 
-### 18 · Analytics on a phone
+### 19 · Analytics on a phone
 
 ![Analytics at 360 by 740](screenshots/mobile-analytics.png)
 
@@ -310,7 +332,7 @@ The period selector becomes a full-width control, and the comparison line wraps 
 lines rather than truncating - the window a figure covers is not something to hide on a
 small screen.
 
-### 19 · Reconciliation on a phone
+### 20 · Reconciliation on a phone
 
 ![Reconciliation table on mobile](screenshots/mobile-reconciliation.png)
 
@@ -321,7 +343,7 @@ small screen.
 still legible. Financial tables are where responsive design usually gives up and
 scrolls sideways.
 
-### 20 · Audit log on a phone
+### 21 · Audit log on a phone
 
 ![Audit log on mobile](screenshots/mobile-audit-log.png)
 
@@ -336,7 +358,7 @@ to a bank is the moment a business's opaque namespace stops being opaque to that
 it belongs in the record at the same severity as switching sealing on. The bundle behind
 [shots 1-3](#the-verifier) is the one this row is recording.
 
-### 21 · Settings on a phone
+### 22 · Settings on a phone
 
 ![Security settings on mobile](screenshots/mobile-settings.png)
 
@@ -372,7 +394,7 @@ the verifier pair. The [demo video](demo-video.md) covers the same ground in mot
 | --- | --- |
 | [Root README](../README.md#screenshots) | `verify` · `verify-tampered` · `product-ui` · `mobile` |
 | [SUBMISSION.md](../SUBMISSION.md#screenshots) | Product UI, mobile responsive and analytics, mapped to checklist item 6 |
-| This page | All twenty-one |
+| This page | All twenty-two |
 
 Adding a shot means dropping the file in [`screenshots/`](screenshots/) and adding a
 section here. Only promote it into the README if it displaces one of the four.

@@ -4,7 +4,7 @@
 [Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Screenshots](screenshots.md) · [Demo video](demo-video.md) · **Evidence** · [Development](development.md) · [Deployment](deployment.md)
 <!-- nav:end -->
 
-Generated 2026-08-31T12:15:50+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
+Generated 2026-08-31T12:37:31+00:00 from this install's own database and the **testnet** ledger. Every on-chain figure below links to a public explorer, so none of it has to be taken on trust.
 
 Contract: [`CCB66KMNINKN…`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR)
 
@@ -45,20 +45,20 @@ The signer's secret is never selected by the query behind this table, so it cann
 
 Collected by the in-app widget, which works signed out as well - somebody who cannot get past the sign-in screen is exactly the person whose report is worth having, and a form behind the sign-in would never hear from them.
 
-**12** submissions.
+**14** submissions.
 
 | Kind | Count |
 | --- | --- |
-| praise | 6 |
+| praise | 8 |
 | idea | 4 |
 | question | 1 |
 | problem | 1 |
 
 | Status | Count |
 | --- | --- |
-| new | 12 |
+| new | 14 |
 
-Mean rating **4.2** across 10 rated submissions.
+Mean rating **4.33** across 12 rated submissions.
 
 ---
 
@@ -66,12 +66,12 @@ Mean rating **4.2** across 10 rated submissions.
 
 First-party analytics, stored in this install's own PostgreSQL and never sent anywhere. Last **30** days.
 
-**6** organizations, **6** users.
+**7** organizations, **7** users.
 
 | Action | Events | Organizations | Users |
 | --- | --- | --- | --- |
 | `screen.trust` | 18 | 6 | 6 |
-| `screen.dashboard` | 14 | 6 | 6 |
+| `screen.dashboard` | 15 | 7 | 7 |
 | `seal.now` | 12 | 6 | 6 |
 | `screen.accounting` | 7 | 1 | 1 |
 | `attestation.enabled` | 6 | 6 | 6 |
@@ -81,9 +81,10 @@ First-party analytics, stored in this install's own PostgreSQL and never sent an
 | `screen.analytics` | 4 | 2 | 2 |
 | `screen.sales` | 4 | 1 | 1 |
 | `proof.verified` | 3 | 1 | 1 |
-| `screen.accounts` | 2 | 1 | 1 |
-| `screen.settings` | 2 | 1 | 1 |
-| `screen.documents` | 2 | 1 | 1 |
 | `screen.inventory` | 2 | 1 | 1 |
+| `screen.settings` | 2 | 1 | 1 |
+| `feedback.submitted` | 2 | 1 | 1 |
+| `screen.documents` | 2 | 1 | 1 |
+| `screen.accounts` | 2 | 1 | 1 |
 
 The events table has **no free-text payload column**. An open payload is how an analytics table ends up inside the compliance boundary, so actions are allow-listed and the context keys are too.

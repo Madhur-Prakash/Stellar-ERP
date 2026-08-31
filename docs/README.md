@@ -25,8 +25,9 @@ Pick the row that matches what you are trying to do.
 
 | I want to… | Read, in order |
 | --- | --- |
+| **Watch the demo** | [youtu.be/-84c0-0rdnk](https://youtu.be/-84c0-0rdnk) - 88s, or it plays inline at the top of the [README](../README.md) |
 | **Record the demo** | [Demo video](demo-video.md) - shot list, timings and narration |
-| **See the product without running it** | [Screenshots](screenshots.md) - twenty-one shots, including the verifier passing **and** failing |
+| **See the product without running it** | [Screenshots](screenshots.md) - twenty-two shots, including the verifier passing **and** failing |
 | **Check a proof myself** | The [live verifier](https://stellar-erp-sigma.vercel.app/verify) - no account, no wallet, no backend of ours in the path |
 | **Check what this install has actually done** | [Evidence](evidence.md) - regenerate it with `make evidence`, then check the explorer links rather than the claims |
 | **Just run the thing** | [Commands](commands.md#2-first-time-setup) - every task as a `make` target and as raw commands |
@@ -58,7 +59,7 @@ Pick the row that matches what you are trying to do.
 | [**Security**](security.md) | The threat model and every control, each with its rationale - network edge, authentication, sessions, authorization, input handling, secrets, and rate limiting. |
 | [**Security audit**](security-audit.md) | A full review of the exposure surface: sixteen findings, each verified against the code, with the fix applied and how to confirm it. Several carry supersession notes where the system has since changed, and the limits the third ledger adds are stated there rather than left implied. |
 | [**Commands**](commands.md) | Every task twice: as a `make` target and as the raw commands it runs. Prerequisites, first-time setup, running it, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, quality gates, release builds, production, and a troubleshooting table. |
-| [**Screenshots**](screenshots.md) | Twenty-one shots at full size in four groups - the verifier (passing and failing), the product, monitoring, and seven mobile viewports - each with what it shows and why that shot rather than another, plus the rules the set is held to. The root README carries four. |
+| [**Screenshots**](screenshots.md) | Twenty-two shots at full size in four groups - the verifier (passing and failing), the product, monitoring, and seven mobile viewports - each with what it shows and why that shot rather than another, plus the rules the set is held to. The root README carries four. |
 | [**Demo video**](demo-video.md) | A three-minute script built around one moment: a proof verifies, one digit changes, and it fails. Shot list, narration, and the mistakes that ruin a take. |
 | [**Evidence**](evidence.md) | **The only generated page here** - `make evidence` writes it from this install's own database and the live ledger. Wallet interactions, the feedback summary, and the usage rollup, with a public explorer link beside every on-chain figure. It marks its own seeded rows and the generator exits non-zero while the headline count is short, so it cannot quietly overstate. |
 | [**Development**](development.md) | Local setup, backend and frontend conventions, testing, the pre-PR checklist, debugging, and the gotchas hit while building this. |

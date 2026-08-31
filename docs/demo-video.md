@@ -219,12 +219,19 @@ github.com/Madhur-Prakash/Stellar-ERP
 2. Put the link in [SUBMISSION.md](../SUBMISSION.md) row 7 and in the README.
 3. Pull stills from the take for [Screenshots](screenshots.md) if any beat it.
 
-**Steps 2 and 3 are already satisfied for the launch video.** It is published and
-embedded at the top of the [README](../README.md):
+**Steps 2 and 3 are already satisfied for the launch video.** It is public on YouTube
+and embedded at the top of the [README](../README.md):
 
-<https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e>
+| | |
+| --- | --- |
+| **YouTube** | <https://youtu.be/-84c0-0rdnk> |
+| **GitHub upload** | <https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e> |
 
-And the screenshot requirement is met independently - [twenty-one shots](screenshots.md),
+Two hosts on purpose: YouTube is the durable link for a submission form and works for
+anyone, while the GitHub upload is what lets the README play inline without sending a
+reader to a third-party site first.
+
+And the screenshot requirement is met independently - [twenty-two shots](screenshots.md),
 including the verifier both **passing** and **failing**, captured from the running app
 rather than pulled from video frames. Stills from a take are a fallback when there is no
 running deployment to capture; there is one now, so they were shot directly.

@@ -529,6 +529,39 @@ history, and it never tells you when it has stopped - which is why
 `make` resolves the path for you, which matters because the script runs from
 `backend/` and a relative path would be resolved from there.
 
+### Evidence for the submission
+
+Four targets that read the live database and the live ledger rather than asserting
+anything about them.
+
+| make | raw |
+| --- | --- |
+| `make evidence` | `cd backend && uv run python scripts/submission_evidence.py --out ../docs/evidence.md` |
+| `make interactions n=2` | `cd backend && uv run python scripts/demo_interactions.py --rounds 2` |
+| `make interactions-list` | `cd backend && uv run python scripts/demo_interactions.py --list` |
+| `make feedback-summary` | `docker compose exec -T postgres psql -U stellarerp -d stellarerp -v ON_ERROR_STOP=1 < backend/scripts/feedback_summary.sql` |
+
+**`evidence`** regenerates [docs/evidence.md](evidence.md) with wallet interactions, the
+feedback summary and the usage rollup, printing a public explorer link beside every
+on-chain figure. It **exits non-zero while the signed-interaction count is under ten**,
+so it cannot be wired into CI and quietly pass while the submission claims otherwise.
+
+**`interactions`** posts one journal entry and seals it, `n` times. Seals are the
+repeatable half of the interaction count - registrations are one per organization - and
+`Seal now` is deliberately idempotent, so a second press with nothing outstanding writes
+no transaction. An entry has to be posted *between* seals, which is the loop this
+automates. Everything goes through `PostingService` and `SealService.seal_now`, so the
+transactions are real and the invariants are the same as pressing the button.
+
+> Run against a seeded organization these are seeded-organization transactions. Real
+> on-chain, real signatures, but a strict reading of "**user** wallet interactions" would
+> discount them - register a real organization and pass `--org` if that matters.
+
+**`feedback-summary`** reports the `feedback` table with seeded rows counted separately
+from real ones, using the same marker `submission_evidence.py` uses so the two cannot
+drift. It never prints a combined total, because a total is a claim about users that the
+number does not support - see [`feedback_summary.sql`](../backend/scripts/feedback_summary.sql).
+
 ---
 
 ## 6. Seeing the deployed contract
@@ -830,6 +863,7 @@ replace a production database with one mistyped filename.
 | `migrate`, `migration`, `rollback`, `db-check`, `db-history`, `db-reset` | [Database](#4-database) |
 | `contract-up`, `contract-test`, `contract-lint`, `contract-build`, `contract-key`, `contract-deploy` | [The proof ledger contract](#5-the-proof-ledger-contract) |
 | `seal-worker`, `verify-proof` | [The seal worker](#the-seal-worker) |
+| `evidence`, `interactions`, `interactions-list`, `feedback-summary` | [Evidence for the submission](#evidence-for-the-submission) |
 | `check`, `lint`, `format`, `typecheck`, `test`, `test-cov` | [Quality gates](#8-quality-gates) |
 | `build`, `build-desktop`, `installer-deps` | [Building for release](#9-building-for-release) |
 | `prod-up`, `prod-down`, `prod-logs`, `prod-migrate`, `prod-config`, `backup`, `restore` | [Production](#10-production) |

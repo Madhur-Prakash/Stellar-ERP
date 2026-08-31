@@ -6,6 +6,7 @@
 
 [![Live demo](https://img.shields.io/badge/live_demo-stellar--erp--sigma.vercel.app-2EA043?style=flat-square&logo=vercel&logoColor=white)](https://stellar-erp-sigma.vercel.app)
 [![Verifier](https://img.shields.io/badge/verifier-no_account_needed-4C8BF5?style=flat-square)](https://stellar-erp-sigma.vercel.app/verify)
+[![Demo video](https://img.shields.io/badge/demo_video-YouTube-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://youtu.be/-84c0-0rdnk)
 [![Licence](https://img.shields.io/badge/licence-MIT-2EA043?style=flat-square)](LICENSE)
 ![Ledgers](https://img.shields.io/badge/ledgers-3-8E5B0C?style=flat-square)
 ![Contract](https://img.shields.io/badge/Soroban-deployed_on_testnet-1C6B4C?style=flat-square)
@@ -18,11 +19,17 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?style=flat-square&logo=flutter&logoColor=white)
 
-[Live demo](#live-demo) · [The third ledger](#the-third-ledger) · [Verify a proof](#verifying-a-proof) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Submission](SUBMISSION.md)
+[Live demo](#live-demo) · [Demo video](https://youtu.be/-84c0-0rdnk) · [The third ledger](#the-third-ledger) · [Verify a proof](#verifying-a-proof) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Submission](SUBMISSION.md)
 
 </div>
 
 https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e
+
+<div align="center"><sub>
+
+**Demo video** - plays above on GitHub, or watch it on [YouTube](https://youtu.be/-84c0-0rdnk)
+
+</sub></div>
 
 > **This is a fork of [Madhur-Prakash/Personal-ERP](https://github.com/Madhur-Prakash/Personal-ERP),
 > extended with a third ledger on Stellar.** Personal ERP is the self-hosted
@@ -340,9 +347,9 @@ is protected by every rule that protects a hand-entered one.
 </tr>
 </table>
 
-Four of twenty-one. The rest - the audit log with the full seal lifecycle, the
-dashboard, analytics, the double-entry core, roles, the feedback widget, three
-**monitoring** shots, and six more mobile viewports - are in
+Four of twenty-two. The rest - the audit log with the full seal lifecycle, the
+dashboard, analytics, the double-entry core, roles, the feedback widget and its
+table, three **monitoring** shots, and six more mobile viewports - are in
 **[docs/screenshots.md](docs/screenshots.md)**, at full size, each with what it shows and
 why that shot rather than another.
 

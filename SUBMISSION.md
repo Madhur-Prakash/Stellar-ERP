@@ -4,7 +4,7 @@
 
 **Stellar ERP - the third ledger.**
 
-[Live demo](https://stellar-erp-sigma.vercel.app) · [Repository](https://github.com/Madhur-Prakash/Stellar-ERP) · [Readme](README.md) · [Proof ledger](docs/attestation.md) · [Screenshots](docs/screenshots.md) · [Commands](docs/commands.md) · [Demo script](docs/demo-video.md)
+[Live demo](https://stellar-erp-sigma.vercel.app) · [Demo video](https://youtu.be/-84c0-0rdnk) · [Repository](https://github.com/Madhur-Prakash/Stellar-ERP) · [Readme](README.md) · [Proof ledger](docs/attestation.md) · [Screenshots](docs/screenshots.md) · [Commands](docs/commands.md) · [Demo script](docs/demo-video.md)
 
 </div>
 
@@ -16,13 +16,13 @@
 | --- | --- | --- | --- |
 | 1 | Public GitHub repository | Done | [Madhur-Prakash/Stellar-ERP](https://github.com/Madhur-Prakash/Stellar-ERP) |
 | 2 | README with complete documentation | Done | [README.md](README.md) + [fourteen documents](docs/README.md) |
-| 3 | Minimum 15+ meaningful commits | Done - **34** | `git log --oneline \| wc -l` |
+| 3 | Minimum 15+ meaningful commits | Done - **38** | `git log --oneline \| wc -l` |
 | 4 | Live demo link | Done | **[stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app)** - the [verifier](https://stellar-erp-sigma.vercel.app/verify) runs there with no backend. See [Deploying the demo](#deploying-the-demo) |
 | 5 | Contract deployment address | Done | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
-| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | Done - **21** | All three categories covered, plus the verifier passing **and failing**. [docs/screenshots.md](docs/screenshots.md); four in the [README](README.md#screenshots) |
-| 7 | Demo video link | Done | Uploaded and embedded at the top of the [README](README.md) - see [Demo video](#demo-video) |
+| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | Done - **22** | All three categories covered, plus the verifier passing **and failing**. [docs/screenshots.md](docs/screenshots.md); four in the [README](README.md#screenshots) |
+| 7 | Demo video link | Done | **[youtu.be/-84c0-0rdnk](https://youtu.be/-84c0-0rdnk)** - also embedded at the top of the [README](README.md). See [Demo video](#demo-video) |
 | 8 | Proof of 10+ user wallet interactions | **In progress - 8 of 10** | 6 registrations + 2 confirmed seals, each resolving on a public explorer. `make evidence` - see [Wallet interactions](#wallet-interactions) |
-| 9 | Basic user feedback summary | **Outstanding - seeded only** | 12 submissions exist, but `seed_demo.py` wrote all 12. The widget is live; real submissions are not. See [docs/evidence.md](docs/evidence.md) |
+| 9 | Basic user feedback summary | **In progress - 2 real** | 14 rows, of which `seed_demo.py` wrote 12. The two arriving through the widget are real. See [Feedback](#feedback) and [docs/evidence.md](docs/evidence.md) |
 
 **Seven of nine are done.** The two that are not both need other people, and neither can
 be closed by writing anything into this repository:
@@ -30,9 +30,10 @@ be closed by writing anything into this repository:
 - **Item 8 needs two more on-chain interactions.** Eight exist and every one resolves on
   a public explorer. Two more organizations switching sealing on would do it - the
   generator refuses to report ten until there are ten, so this cannot be rounded up.
-- **Item 9 needs real submissions.** All twelve rows in the feedback table were written
-  by the seeder, and `docs/evidence.md` says so at the top of the page rather than
-  letting the count speak for itself.
+- **Item 9 has started.** Two submissions have arrived through the widget, against
+  twelve written by the seeder. `docs/evidence.md` declares that split at the top of the
+  page rather than letting the total speak for itself. A handful more real ones closes
+  it.
 
 That distinction is the whole point of [docs/evidence.md](docs/evidence.md): it is
 generated from the live database and the live ledger, it marks its own seeded rows, and
@@ -127,20 +128,32 @@ arithmetic a submission should not contain.
 ### Getting the last two
 
 Each organization contributes one `register` plus one transaction per seal, so **two
-more seals by any organization closes it** - or one more organization switching sealing
-on and sealing once. Every account is funded by Friendbot, so it costs nothing:
+more seals by any organization closes it**. Every account is funded by Friendbot, so it
+costs nothing:
 
-1. Register an organization, post two or three journal entries.
-2. Open **Trust**, switch sealing on. That funds the account and registers the book -
-   two on-chain transactions already.
-3. Press **Seal now**. One more.
-4. `make evidence` to regenerate the table.
+```bash
+make interactions n=2     # posts an entry and seals it, twice
+make evidence             # regenerate the table
+```
+
+Rounds rather than repeats, because `Seal now` is idempotent: with nothing outstanding
+it writes no transaction, so an entry has to be posted *between* seals. See
+[Commands](docs/commands.md#evidence-for-the-submission).
+
+By hand it is the same loop - post a journal entry, open **Trust**, press **Seal now** -
+or register a fresh organization, which contributes its `register` transaction the
+moment sealing is switched on.
+
+> Run against a seeded organization, these are seeded-organization transactions. Real
+> on-chain and really signed, but a strict reading of "**user** wallet interactions"
+> would discount them. `make interactions --org "…"` against an organization registered
+> with a real email produces interactions that survive that reading.
 
 ---
 
 ## Screenshots
 
-**Twenty-one, covering all three required categories.** Full gallery with what each shot
+**Twenty-two, covering all three required categories.** Full gallery with what each shot
 shows and why: **[docs/screenshots.md](docs/screenshots.md)**. Four are carried in the
 [README](README.md#screenshots).
 
@@ -155,7 +168,7 @@ shows and why: **[docs/screenshots.md](docs/screenshots.md)**. Four are carried 
 
 | Required | Covered by |
 | --- | --- |
-| **Product UI** | `product-ui.png` (Trust, two seals, unbroken chain), `dashboard.png`, `accounting.png`, `accounting-charts.png`, `audit-log.png`, `roles.png`, `feedback.png` |
+| **Product UI** | `product-ui.png` (Trust, two seals, unbroken chain), `dashboard.png`, `accounting.png`, `accounting-charts.png`, `audit-log.png`, `roles.png`, `feedback.png`, `feedback-summary.png` |
 | **Mobile responsive** | `mobile.png` (Trust, 360 × 740) plus six more viewports: dashboard, analytics, reconciliation, seal history, audit log, settings |
 | **Analytics** | `analytics.png` - period against the same period last year, tiles reading *"no prior data to compare"* rather than a fabricated delta |
 | **Monitoring** | `monitoring.png` - `GET /attestation/status` showing `days_unsealed` and `chain.agrees_with_local`, plus `/health/ready`. `monitoring-chain-check.png` is the same reconciliation from the UI. Sentry is wired but off by default, [deliberately](backend/app/core/monitoring.py) |
@@ -220,17 +233,22 @@ Three things that will otherwise cost an evening:
 
 ### 1. The launch video - built, rendered
 
-**Published, and embedded at the top of the [README](README.md):**
+**Published on YouTube:** <https://youtu.be/-84c0-0rdnk>
+
+Also embedded at the top of the [README](README.md), where GitHub plays it inline:
 <https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e>
+
+Two hosts on purpose. The YouTube link is the durable one to paste into a submission
+form and is viewable by anyone; the GitHub upload is what makes the README play without
+sending a reader to a third-party site first.
 
 88s, 1920x1080, narrated, with a music bed. A HyperFrames project: ten HTML compositions
 on a seek-safe timeline, rendered to MP4. The source is in `videos/stellar-erp-launch/`
 and every frame is re-renderable; `renders/video-v1.mp4` is the first cut, kept for
 comparison (same visuals, rougher narration, no music).
 
-GitHub hosts the upload, so the README plays it inline with nothing to click through
-and no third-party player. A local copy sits in `docs/videos/`, which is gitignored -
-the published asset above is the canonical link, not the file.
+A local copy sits in `docs/videos/`, which is gitignored - the published links above are
+canonical, not the file.
 
 Arc: your books balance and are worthless to your bank → two ledgers, one password →
 keep them private or publish them, both fail → **the thesis** → the third ledger →
@@ -267,11 +285,30 @@ more convincing one. Recording it needs a screen recorder, which is yours to run
 The in-app widget is live on every screen and **works signed out**, which is the
 part that matters: somebody who cannot get past the sign-in screen is exactly the
 person whose report is worth having, and a form behind the sign-in would never hear
-from them. It lands in `POST /feedback`.
+from them. It lands in `POST /feedback`, and it sends the route the person was on -
+which is what turns "this is confusing" into a filed bug.
 
-`make evidence` summarises what has been submitted - counts by kind and status, and
-the mean rating with its sample size attached, because a mean over three ratings is
-noise and quoting it alone would be misleading.
+**Where the count stands: 14 rows, 12 of them seeded.**
+
+| | |
+| --- | --- |
+| Rows in the table | 14 |
+| Written by `scripts/seed_demo.py` | 12 |
+| **Arrived through the widget** | **2** |
+
+The seeded twelve exist so the inbox screen has something in it for a screenshot, and
+they are marked in the database rather than merely remembered - `contact_email` carries
+a reserved-domain address, which is how both `make evidence` and
+[`scripts/feedback_summary.sql`](backend/scripts/feedback_summary.sql) tell the two
+apart. In [the screenshot](docs/screenshots.md#12--the-feedback-table) the timestamps
+show it too: the seeded batch all landed in one run at `10:14:34`.
+
+**Two real submissions is not yet a summary**, and the honest description of item 9 is
+*in progress* rather than done. What would close it is a handful more through the
+public link - the widget needs no account, so the only cost is asking.
+
+`make evidence` prints the mean rating with its sample size attached, because a mean
+over three ratings is noise and quoting it alone would be misleading.
 
 ---
 
