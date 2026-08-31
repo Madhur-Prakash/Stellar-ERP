@@ -340,10 +340,11 @@ is protected by every rule that protects a hand-entered one.
 </tr>
 </table>
 
-Four of eighteen. The rest - the audit log with the full seal lifecycle, the dashboard,
-analytics, the double-entry core, roles, the feedback widget, and six more mobile
-viewports - are in **[docs/screenshots.md](docs/screenshots.md)**, at full size, each
-with what it shows and why that shot rather than another.
+Four of twenty-one. The rest - the audit log with the full seal lifecycle, the
+dashboard, analytics, the double-entry core, roles, the feedback widget, three
+**monitoring** shots, and six more mobile viewports - are in
+**[docs/screenshots.md](docs/screenshots.md)**, at full size, each with what it shows and
+why that shot rather than another.
 
 ---
 

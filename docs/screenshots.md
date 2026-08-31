@@ -4,7 +4,7 @@
 
 **Every screen, shot by shot - and why each shot rather than another.**
 
-![Captured](https://img.shields.io/badge/captured-18-2EA043?style=flat-square)
+![Captured](https://img.shields.io/badge/captured-21-2EA043?style=flat-square)
 ![Verifier](https://img.shields.io/badge/verifier-pass_and_fail-4C8BF5?style=flat-square)
 ![Mobile](https://img.shields.io/badge/mobile-360_%C3%97_740-8957E5?style=flat-square)
 ![Theme](https://img.shields.io/badge/capture-light_theme-F6F8FA?style=flat-square)
@@ -17,8 +17,9 @@
 
 ---
 
-Eighteen shots, in three groups: **[the verifier](#the-verifier)** (3), **[the product](#the-product)** (8),
-and **[mobile](#mobile)** (7). The [root README](../README.md#screenshots) carries four of them.
+Twenty-one shots in four groups: **[the verifier](#the-verifier)** (3),
+**[the product](#the-product)** (8), **[monitoring](#monitoring)** (3), and
+**[mobile](#mobile)** (7). The [root README](../README.md#screenshots) carries four.
 
 Every shot is a real install against the real testnet contract.
 `Bharat Cold Storage (demo)` is a seeded organization from `scripts/seed_demo.py`,
@@ -29,6 +30,7 @@ honest for a screenshot and are explicitly not evidence.
 | --- | --- |
 | [The verifier](#the-verifier) | `verify.png` · `verify-verdict.png` · `verify-tampered.png` |
 | [The product](#the-product) | `product-ui.png` · `audit-log.png` · `dashboard.png` · `analytics.png` · `accounting.png` · `accounting-charts.png` · `roles.png` · `feedback.png` |
+| [Monitoring](#monitoring) | `monitoring.png` · `monitoring-chain-check.png` · `seal-nothing-to-commit.png` |
 | [Mobile](#mobile) | `mobile.png` · `mobile-trust-seals.png` · `mobile-dashboard.png` · `mobile-analytics.png` · `mobile-reconciliation.png` · `mobile-audit-log.png` · `mobile-settings.png` |
 
 ---
@@ -204,6 +206,60 @@ exactly the person whose report is worth having.
 
 ---
 
+## Monitoring
+
+Three shots for the checklist's *monitoring* half. Sentry is wired but **off** -
+`SENTRY_DSN` is empty by default, and
+[monitoring.py](../backend/app/core/monitoring.py) argues that is a requirement rather
+than a gap: *"a hard dependency on a third-party error tracker would contradict [the
+promise] on the same page that promises it."* So this install monitors itself.
+
+### 12 · The two figures that matter
+
+![Terminal showing attestation status and health checks](screenshots/monitoring.png)
+
+<sub><code>monitoring.png</code> · <code>GET /attestation/status</code> and <code>GET /health/ready</code></sub>
+
+| Field | Why it is the one to watch |
+| --- | --- |
+| `days_unsealed: null`, `unsealed_entries: 0` | Nothing is waiting. A rising `days_unsealed` is the only early warning that sealing has quietly stopped |
+| `chain.agrees_with_local: true` | The contract's head and root match this database's. Disagreement means the two ledgers have diverged - the most important alarm this system has |
+| `chain.head: 2`, `chain.root: e51e07c6…` | Read back **from the contract**, not from our own tables |
+| `warnings: [...]` | The signing-key limitation is returned by the **API**, not only rendered in the UI - so a monitoring integration inherits the caveat rather than losing it |
+| `/health/ready` → `database: up`, `redis: up` | The ordinary liveness half. It answers with **no token and no Host header** - it is in `HOST_EXEMPT_PROBES`, because a probe reaching the app directly cannot satisfy conditions a proxy would normally arrange |
+
+A green uptime chart shows none of this. *"The service is up"* and *"the books are still
+being sealed"* are different questions, and only the second one is what this product
+promises.
+
+### 13 · Monitoring from the UI
+
+![Trust screen after checking the chain](screenshots/monitoring-chain-check.png)
+
+<sub><code>monitoring-chain-check.png</code> · after pressing <b>Check the chain</b></sub>
+
+The same reconciliation as a button, for an operator who is not going to curl anything:
+**"The chain and your database agree."** It re-reads the contract live rather than
+reporting a cached status, which is why it is a button and not a badge.
+
+### 14 · A seal it refused to write
+
+![Seal now reporting nothing to commit](screenshots/seal-nothing-to-commit.png)
+
+<sub><code>seal-nothing-to-commit.png</code> · <b>Seal now</b> with an empty backlog</sub>
+
+**"Everything is already sealed - there was nothing new to commit."**
+
+Pressing the button with `WAITING TO BE SEALED · 0` writes **no transaction**. A no-op
+seal would be a junk transaction on a public ledger and a lie in the seal history, where
+every row is supposed to mean a batch of entries was committed. The button is
+idempotent, and says so rather than appearing to work.
+
+It is also why [`make interactions`](commands.md) exists: moving the on-chain
+interaction count needs an entry posted *between* seals, not a second press.
+
+---
+
 ## Mobile
 
 Seven viewports, captured in Chrome's device toolbar at **360 × 740** (Samsung) and
@@ -215,7 +271,7 @@ Seven viewports, captured in Chrome's device toolbar at **360 × 740** (Samsung)
 > for a submission or a slide, re-capture with DevTools undocked or crop to the viewport.
 > Nothing about the layout needs to change; only the framing does.
 
-### 12 · Trust on a phone
+### 15 · Trust on a phone
 
 ![Trust screen at 360 by 740](screenshots/mobile.png)
 
@@ -226,7 +282,7 @@ scroll, and the tiles stacked one per row instead of three across. The amber sig
 banner survives the narrow viewport intact rather than being hidden at small widths -
 the limitation is not something the layout is allowed to drop.
 
-### 13 · Seal history on a phone
+### 16 · Seal history on a phone
 
 ![Seal history stacked on mobile](screenshots/mobile-trust-seals.png)
 
@@ -236,7 +292,7 @@ the limitation is not something the layout is allowed to drop.
 truncated. A 64-character hash is the hardest thing on this screen to lay out narrow, and
 it is readable.
 
-### 14 · Dashboard on a phone
+### 17 · Dashboard on a phone
 
 ![Dashboard at 414 by 896](screenshots/mobile-dashboard.png)
 
@@ -244,7 +300,7 @@ it is readable.
 
 The eight-tile figure grid collapsed to one column, amounts intact.
 
-### 15 · Analytics on a phone
+### 18 · Analytics on a phone
 
 ![Analytics at 360 by 740](screenshots/mobile-analytics.png)
 
@@ -254,7 +310,7 @@ The period selector becomes a full-width control, and the comparison line wraps 
 lines rather than truncating - the window a figure covers is not something to hide on a
 small screen.
 
-### 16 · Reconciliation on a phone
+### 19 · Reconciliation on a phone
 
 ![Reconciliation table on mobile](screenshots/mobile-reconciliation.png)
 
@@ -265,7 +321,7 @@ small screen.
 still legible. Financial tables are where responsive design usually gives up and
 scrolls sideways.
 
-### 17 · Audit log on a phone
+### 20 · Audit log on a phone
 
 ![Audit log on mobile](screenshots/mobile-audit-log.png)
 
@@ -280,7 +336,7 @@ to a bank is the moment a business's opaque namespace stops being opaque to that
 it belongs in the record at the same severity as switching sealing on. The bundle behind
 [shots 1-3](#the-verifier) is the one this row is recording.
 
-### 18 · Settings on a phone
+### 21 · Settings on a phone
 
 ![Security settings on mobile](screenshots/mobile-settings.png)
 
@@ -316,7 +372,7 @@ the verifier pair. The [demo video](demo-video.md) covers the same ground in mot
 | --- | --- |
 | [Root README](../README.md#screenshots) | `verify` · `verify-tampered` · `product-ui` · `mobile` |
 | [SUBMISSION.md](../SUBMISSION.md#screenshots) | Product UI, mobile responsive and analytics, mapped to checklist item 6 |
-| This page | All eighteen |
+| This page | All twenty-one |
 
 Adding a shot means dropping the file in [`screenshots/`](screenshots/) and adding a
 section here. Only promote it into the README if it displaces one of the four.

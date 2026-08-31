@@ -19,7 +19,7 @@
 | 3 | Minimum 15+ meaningful commits | Done - **34** | `git log --oneline \| wc -l` |
 | 4 | Live demo link | Done | **[stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app)** - the [verifier](https://stellar-erp-sigma.vercel.app/verify) runs there with no backend. See [Deploying the demo](#deploying-the-demo) |
 | 5 | Contract deployment address | Done | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
-| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | Done - **18** | All three categories covered, plus the verifier passing **and failing**. [docs/screenshots.md](docs/screenshots.md); four in the [README](README.md#screenshots) |
+| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | Done - **21** | All three categories covered, plus the verifier passing **and failing**. [docs/screenshots.md](docs/screenshots.md); four in the [README](README.md#screenshots) |
 | 7 | Demo video link | Done | Uploaded and embedded at the top of the [README](README.md) - see [Demo video](#demo-video) |
 | 8 | Proof of 10+ user wallet interactions | **In progress - 8 of 10** | 6 registrations + 2 confirmed seals, each resolving on a public explorer. `make evidence` - see [Wallet interactions](#wallet-interactions) |
 | 9 | Basic user feedback summary | **Outstanding - seeded only** | 12 submissions exist, but `seed_demo.py` wrote all 12. The widget is live; real submissions are not. See [docs/evidence.md](docs/evidence.md) |
@@ -140,7 +140,7 @@ on and sealing once. Every account is funded by Friendbot, so it costs nothing:
 
 ## Screenshots
 
-**Eighteen, covering all three required categories.** Full gallery with what each shot
+**Twenty-one, covering all three required categories.** Full gallery with what each shot
 shows and why: **[docs/screenshots.md](docs/screenshots.md)**. Four are carried in the
 [README](README.md#screenshots).
 
@@ -157,7 +157,8 @@ shows and why: **[docs/screenshots.md](docs/screenshots.md)**. Four are carried 
 | --- | --- |
 | **Product UI** | `product-ui.png` (Trust, two seals, unbroken chain), `dashboard.png`, `accounting.png`, `accounting-charts.png`, `audit-log.png`, `roles.png`, `feedback.png` |
 | **Mobile responsive** | `mobile.png` (Trust, 360 × 740) plus six more viewports: dashboard, analytics, reconciliation, seal history, audit log, settings |
-| **Analytics / monitoring** | `analytics.png` - period against the same period last year, tiles reading *"no prior data to compare"* rather than a fabricated delta |
+| **Analytics** | `analytics.png` - period against the same period last year, tiles reading *"no prior data to compare"* rather than a fabricated delta |
+| **Monitoring** | `monitoring.png` - `GET /attestation/status` showing `days_unsealed` and `chain.agrees_with_local`, plus `/health/ready`. `monitoring-chain-check.png` is the same reconciliation from the UI. Sentry is wired but off by default, [deliberately](backend/app/core/monitoring.py) |
 
 Three shots carry limitations that a more flattering capture would have cropped: the
 amber signing-key banner on Trust, the *"It does not mean"* card on the verifier, and

@@ -364,6 +364,22 @@ seal-worker: ## Run the seal worker on its own (SEAL_WORKER_ENABLED=false in the
 evidence: ## Generate submission evidence (wallet interactions, feedback, usage)
 	@$(BACKEND) uv run python scripts/submission_evidence.py --out ../docs/evidence.md || echo "  (see the note above - the file was still written)"
 
+# One posted entry plus one seal per round, which is how the interaction count moves.
+# `Seal now` is idempotent - with nothing outstanding it writes no transaction, because
+# a no-op seal would be a junk entry on a public ledger - so rounds, not repeats.
+#
+# `n=` rather than a bare number so the intent is readable at the call site, and `org=`
+# because the default (first registered book) is rarely the one you mean once there is
+# more than one.
+.PHONY: interactions
+interactions: ## Post an entry and seal it, n times: make interactions n=2 [org="Acme"]
+	@$(BACKEND) uv run python scripts/demo_interactions.py \
+		--rounds $(or $(n),2) $(if $(org),--org "$(org)",)
+
+.PHONY: interactions-list
+interactions-list: ## List organizations and whether each has a book on chain
+	@$(BACKEND) uv run python scripts/demo_interactions.py --list
+
 .PHONY: verify-proof
 verify-proof: ## Check an exported proof bundle: make verify-proof f=bundle.json
 	@test -n "$(f)" || (echo "Usage: make verify-proof f=path/to/bundle.json" && exit 1)

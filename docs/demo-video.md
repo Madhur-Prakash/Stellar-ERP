@@ -224,7 +224,7 @@ embedded at the top of the [README](../README.md):
 
 <https://github.com/user-attachments/assets/937cacee-1728-4db6-bf98-d811abc2ab1e>
 
-And the screenshot requirement is met independently - [eighteen shots](screenshots.md),
+And the screenshot requirement is met independently - [twenty-one shots](screenshots.md),
 including the verifier both **passing** and **failing**, captured from the running app
 rather than pulled from video frames. Stills from a take are a fallback when there is no
 running deployment to capture; there is one now, so they were shot directly.

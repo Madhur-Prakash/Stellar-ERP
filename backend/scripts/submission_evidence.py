@@ -166,7 +166,14 @@ def render(data: dict[str, Any]) -> str:
             "`scripts/seed_demo.py`, not by real users. Seeded rows are fine for a "
             "screenshot or a demo recording and are **not** evidence: the checklist's "
             "*user feedback summary* and *10+ wallet interactions* both mean real "
-            "people. Run `scripts/seed_demo.py --wipe` before quoting any of this."
+            "people. Subtract the seeded counts above before quoting any figure here.\n>\n"
+            "> **`scripts/seed_demo.py --wipe` is not the fix, and will make this worse.** "
+            "It deletes seeded organizations and users, and a seeded organization that "
+            "switched sealing on is carrying `register` and `seal` transactions in the "
+            "wallet-interaction count. Wiping removes the rows this report reads, so the "
+            "count drops to whatever the real accounts have done - which may be nothing. "
+            "The transactions themselves stay on chain forever; only the ability to "
+            "report them goes. Wipe only when deliberately rebuilding from scratch."
         )
         add("")
     add("---")
