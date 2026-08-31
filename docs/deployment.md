@@ -9,7 +9,7 @@
 ![Self-hosted](https://img.shields.io/badge/self--hosted-your_server-6E7681?style=flat-square)
 
 <!-- nav:start -->
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Demo video](demo-video.md) · [Development](development.md) · **Deployment**
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Screenshots](screenshots.md) · [Demo video](demo-video.md) · [Evidence](evidence.md) · [Development](development.md) · **Deployment**
 <!-- nav:end -->
 
 </div>
@@ -48,6 +48,36 @@ raised to about 25% of RAM on anything larger.
 
 ---
 
+## 0. Two shapes, and which one this is
+
+| Shape | What runs where | When |
+| --- | --- | --- |
+| **All-in-one** | Everything from `docker-compose.prod.yml` on one VPS, one hostname, your terminator in front | The default. **The rest of this document describes this shape.** |
+| **Split** | Web client built to static files on a CDN; API, Postgres and Redis on a private server | When the frontend should be globally cached, or the API must not share a hostname with it |
+
+**This repository's own deployment is the split shape.** The web client is on Vercel
+at <https://stellar-erp-sigma.vercel.app>; the API is on a private Ubuntu server that
+is not published. Everything in sections 1-8 still applies to the API half — the split
+changes three things and nothing else:
+
+- **`CORS_ORIGINS` must name the client's origin exactly.** Two hostnames means every
+  API call is cross-origin. Production boot rejects `*`, so this is a list of `https://`
+  origins or the service does not start.
+- **`ALLOWED_HOSTS` must name the API's own hostname**, not the client's. Get these two
+  backwards and you get `400 Invalid host header` on every call while health probes
+  keep reporting the service up.
+- **The client is built, not served by us.** `VITE_*` values are inlined at build time,
+  so changing the contract id means a rebuild and a redeploy of the static bundle — a
+  restart picks up nothing. [`frontend/README.md`](../frontend/README.md) has the build.
+
+**The verifier is the exception to all of it.** `/verify` talks to a public Soroban RPC
+endpoint from the reader's browser and never calls our API, so it works on a static
+host with no backend reachable at all. That is not a deployment trick — it is the
+reason the check is worth anything, and [why the encoding is implemented
+twice](attestation.md).
+
+---
+
 ## 1. Prepare the server
 
 ```bash
@@ -75,7 +105,7 @@ sudo apt install -y unattended-upgrades && sudo dpkg-reconfigure -plow unattende
 
 ```bash
 sudo mkdir -p /srv/stellarerp && sudo chown "$USER" /srv/stellarerp
-git clone <repo> /srv/stellarerp && cd /srv/stellarerp
+git clone https://github.com/Madhur-Prakash/Stellar-ERP.git /srv/stellarerp && cd /srv/stellarerp
 cp .env.sample .env
 ```
 

@@ -12,7 +12,7 @@ client mirrors.
 ![TanStack](https://img.shields.io/badge/TanStack-Router_Query_Table-FF4154?style=flat-square&logo=reactquery&logoColor=white)
 ![ESLint](https://img.shields.io/badge/ESLint-type--aware-4B32C3?style=flat-square&logo=eslint&logoColor=white)
 
-[Architecture](../docs/architecture.md#frontend-architecture) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Commands](../docs/commands.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
+[Live demo](https://stellar-erp-sigma.vercel.app) · [Architecture](../docs/architecture.md#frontend-architecture) · [Proof ledger](../docs/attestation.md) · [API](../docs/api.md) · [Screenshots](../docs/screenshots.md) · [Commands](../docs/commands.md) · [Development](../docs/development.md#frontend-conventions) · [Security](../docs/security.md)
 
 </div>
 
@@ -98,6 +98,28 @@ npm test             # vitest - the canonical encoding, 42 tests
 ```
 
 The first four run in CI on every push - this is the one surface CI fully covers.
+
+---
+
+## Deployed
+
+**<https://stellar-erp-sigma.vercel.app>** — this client, built by `npm run build` and
+served as static files from Vercel. [`vercel.json`](vercel.json) is the whole
+configuration: one rewrite sending every path to `index.html`, because TanStack Router
+owns routing and a hard refresh on `/verify` would otherwise 404 at the CDN.
+
+The `VITE_*` values are set as Vercel build environment variables rather than read from
+the repo-root `.env`, which does not exist there. The three chain values matter most —
+get `VITE_SOROBAN_CONTRACT_ID` wrong and the verifier checks proofs against the wrong
+book, confidently.
+
+**The API behind it is not public.** It is self-hosted on a private Ubuntu server, so
+signed-in screens on the hosted client do not connect; run the stack locally for those.
+
+**`/verify` works there regardless**, because it queries a public Soroban RPC endpoint
+from the browser and never calls our API at all. A static host with no backend
+reachable is enough to check a proof — which is the point of building it this way, not
+a happy accident. See [Deployment § 0](../docs/deployment.md#0-two-shapes-and-which-one-this-is).
 
 ---
 

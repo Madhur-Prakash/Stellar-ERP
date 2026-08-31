@@ -4,7 +4,11 @@
 
 **A three-minute script: what to record, in what order, and what to say over it.**
 
-[Docs](README.md) · [Submission](../SUBMISSION.md) · [Proof ledger](attestation.md) · [Commands](commands.md)
+<!-- nav:start -->
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Screenshots](screenshots.md) · **Demo video** · [Evidence](evidence.md) · [Development](development.md) · [Deployment](deployment.md)
+<!-- nav:end -->
+
+[Submission](../SUBMISSION.md)
 
 </div>
 

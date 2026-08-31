@@ -23,7 +23,7 @@ quickly. Large ones land only if the shape was agreed before the code was writte
 | Report a bug | [Open a bug report](https://github.com/Madhur-Prakash/Stellar-ERP/issues/new?labels=bug) |
 | Propose a feature | [Open a feature request](https://github.com/Madhur-Prakash/Stellar-ERP/issues/new?labels=enhancement) |
 | Report a **security vulnerability** | **Not an issue.** Use GitHub's private vulnerability reporting - see [SECURITY.md](SECURITY.md) |
-| Ask how something works | Check [docs/](docs/README.md) first - it is ten documents deep and indexed by task - then open a discussion or an issue |
+| Ask how something works | Check [docs/](docs/README.md) first - it is fourteen documents deep and indexed by task - then open a discussion or an issue |
 
 **Search the existing issues first**, and check [Delivery status](README.md#delivery-status).
 Stages 6, 7 and 9 are *planned*, not missing - a request for the AI assistant or the
@@ -199,7 +199,11 @@ you catch it here.
   diff a year later. Link the issue it closes
 - **Update the docs in the same commit** if behaviour changed. A doc that describes last
   month's behaviour is worse than no doc
-- **Screenshots for UI changes**, in both light and dark
+- **Screenshots for UI changes**, in both light and dark. If the change touches a screen
+  the repository already ships a shot of, re-capture it to
+  [the same spec](docs/screenshots.md#rules) and update
+  [`docs/screenshots/`](docs/screenshots/) in the same PR - a gallery showing last
+  month's UI is the same problem as a doc describing last month's behaviour
 
 A PR that changes the shape of something - a new module, a new dependency, a change to the
 posting contract or the token model - is worth raising as an issue first. It is a much

@@ -4,6 +4,8 @@
 
 **A self-hosted ERP whose books a bank can verify — without ever seeing them.**
 
+[![Live demo](https://img.shields.io/badge/live_demo-stellar--erp--sigma.vercel.app-2EA043?style=flat-square&logo=vercel&logoColor=white)](https://stellar-erp-sigma.vercel.app)
+[![Verifier](https://img.shields.io/badge/verifier-no_account_needed-4C8BF5?style=flat-square)](https://stellar-erp-sigma.vercel.app/verify)
 [![Licence](https://img.shields.io/badge/licence-MIT-2EA043?style=flat-square)](LICENSE)
 ![Ledgers](https://img.shields.io/badge/ledgers-3-8E5B0C?style=flat-square)
 ![Contract](https://img.shields.io/badge/Soroban-deployed_on_testnet-1C6B4C?style=flat-square)
@@ -16,7 +18,7 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?style=flat-square&logo=flutter&logoColor=white)
 
-[The third ledger](#the-third-ledger) · [Quick start](#quick-start) · [Verify a proof](#verifying-a-proof) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Submission](SUBMISSION.md)
+[Live demo](#live-demo) · [The third ledger](#the-third-ledger) · [Verify a proof](#verifying-a-proof) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Submission](SUBMISSION.md)
 
 </div>
 
@@ -26,6 +28,40 @@
 > analytics. Everything under [The third ledger](#the-third-ledger) is what this
 > repository adds, and it is kept deliberately separable: the accounting core does
 > not import it, and `ATTESTATION_ENABLED=false` removes it entirely.
+
+---
+
+## Live demo
+
+| | |
+| --- | --- |
+| **Web client** | **<https://stellar-erp-sigma.vercel.app>** |
+| **Verifier** — *no account, no wallet, no backend* | **<https://stellar-erp-sigma.vercel.app/verify>** |
+| **Contract** | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) on Stellar Testnet |
+| **Source** | [github.com/Madhur-Prakash/Stellar-ERP](https://github.com/Madhur-Prakash/Stellar-ERP) |
+
+**Start at `/verify`.** It is the one screen that needs nothing from us: it re-encodes
+the entry, folds the Merkle path, and queries a public Soroban RPC endpoint *from your
+browser*. There is no API call to our server in that flow at all — which is the whole
+point, and why it keeps working on a static host.
+
+**The rest of the app needs a backend, and ours is not public.** The API is
+self-hosted on an Ubuntu server that is deliberately kept private — an ERP holds a
+business's ledger, its customers and its supplier terms, so a permanently exposed demo
+instance full of real double-entry data is not a thing this project is willing to
+publish. That is the same argument the product itself makes: the books stay private,
+and only the proof is public.
+
+So signed-in screens on the hosted client will not connect. To see them, run the stack
+yourself — **[Quick start](#quick-start)** is two commands — or look at
+**[Screenshots](#screenshots)**.
+
+| Want to… | Where |
+| --- | --- |
+| Check a proof someone sent you | [The live verifier](https://stellar-erp-sigma.vercel.app/verify) — works right now |
+| Inspect the contract without trusting us | [Six ways](docs/commands.md#6-seeing-the-deployed-contract), two of which trust us not at all |
+| See the signed-in product | [Screenshots](#screenshots), or [run it locally](#quick-start) |
+| Watch tamper-evidence happen | [Demonstrating it](docs/commands.md#7-demonstrating-that-the-records-are-tamper-evident) |
 
 ---
 
@@ -265,6 +301,60 @@ is protected by every rule that protects a hand-entered one.
 
 ---
 
+## Screenshots
+
+<!--
+  SCREENSHOT SLOTS — drop the PNGs into docs/screenshots/ and they appear here.
+  Until then each slot renders as its alt text, which is intentional.
+  Capture specs, what each shot must show, and the full seven-shot gallery:
+  docs/screenshots.md
+-->
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+![Trust screen — the proof ledger, sealing enabled](docs/screenshots/product-ui.png)
+
+**Trust** — the third ledger. Backlog age, a confirmed seal with its explorer link, and the *"What it does not"* card.
+
+</td>
+<td width="50%" valign="top">
+
+![The verifier, signed out, with a verified proof bundle](docs/screenshots/verify.png)
+
+**`/verify`** — signed out. Five-step verdict, and an RPC endpoint the reader can change.
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+![Analytics dashboard](docs/screenshots/analytics.png)
+
+**Analytics** — real figures with a like-for-like comparison beside them.
+
+</td>
+<td width="50%" valign="top">
+
+![Trust screen at 390 × 844](docs/screenshots/mobile.png)
+
+**Mobile**, 390 × 844 — nothing clipped, no horizontal scroll.
+
+</td>
+</tr>
+</table>
+
+Four of seven. The rest — the verifier **failing** on a tampered bundle, the monitoring
+figures that distinguish *sealing works* from *sealing stopped silently*, and the native
+desktop window — are in **[docs/screenshots.md](docs/screenshots.md)**, at full size,
+each with what it has to have in frame and why that shot rather than another.
+
+> Images not showing? The slots are wired to `docs/screenshots/`, waiting for the files.
+> [The gallery](docs/screenshots.md) names each one and how to capture it.
+
+---
+
 ## Quick start
 
 **Requires** Docker, plus [uv](https://docs.astral.sh/uv/) and Node 24 for running
@@ -272,7 +362,7 @@ outside containers. The contract additionally needs Rust and the
 [Stellar CLI](https://developers.stellar.org/docs/tools/developer-tools).
 
 ```bash
-git clone <this repository> && cd Stellar_ERP
+git clone https://github.com/Madhur-Prakash/Stellar-ERP.git && cd Stellar-ERP
 make setup          # creates .env, installs deps, starts services, migrates
 make up             # starts the whole stack
 ```
@@ -287,6 +377,10 @@ make up             # starts the whole stack
 
 Register at <http://localhost:5173/register>, then open **Trust** and switch sealing
 on.
+
+The hosted client at <https://stellar-erp-sigma.vercel.app> is the same build without a
+backend behind it, so `/verify` works there and the signed-in screens do not - see
+[Live demo](#live-demo) for why the API is not exposed.
 
 `make help` lists every task. **[docs/commands.md](docs/commands.md) gives every one
 of them twice - as a `make` target and as the raw commands it runs** - so you are
@@ -513,7 +607,7 @@ Three tests are worth naming, because each found a real defect:
 
 ## Documentation
 
-**[docs/](docs/README.md)** is the index. Twelve documents, each explaining *why*
+**[docs/](docs/README.md)** is the index. Fourteen documents, each explaining *why*
 as well as what.
 
 | Document | Contents |
@@ -527,6 +621,9 @@ as well as what.
 | [Security](docs/security.md) | Threat model and every control, with rationale |
 | [Security audit](docs/security-audit.md) | Findings against running code, each with its fix and how to verify it |
 | [**Commands**](docs/commands.md) | **Every task as `make` and as raw commands.** Setup, running, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, troubleshooting |
+| [Screenshots](docs/screenshots.md) | Every shot at full size, what each must have in frame, and the capture rules |
+| [Demo video](docs/demo-video.md) | The three-minute script: shot list, timings, narration, and the mistakes that ruin a take |
+| [Evidence](docs/evidence.md) | Generated by `make evidence` from the live database and ledger - wallet interactions, feedback, usage, every on-chain figure linked to an explorer |
 | [Development](docs/development.md) | Local workflow, conventions, testing, adding a module |
 | [Deployment](docs/deployment.md) | VPS setup, the proxy you supply, backups, updates, pre-flight checklist |
 

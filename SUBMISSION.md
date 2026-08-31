@@ -4,7 +4,7 @@
 
 **Stellar ERP — the third ledger.**
 
-[Repository](https://github.com/Madhur-Prakash/Stellar-ERP) · [Readme](README.md) · [Proof ledger](docs/attestation.md) · [Commands](docs/commands.md) · [Demo script](docs/demo-video.md)
+[Live demo](https://stellar-erp-sigma.vercel.app) · [Repository](https://github.com/Madhur-Prakash/Stellar-ERP) · [Readme](README.md) · [Proof ledger](docs/attestation.md) · [Screenshots](docs/screenshots.md) · [Commands](docs/commands.md) · [Demo script](docs/demo-video.md)
 
 </div>
 
@@ -15,20 +15,20 @@
 | # | Required | Status | Where |
 | --- | --- | --- | --- |
 | 1 | Public GitHub repository | Done | [Madhur-Prakash/Stellar-ERP](https://github.com/Madhur-Prakash/Stellar-ERP) |
-| 2 | README with complete documentation | Done | [README.md](README.md) + [eleven documents](docs/README.md) |
+| 2 | README with complete documentation | Done | [README.md](README.md) + [fourteen documents](docs/README.md) |
 | 3 | Minimum 15+ meaningful commits | Done — **24** | `git log --oneline \| wc -l` |
-| 4 | Live demo link | **Outstanding** | see [Deploying the demo](#deploying-the-demo) |
+| 4 | Live demo link | Done | **[stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app)** — the [verifier](https://stellar-erp-sigma.vercel.app/verify) runs there with no backend. See [Deploying the demo](#deploying-the-demo) |
 | 5 | Contract deployment address | Done | [`CCB66KMN…S5YR`](https://stellar.expert/explorer/testnet/contract/CCB66KMNINKNGBCVWCYKEF26OIXNZQIIJ4EUKCUOUD4OCDFA6ID4S5YR) |
-| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | **Outstanding** | see [Screenshots](#screenshots) |
+| 6 | Screenshots: product UI, mobile responsive, analytics/monitoring | **Outstanding — slots wired** | [docs/screenshots.md](docs/screenshots.md) — every shot specified, slots live in the [README](README.md#screenshots); the PNGs still have to be captured |
 | 7 | Demo video link | **Rendered, needs uploading** | `videos/stellar-erp-launch/renders/video.mp4` — see [Demo video](#demo-video) |
 | 8 | Proof of 10+ user wallet interactions | **In progress** | `make evidence` — see [Wallet interactions](#wallet-interactions) |
 | 9 | Basic user feedback summary | **In progress** | `make evidence` — the widget is live, submissions are not |
 
 Item 7 is rendered and sitting in the repo; it needs uploading and the link pasting
-back here. Items 4 and 6 need a deployment and a browser. Items 8 and 9 need people
-using it. **None of the remaining ones can be written into the repository honestly
-without the underlying thing existing**, which is why they are listed as outstanding
-rather than quietly filled in.
+back here. Item 6 needs a browser — the slots and the capture spec are in place, the
+PNGs are not. Items 8 and 9 need people using it. **None of the remaining ones can be
+written into the repository honestly without the underlying thing existing**, which is
+why they are listed as outstanding rather than quietly filled in.
 
 ---
 
@@ -117,7 +117,12 @@ costs nothing:
 
 ## Screenshots
 
-Not yet captured. What each one has to show, and why that shot rather than another:
+Not yet captured. The slots are wired — [`docs/screenshots/`](docs/screenshots/) is the
+directory, the [README grid](README.md#screenshots) holds four of them, and
+**[docs/screenshots.md](docs/screenshots.md)** is the full gallery with the capture
+rules. Dropping the PNGs in is all that is left.
+
+The five the checklist requires, and why that shot rather than another:
 
 | File | Shot | Must show |
 | --- | --- | --- |
@@ -127,33 +132,51 @@ Not yet captured. What each one has to show, and why that shot rather than anoth
 | `docs/screenshots/analytics.png` | Analytics dashboard | Real figures with a like-for-like comparison |
 | `docs/screenshots/monitoring.png` | `GET /attestation/status` or the Sentry project | `days_unsealed` and `chain.agrees_with_local` — the two figures that distinguish sealing working from sealing having silently stopped |
 
-Capture on a **light** theme at **1440 × 900** for the desktop shots, then drop them
-in `docs/screenshots/` and link them from the README.
+Capture on a **light** theme at **1440 × 900** for the desktop shots and **390 × 844**
+for mobile, then drop them in [`docs/screenshots/`](docs/screenshots/). The README grid
+and the gallery both pick them up with no further edits — the slots already point at
+those filenames. Full rules: [docs/screenshots.md § Rules](docs/screenshots.md#rules).
 
 ---
 
 ## Deploying the demo
 
-`RENDER_EXTERNAL_HOSTNAME` in `.env` points at `stellar-erp.onrender.com`, so a
-Render deployment is the intended target.
+**Web client — live.** [stellar-erp-sigma.vercel.app](https://stellar-erp-sigma.vercel.app),
+on Vercel, built from [`frontend/`](frontend/). SPA rewrites are in
+[`frontend/vercel.json`](frontend/vercel.json); the `VITE_STELLAR_*` values are set as
+Vercel build environment variables.
 
-**Read [docs/deployment.md](docs/deployment.md) first**, and in particular the
-production guardrails: `ENVIRONMENT=production` refuses to boot on a placeholder
-`SECRET_KEY`, `DEBUG=true`, `CORS_ORIGINS=*`, an empty `ALLOWED_HOSTS`, or a default
-Postgres password. That is deliberate — it crashes at boot rather than serving
-traffic with a placeholder signing key — but it does mean a half-filled environment
-looks like a failed deploy.
+**API — self-hosted on Ubuntu, deliberately not public.** An ERP holds a business's
+ledger, its customers and its supplier terms, and a permanently exposed instance full
+of real double-entry data is not something this project will publish. That is the
+product's own argument applied to its own demo: the books stay private, only the proof
+is public.
 
-Two things that will otherwise cost an evening:
+**This costs the demo less than it sounds like**, because the screen that matters does
+not need the API. `/verify` re-encodes the entry, folds the Merkle path, and queries a
+public Soroban RPC endpoint from the reader's browser — no call to our backend at any
+point. It is fully functional on the hosted client, against the real testnet contract.
+Signed-in screens are the part that needs a local `make up`.
+
+If you are standing up your own public instance, **read
+[docs/deployment.md](docs/deployment.md) first** — in particular the production
+guardrails: `ENVIRONMENT=production` refuses to boot on a placeholder `SECRET_KEY`,
+`DEBUG=true`, `CORS_ORIGINS=*`, an empty `ALLOWED_HOSTS`, or a default Postgres
+password. That is deliberate — it crashes at boot rather than serving traffic with a
+placeholder signing key — but it does mean a half-filled environment looks like a
+failed deploy.
+
+Three things that will otherwise cost an evening:
 
 - **`ALLOWED_HOSTS` must contain the hostname you are served at**, or every API call
-  answers `400 Invalid host header` while the platform's health probes keep
-  reporting the service up. `RENDER_EXTERNAL_HOSTNAME` is folded in automatically.
-- **`VITE_*` values are inlined at build time.** Rebuild the web client after any
-  change to the contract id, or the browser verifies against the old contract while
-  the API uses the new one.
-
-Once it is up, put the URL in the README and in the table at the top of this file.
+  answers `400 Invalid host header` while the platform's health probes keep reporting
+  the service up. `RENDER_EXTERNAL_HOSTNAME`, if set, is folded in automatically.
+- **`CORS_ORIGINS` must contain the web client's origin** — a browser-hosted frontend
+  on one domain calling an API on another is cross-origin, and the guardrail refuses
+  to let you paper over it with `*`.
+- **`VITE_*` values are inlined at build time.** Rebuild and redeploy the web client
+  after any change to the contract id, or the browser verifies against the old contract
+  while the API uses the new one.
 
 ---
 

@@ -134,6 +134,20 @@ def render(data: dict[str, Any]) -> str:
 
     add("# Submission evidence")
     add("")
+    # The docs index counts this file as one of its own, so it carries the same nav
+    # bar as every hand-written page. It lives here rather than in the .md because
+    # anything written into the file itself is gone on the next `make evidence`.
+    add("<!-- nav:start -->")
+    add(
+        "[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · "
+        "[Database](database.md) · [Accounting](accounting.md) · "
+        "[Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · "
+        "[Audit](security-audit.md) · [Commands](commands.md) · "
+        "[Screenshots](screenshots.md) · [Demo video](demo-video.md) · "
+        "**Evidence** · [Development](development.md) · [Deployment](deployment.md)"
+    )
+    add("<!-- nav:end -->")
+    add("")
     add(
         f"Generated {data['generated_at']} from this install's own database and the "
         f"**{data['network']}** ledger. Every on-chain figure below links to a public "
