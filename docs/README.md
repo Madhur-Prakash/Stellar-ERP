@@ -2,9 +2,9 @@
 
 # Documentation
 
-**Eleven documents covering what this system is, how it is built, and how to run it.**
+**Twelve documents covering what this system is, how it is built, and how to run it.**
 
-[Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Development](development.md) · [Deployment](deployment.md)
+[Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Demo video](demo-video.md) · [Development](development.md) · [Deployment](deployment.md)
 
 </div>
 
@@ -25,6 +25,7 @@ Pick the row that matches what you are trying to do.
 
 | I want to… | Read, in order |
 | --- | --- |
+| **Record the demo** | [Demo video](demo-video.md) - shot list, timings and narration |
 | **Just run the thing** | [Commands](commands.md#2-first-time-setup) - every task as a `make` target and as raw commands |
 | **Deploy the contract** | [Commands](commands.md#5-the-proof-ledger-contract) → [Proof ledger](attestation.md) |
 | **See the deployed contract** | [Commands](commands.md#6-seeing-the-deployed-contract) - six ways, two of which trust us not at all |
@@ -54,6 +55,7 @@ Pick the row that matches what you are trying to do.
 | [**Security**](security.md) | The threat model and every control, each with its rationale - network edge, authentication, sessions, authorization, input handling, secrets, and rate limiting. |
 | [**Security audit**](security-audit.md) | A full review of the exposure surface: sixteen findings, each verified against the code, with the fix applied and how to confirm it. Several carry supersession notes where the system has since changed, and the limits the third ledger adds are stated there rather than left implied. |
 | [**Commands**](commands.md) | Every task twice: as a `make` target and as the raw commands it runs. Prerequisites, first-time setup, running it, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, quality gates, release builds, production, and a troubleshooting table. |
+| [**Demo video**](demo-video.md) | A three-minute script built around one moment: a proof verifies, one digit changes, and it fails. Shot list, narration, and the mistakes that ruin a take. |
 | [**Development**](development.md) | Local setup, backend and frontend conventions, testing, the pre-PR checklist, debugging, and the gotchas hit while building this. |
 | [**Deployment**](deployment.md) | Self-hosting on a VPS: configuration, the proxy you have to supply, backups, updates, and a pre-flight checklist. |
 

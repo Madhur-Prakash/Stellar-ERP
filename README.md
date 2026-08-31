@@ -16,7 +16,7 @@
 ![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![Flutter](https://img.shields.io/badge/Flutter-3.44-02569B?style=flat-square&logo=flutter&logoColor=white)
 
-[The third ledger](#the-third-ledger) · [Quick start](#quick-start) · [Verify a proof](#verifying-a-proof) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Design rationale](docs/attestation.md)
+[The third ledger](#the-third-ledger) · [Quick start](#quick-start) · [Verify a proof](#verifying-a-proof) · [Commands](docs/commands.md) · [Documentation](docs/README.md) · [Submission](SUBMISSION.md)
 
 </div>
 
@@ -407,7 +407,7 @@ undeployable without the blockchain subsystem.
 │       └── verify/          The public verifier
 ├── app_frontend/            Flutter desktop client · Windows · macOS · Linux
 ├── installer/               Inno Setup script for the Windows desktop build
-└── docs/                    Eleven documents - start at docs/README.md
+└── docs/                    Twelve documents - start at docs/README.md
 ```
 
 ---
@@ -513,7 +513,7 @@ Three tests are worth naming, because each found a real defect:
 
 ## Documentation
 
-**[docs/](docs/README.md)** is the index. Eleven documents, each explaining *why*
+**[docs/](docs/README.md)** is the index. Twelve documents, each explaining *why*
 as well as what.
 
 | Document | Contents |
@@ -529,6 +529,9 @@ as well as what.
 | [**Commands**](docs/commands.md) | **Every task as `make` and as raw commands.** Setup, running, the database, deploying the contract, six ways to inspect the deployed contract, demonstrating tamper-evidence, troubleshooting |
 | [Development](docs/development.md) | Local workflow, conventions, testing, adding a module |
 | [Deployment](docs/deployment.md) | VPS setup, the proxy you supply, backups, updates, pre-flight checklist |
+
+The Level 4 submission checklist, with evidence and what is still outstanding, is
+**[SUBMISSION.md](SUBMISSION.md)**.
 
 Also: [`contracts/README.md`](contracts/README.md) for the contract,
 [`backend/README.md`](backend/README.md), [`frontend/README.md`](frontend/README.md),

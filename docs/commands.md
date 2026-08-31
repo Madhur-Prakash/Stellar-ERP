@@ -4,7 +4,7 @@
 
 **Every task in this repository, as a `make` target and as the raw commands it runs.**
 
-[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Development](development.md) · [Deployment](deployment.md)
+[Docs](README.md) · [Spec](spec.md) · [Architecture](architecture.md) · [Database](database.md) · [Accounting](accounting.md) · [Proof ledger](attestation.md) · [API](api.md) · [Security](security.md) · [Audit](security-audit.md) · [Commands](commands.md) · [Demo video](demo-video.md) · [Development](development.md) · [Deployment](deployment.md)
 
 </div>
 
@@ -97,8 +97,15 @@ cargo install --locked stellar-cli
 ### make
 
 ```bash
-make setup
+make deployment      # checks the toolchain first, then prints how to run it
+make setup           # the same work, without the checks or the summary
 ```
+
+`deployment` is the one to reach for on a machine you have not built on before. It
+verifies `uv`, `node` and `docker` are present and prints what is missing rather than
+failing part-way through with a bare `command not found`, then runs `setup`, then
+prints the two commands you actually need next — which was the part people were
+reading the Makefile source to find.
 
 ### raw
 
@@ -121,6 +128,38 @@ cd backend && uv run alembic upgrade head && cd ..
 
 `make setup` will not overwrite an existing `.env`. It tests for the file first, so
 running it twice is safe.
+
+### Demo data
+
+```bash
+make seed            # 12 organizations, 3 entries each, 12 feedback rows
+make seed n=16       # more (16 business names are defined)
+```
+
+Raw, with the full flag set:
+
+```bash
+cd backend
+uv run python scripts/seed_demo.py --dry-run
+uv run python scripts/seed_demo.py --organizations 12 --entries 5
+uv run python scripts/seed_demo.py --wipe     # removes the feedback/usage rows it wrote
+```
+
+Every row is written through the **real services** — registration, organization
+creation, `post_simple`, the feedback service — not by direct INSERT, so the seeded
+data satisfies every invariant the application enforces. A seeder writing its own SQL
+would happily produce an unbalanced journal entry, and the trial balance is the first
+thing anyone opens on a populated install.
+
+Re-running is safe: existing accounts are skipped. Sign in as any of them with
+`Sealed#Books-2026`.
+
+> **Seeded rows are for screenshots and demos, not for evidence.** They are marked in
+> three places — the email domain, the organization name suffix, the feedback contact —
+> and [`make evidence`](#5-the-proof-ledger-contract) detects the marker and prints a
+> warning banner, because it reads the same tables. The checklist's *user feedback
+> summary* and *10+ wallet interactions* both mean real people. `--wipe` before quoting
+> any of it.
 
 ### Then edit `.env`
 
@@ -782,7 +821,7 @@ replace a production database with one mistyped filename.
 | Target | Section |
 | --- | --- |
 | `help` | [How to read this page](#discovering-targets) |
-| `setup`, `install` | [First-time setup](#2-first-time-setup) |
+| `deployment`, `setup`, `install`, `seed` | [First-time setup](#2-first-time-setup) |
 | `up`, `up-objectstore`, `down`, `clean`, `services` | [Running it](#3-running-it) |
 | `dev-api`, `dev-web`, `desktop` | [On the host](#on-the-host-with-reload) |
 | `logs`, `logs-api`, `shell`, `psql`, `redis-cli` | [Logs and shells](#logs-and-shells) |
