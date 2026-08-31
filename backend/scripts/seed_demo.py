@@ -84,15 +84,33 @@ BUSINESSES: tuple[tuple[str, str], ...] = (
 )
 
 #: Two-line entries a real small business would actually post. Amounts in rupees.
+#:
+#: **Nothing here touches a control account, and that constraint is the whole point.**
+#: `accounts_receivable`, `accounts_payable` and `inventory` are reconciled twice by
+#: `AnalyticsService.control_checks` - once from the control account, once from the
+#: invoices, bills or stock levels that should have produced it. `post_simple` writes
+#: only the ledger side, so an entry posted straight into one of those accounts leaves
+#: a balance with no document behind it and the reconciliation correctly reports a
+#: disagreement.
+#:
+#: An earlier version of this list did exactly that, and every seeded organization
+#: showed "They do not agree - review" in the footer: receivables 48,250 against a
+#: zero subledger, payables and inventory 31,400 each. Which is the control this
+#: product exists to surface, reporting a fault the seeder itself introduced - a
+#: populated demo that undermines the pitch, and a screenshot that would be actively
+#: damaging.
+#:
+#: So these are all immediate-settlement entries: cash and bank against revenue and
+#: capital. Real double entry, no subledger to contradict. Seeding receivables
+#: properly would mean raising invoices through the sales module, which is a different
+#: script.
 ENTRIES: tuple[tuple[str, str, str, str], ...] = (
-    ("Sale on credit, invoice 1041", "accounts_receivable", "sales_revenue", "48250.00"),
-    ("Stock received from supplier", "inventory", "accounts_payable", "31400.00"),
     ("Counter sale, settled in cash", "cash", "sales_revenue", "6820.00"),
-    ("Customer settled invoice 1041", "bank", "accounts_receivable", "48250.00"),
-    ("Paid supplier on account", "accounts_payable", "bank", "31400.00"),
-    ("Sale on credit, invoice 1042", "accounts_receivable", "sales_revenue", "12975.00"),
+    ("Card sale, banked same day", "bank", "sales_revenue", "18450.00"),
     ("Owner introduced capital", "bank", "owner_capital", "150000.00"),
-    ("Stock received, second lot", "inventory", "accounts_payable", "22600.00"),
+    ("Cash takings banked", "bank", "cash", "5000.00"),
+    ("Counter sale, settled in cash", "cash", "sales_revenue", "2340.00"),
+    ("Online order, paid on delivery", "bank", "sales_revenue", "9275.00"),
 )
 
 #: What people actually write. Weighted towards praise and ideas because the ask was

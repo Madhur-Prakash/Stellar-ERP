@@ -85,9 +85,17 @@ export function FeedbackWidget() {
         aria-label="Send feedback"
         className={cn(
           'bg-surface border-border text-content-secondary hover:text-content hover:border-border-strong',
-          // Bottom-*left*: the toaster occupies bottom-right, and a button that
-          // sits under every success message is a button nobody can press.
-          'focus-visible:ring-primary fixed bottom-4 left-4 z-40 inline-flex items-center gap-2',
+          // Bottom-left of the *content*, not of the viewport.
+          //
+          // Bottom-right is the toaster's, and a button under every success message is
+          // a button nobody can press. But plain `left-4` put this on top of the
+          // sidebar's own bottom row - the organization switcher and the signed-in
+          // address - at the same z-index, so the two drew over each other. The
+          // sidebar is `w-[248px]`; 264px clears it with the same 16px gutter the
+          // button already used. Below `lg` the sidebar is a drawer, so `left-4` is
+          // correct there.
+          'focus-visible:ring-primary fixed bottom-4 left-4 z-40 lg:left-[264px]',
+          'inline-flex items-center gap-2',
           'rounded-full border py-2.5 pr-4 pl-3 text-[13px] font-medium shadow-lg',
           'transition-colors focus-visible:ring-2 focus-visible:outline-none',
         )}
@@ -102,7 +110,9 @@ export function FeedbackWidget() {
           aria-modal="false"
           aria-label="Send feedback"
           className={cn(
-            'bg-surface border-border fixed bottom-16 left-4 z-50 rounded-xl border shadow-2xl',
+            // Anchored to the button, so it moves with it past the sidebar.
+            'bg-surface border-border fixed bottom-16 left-4 z-50 lg:left-[264px]',
+            'rounded-xl border shadow-2xl',
             // Never wider than the viewport on a phone, and never taller than it.
             // `dvh` rather than `vh` so the mobile keyboard shrinking the viewport
             // scrolls the panel instead of pushing the Send button off-screen.
